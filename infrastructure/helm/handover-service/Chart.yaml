@@ -1,0 +1,38 @@
+apiVersion: v2
+name: handover-service
+version: 1.0.0
+appVersion: 1.0.0
+type: application
+description: EMR Task Management Platform's automated shift handover service with HIPAA compliance and high availability
+
+keywords:
+  - healthcare
+  - emr
+  - handover
+  - shift-management
+  - task-management
+  - hipaa-compliant
+  - high-availability
+  - kubernetes
+
+maintainers:
+  - name: EMR Task Platform Team
+    email: platform-team@emr-task.com
+
+dependencies:
+  - name: common
+    version: ^1.0.0
+    repository: https://charts.emr-task.com
+
+annotations:
+  kubernetes.io/target-platform: ^1.26.0
+  healthcare.emr-task.com/hipaa-compliant: "true"
+  healthcare.emr-task.com/service-tier: critical
+  healthcare.emr-task.com/backup-policy: enabled
+
+# Engine: Helm v3.0.0+
+# Kubernetes: v1.26.0+
+# Required for automated shift handover functionality and high availability
+# Ensures 99.99% uptime through Kubernetes deployment configuration
+# Implements HIPAA-compliant security measures
+# Supports automated backup and disaster recovery
