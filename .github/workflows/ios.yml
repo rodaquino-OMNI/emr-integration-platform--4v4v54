@@ -1,0 +1,205 @@
+name: iOS CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/ios/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/ios/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Deployment target environment'
+        options:
+          - beta
+          - production
+        required: true
+      security_scan:
+        type: boolean
+        description: 'Run enhanced security scan'
+        default: true
+  schedule:
+    - cron: '0 0 * * 0' # Weekly certificate rotation check
+
+env:
+  MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+  MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  TEAM_ID: ${{ secrets.TEAM_ID }}
+  FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+  FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+  EMR_INTEGRATION_KEY: ${{ secrets.EMR_INTEGRATION_KEY }}
+  CERTIFICATE_ROTATION_TOKEN: ${{ secrets.CERTIFICATE_ROTATION_TOKEN }}
+  DEVELOPER_APP_ID: ${{ secrets.DEVELOPER_APP_ID }}
+  DEVELOPER_APP_IDENTIFIER: ${{ secrets.DEVELOPER_APP_IDENTIFIER }}
+  PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}
+  TEMP_KEYCHAIN_USER: ${{ secrets.TEMP_KEYCHAIN_USER }}
+  TEMP_KEYCHAIN_PASSWORD: ${{ secrets.TEMP_KEYCHAIN_PASSWORD }}
+  APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+  APPLE_ISSUER_ID: ${{ secrets.APPLE_ISSUER_ID }}
+  APPLE_KEY_CONTENT: ${{ secrets.APPLE_KEY_CONTENT }}
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Ruby environment
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          bundler-cache: true
+          
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            vendor/bundle
+            Pods
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+            
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+          
+      - name: Setup temporary keychain
+        run: |
+          security create-keychain -p "$TEMP_KEYCHAIN_PASSWORD" build.keychain
+          security list-keychains -d user -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$TEMP_KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings
+          
+      - name: Run tests
+        run: |
+          bundle exec fastlane test
+        env:
+          SCAN_DEVICE: "iPhone 14 Pro"
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: test-results
+          path: test_results.zip
+          retention-days: 14
+
+  beta:
+    name: Deploy Beta
+    needs: test
+    if: github.event_name == 'push' || github.event.inputs.environment == 'beta'
+    runs-on: macos-latest
+    timeout-minutes: 15
+    environment: beta
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Ruby environment
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+          
+      - name: Setup provisioning profiles
+        uses: apple-actions/download-provisioning-profiles@v1
+        with:
+          bundle-id: ${{ env.DEVELOPER_APP_IDENTIFIER }}
+          profile-type: 'AD_HOC'
+          issuer-id: ${{ env.APPLE_ISSUER_ID }}
+          api-key-id: ${{ env.APPLE_KEY_ID }}
+          api-private-key: ${{ env.APPLE_KEY_CONTENT }}
+          
+      - name: Deploy to Firebase
+        run: bundle exec fastlane beta
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: beta-build
+          path: |
+            ${{ env.DEVELOPER_APP_IDENTIFIER }}.ipa
+            ${{ env.DEVELOPER_APP_IDENTIFIER }}.app.dSYM.zip
+          retention-days: 14
+
+  production:
+    name: Deploy Production
+    needs: test
+    if: github.event.inputs.environment == 'production'
+    runs-on: macos-latest
+    timeout-minutes: 15
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Ruby environment
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+          
+      - name: Setup provisioning profiles
+        uses: apple-actions/download-provisioning-profiles@v1
+        with:
+          bundle-id: ${{ env.DEVELOPER_APP_IDENTIFIER }}
+          profile-type: 'APP_STORE'
+          issuer-id: ${{ env.APPLE_ISSUER_ID }}
+          api-key-id: ${{ env.APPLE_KEY_ID }}
+          api-private-key: ${{ env.APPLE_KEY_CONTENT }}
+          
+      - name: Verify EMR integration
+        run: bundle exec fastlane verify_emr_integration environment:production
+        
+      - name: Deploy to App Store
+        run: bundle exec fastlane release
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-build
+          path: |
+            ${{ env.DEVELOPER_APP_IDENTIFIER }}.ipa
+            ${{ env.DEVELOPER_APP_IDENTIFIER }}.app.dSYM.zip
+          retention-days: 30
