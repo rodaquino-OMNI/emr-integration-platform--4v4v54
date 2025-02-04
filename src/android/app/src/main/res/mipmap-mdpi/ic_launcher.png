@@ -1,0 +1,26 @@
+[Binary PNG file with the following specifications]
+
+Format: PNG
+Dimensions: 48x48 pixels
+Color Profile: sRGB
+Primary Color: #0066CC (Healthcare Blue)
+Density: mdpi (1.0x scale factor)
+Compression: Lossless PNG optimization
+Target File Size: < 5KB
+Minimum Contrast Ratio: 4.5:1
+Anti-aliasing: Enabled for curved elements
+Background: Solid #0066CC
+Transparency: Supported
+
+Generation Commands:
+1. Create 48x48px icon with #0066CC background
+2. Apply healthcare-optimized design
+3. Ensure minimum 4.5:1 contrast ratio
+4. Export as PNG with lossless compression
+5. Optimize using pngquant/optipng
+6. Verify file size < 5KB
+7. Validate mdpi density requirements
+8. Confirm visual clarity at target size
+
+Note: This is a binary file that requires generation using 
+image processing tools according to the above specifications.
