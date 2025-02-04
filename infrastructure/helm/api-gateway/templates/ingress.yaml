@@ -1,0 +1,65 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ template "api-gateway.fullname" . }}
+  labels:
+    {{- include "api-gateway.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: istio
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Security headers
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; frame-ancestors 'none';";
+    # Performance and timeout settings
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers: "4 256k"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    # CORS configuration
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    # Monitoring
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+spec:
+  ingressClassName: istio
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hosts | first | get "host" }}
+      secretName: api-tls
+      {{- if .Values.ingress.tls }}
+      {{- with (first .Values.ingress.tls) }}
+      {{- if .minimumProtocolVersion }}
+      minimumProtocolVersion: {{ .minimumProtocolVersion }}
+      {{- else }}
+      minimumProtocolVersion: TLSv1.2
+      {{- end }}
+      {{- end }}
+      {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ template "api-gateway.fullname" $ }}
+                port:
+                  number: {{ $.Values.kong.proxy.http.port | default 80 }}
+          {{- end }}
+    {{- end }}
