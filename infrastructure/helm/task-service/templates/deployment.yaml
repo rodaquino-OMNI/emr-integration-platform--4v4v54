@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "task-service.fullname" . }}
+  labels:
+    {{- include "task-service.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/change-cause: {{ .Values.deployment.changeCause | default "Initial deployment" | quote }}
+    checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "task-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "task-service.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Ensure graceful shutdown for task completion
+      terminationGracePeriodSeconds: 60
+      
+      # High availability: Spread pods across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  {{- include "task-service.selectorLabels" . | nindent 18 }}
+
+      # Security context for non-root execution
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        
+        # Expose ports for HTTP and metrics
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+
+        # Environment configuration
+        env:
+        - name: NODE_ENV
+          value: {{ .Values.env.nodeEnv | quote }}
+        - name: PORT
+          value: {{ .Values.env.PORT | quote }}
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "task-service.fullname" . }}-redis-config
+              key: redis.host
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "task-service.fullname" . }}-redis-config
+              key: redis.port
+        - name: EMR_SERVICE_URL
+          value: "http://emr-service:8080"
+        - name: SYNC_RESOLUTION_TIMEOUT_MS
+          value: "500"
+
+        # Resource allocation for performance
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+
+        # Health monitoring
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
+
+        # Graceful shutdown handling
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                # Graceful shutdown procedure
+                echo "Initiating graceful shutdown..."
+                # Signal for no new requests
+                curl -X POST http://localhost:8080/shutdown
+                # Wait for in-flight requests
+                sleep 10
+
+        # Volume mounts for configuration
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+
+      # Volumes definition
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ include "task-service.fullname" . }}-config
+      - name: tmp
+        emptyDir: {}
+
+      # Node selection for deployment
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
