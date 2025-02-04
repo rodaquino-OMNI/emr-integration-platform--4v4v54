@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "vault.fullname" . }}
+  labels:
+    {{ include "vault.labels" . | nindent 4 }}
+  annotations:
+    # AWS Load Balancer SSL Certificate configuration
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ .Values.ui.loadBalancer.cert }}
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: https
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "8200"
+
+    # Load Balancer optimization settings for high availability
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+    # Health check configuration for 99.99% uptime
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "3"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "5"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "30"
+
+spec:
+  # Service type determined by values.yaml configuration
+  type: {{ .Values.ui.serviceType }}
+  ports:
+    # External HTTPS port for UI and API access
+    - name: http
+      port: {{ .Values.ui.externalPort }}
+      targetPort: 8200
+      protocol: TCP
+    
+    # Internal HTTPS port for cluster communication
+    - name: https-internal
+      port: 8201
+      targetPort: 8201
+      protocol: TCP
+  
+  # Pod selector for service endpoints
+  selector:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: {{ .Release.Name }}
