@@ -1,0 +1,38 @@
+[Binary PNG Image File with the following specifications]
+
+Image Properties:
+- Format: PNG
+- Dimensions: 240x240 pixels
+- Scale: 2x (for Retina displays)
+- Color Space: sRGB
+- Background: Transparent
+- Primary Color: #0066CC (Healthcare-optimized brand color)
+
+Technical Requirements:
+- File Size: < 50KB
+- Compression: Optimal level
+- Interlacing: Disabled
+- Color Profile: Embedded sRGB
+- Metadata: Minimal
+- Alpha Channel: Yes (for transparency)
+
+Platform Requirements:
+- iOS Version Support: 14.0+
+- Target Devices: iPhone and iPad
+- Display Type: Retina Display
+- Scale Factor: 2x
+- Dark Mode Compatible: Yes
+- Rendering Mode: Automatic
+
+Usage Context:
+- Purpose: Launch Screen Splash Icon
+- Display Size: 120x120 points (240x240 pixels at 2x)
+- Content Mode: Scale Aspect Fit
+- Position: Centered in Launch Screen
+- Minimum Padding: 16 points
+
+Accessibility:
+- Role: Decorative Image
+- Label: "EMR Task App Logo"
+- Traits: None
+- Behavior: Ignored by VoiceOver
