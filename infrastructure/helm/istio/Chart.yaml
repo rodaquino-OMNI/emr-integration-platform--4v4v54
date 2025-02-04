@@ -1,0 +1,57 @@
+apiVersion: v2
+name: emr-istio
+version: 1.0.0
+description: Healthcare-optimized Istio service mesh configuration for EMR Task Management platform with HIPAA compliance controls
+type: application
+appVersion: "1.18.0"
+
+keywords:
+  - istio
+  - service-mesh
+  - healthcare
+  - hipaa-compliant
+  - security
+  - traffic-management
+  - emr-integration
+
+maintainers:
+  - name: EMR Task Platform Team
+    email: platform@emrtask.com
+
+# Core dependencies for the Istio deployment
+dependencies:
+  - name: base
+    version: 1.18.0
+    repository: https://istio-release.storage.googleapis.com/charts
+    condition: base.enabled
+    tags:
+      - healthcare-core
+
+  - name: istiod
+    version: 1.18.0
+    repository: https://istio-release.storage.googleapis.com/charts
+    condition: istiod.enabled
+    tags:
+      - healthcare-control
+
+# Healthcare and compliance-specific annotations
+annotations:
+  category: Infrastructure
+  compliance/hipaa: enabled
+  security/mtls: strict
+  monitoring/enabled: "true"
+  healthcare/emr-compatible: "true"
+
+# Engine requirements
+kubeVersion: ">=1.24.0"
+engine: gotpl
+
+# Home URL and documentation
+home: https://emrtask.com/platform/infrastructure
+icon: https://emrtask.com/images/istio-logo.png
+sources:
+  - https://github.com/emrtask/platform-infrastructure
+
+# Additional metadata
+deprecated: false
+tillerVersion: ">=3.0.0"
