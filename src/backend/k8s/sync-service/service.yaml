@@ -1,0 +1,52 @@
+# Kubernetes Service configuration for Sync Service
+# Version: v1
+# Purpose: Provides CRDT-based synchronization endpoints with high availability and monitoring
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: sync-service
+  namespace: default
+  labels:
+    app: sync-service
+    component: backend
+    tier: application
+    part-of: task-management
+  annotations:
+    # Prometheus monitoring configuration
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+    # AWS load balancer configuration for internal access
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+
+spec:
+  # Internal cluster service type for secure access
+  type: ClusterIP
+  
+  # Service ports configuration
+  ports:
+    # Main CRDT synchronization endpoint
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+    
+    # Prometheus metrics endpoint
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  
+  # Pod selector using multiple labels for precise service discovery
+  selector:
+    app: sync-service
+    component: backend
+  
+  # Session affinity configuration for consistent routing
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hour timeout for session affinity
