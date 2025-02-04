@@ -1,0 +1,61 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/xcshareddata/xcschemes/*
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Build generated
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods
+Pods/
+*.xcconfig
+Podfile.lock
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Coverage
+*.gcno
+*.gcda
+*.gcov
+
+# Healthcare Sensitive Data
+*.cer
+*.mobileprovision
+*.p12
+*.key
+GoogleService-Info.plist
+EMRTask.entitlements
+**/FHIR/*.plist
+**/EMR/Credentials/*
+HealthKit.entitlements
+
+# Environment & Configuration
+.env
+.env.*
+config.json
+**/Config/*.plist
+!DefaultConfig.plist
+
+# System Files
+.DS_Store
+*.swp
+*.lock
+!Podfile.lock
+tmp/
+*.tmp
