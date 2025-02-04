@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "es2019",
+    "lib": [
+      "es2019",
+      "dom"
+    ],
+    "types": [
+      "cypress",
+      "node"
+    ],
+    "strict": true,
+    "baseUrl": "../",
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@context/*": ["./src/context/*"],
+      "@services/*": ["./src/services/*"]
+    }
+  },
+  "include": [
+    "../cypress/**/*.ts",
+    "../cypress.config.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
