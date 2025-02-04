@@ -1,0 +1,41 @@
+[Binary PNG Image File with the following specifications]
+
+Dimensions:
+- Width: 1024 pixels
+- Height: 1024 pixels
+- Scale: 1x (1024x1024 actual pixels)
+
+Format:
+- File Type: PNG
+- Color Space: sRGB
+- Bit Depth: 32-bit
+- Alpha Channel: Yes (but fully opaque)
+
+Design:
+- Background: Solid #0066CC (Accessible Blue)
+- Safe Zone: 102px padding from all edges (10%)
+- Primary Icon Elements:
+  - Centered medical task symbol
+  - High-contrast white foreground elements
+  - Clean, geometric shapes
+  - No transparency at edges
+  - Sharp, straight edges
+
+Color Palette:
+- Primary: #0066CC (Background)
+- Critical: #D64045 (Accent elements)
+- Success: #2D8B75 (Secondary elements)
+- White: #FFFFFF (Foreground elements)
+
+Technical Requirements:
+- No embedded color profile
+- Optimized file size
+- No transparency at edges
+- Clean vector-based shapes scaled to pixels
+- WCAG 2.1 AA compliant contrast ratios
+- iOS platform-specific safe zones respected
+- Compatible with light and dark mode
+- Meets App Store requirements for marketing icon
+
+File Size:
+- Optimized PNG, typically between 100KB-300KB
