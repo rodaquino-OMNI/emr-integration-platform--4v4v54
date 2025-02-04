@@ -1,0 +1,235 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '18.x'
+  TEST_COVERAGE_THRESHOLD: 85
+  VULNERABILITY_THRESHOLD: high
+  DOCKER_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and format
+        run: |
+          npm run lint
+          npm run format
+
+      - name: Run unit tests
+        run: npm run test -- --ci --parallel
+        env:
+          CI: true
+
+      - name: Run integration tests
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: npm run test:coverage
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(npm run test:coverage | grep -o '[0-9.]*%' | head -1 | cut -d'%' -f1)
+          if (( $(echo "$COVERAGE < $TEST_COVERAGE_THRESHOLD" | bc -l) )); then
+            echo "Test coverage ($COVERAGE%) is below threshold ($TEST_COVERAGE_THRESHOLD%)"
+            exit 1
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Snyk scan
+        uses: snyk/actions/node@v3
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=${{ env.VULNERABILITY_THRESHOLD }}
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@v1
+        with:
+          scan-type: 'fs'
+          security-checks: 'vuln,config,secret'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy'
+
+  docker-build:
+    name: Build Docker Images
+    needs: [build, security-scan]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, task-service, emr-service, sync-service]
+        include:
+          - service: api-gateway
+            size_limit: 100
+          - service: task-service
+            size_limit: 200
+          - service: emr-service
+            size_limit: 300
+          - service: sync-service
+            size_limit: 50
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          buildkitd-flags: --debug
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./src/backend
+          file: ./src/backend/Dockerfile
+          target: ${{ matrix.service }}
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            SERVICE=${{ matrix.service }}
+            NODE_VERSION=${{ env.NODE_VERSION }}
+
+      - name: Check image size
+        run: |
+          SIZE=$(docker image inspect ${{ env.DOCKER_REGISTRY }}/${{ matrix.service }}:${{ github.sha }} --format='{{.Size}}')
+          SIZE_MB=$((SIZE/1024/1024))
+          if [ $SIZE_MB -gt ${{ matrix.size_limit }} ]; then
+            echo "Image size ($SIZE_MB MB) exceeds limit (${{ matrix.size_limit }} MB)"
+            exit 1
+          fi
+
+      - name: Sign image
+        run: |
+          cosign sign --key ${{ secrets.DOCKER_SIGNING_KEY }} \
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+
+  deploy:
+    name: Deploy
+    needs: [docker-build]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy to staging
+        if: github.ref != 'refs/heads/main'
+        run: |
+          helm upgrade --install backend ./src/backend/helm \
+            --namespace staging \
+            --values ./src/backend/helm/values-staging.yaml \
+            --set image.tag=${{ github.sha }} \
+            --atomic --timeout 5m
+
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Canary deployment
+          helm upgrade --install backend ./src/backend/helm \
+            --namespace production \
+            --values ./src/backend/helm/values-production.yaml \
+            --set image.tag=${{ github.sha }} \
+            --set canary.enabled=true \
+            --set canary.weight=20 \
+            --atomic --timeout 15m
+
+      - name: Run smoke tests
+        run: |
+          ./scripts/smoke-tests.sh ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+
+      - name: Monitor deployment health
+        run: |
+          ./scripts/monitor-deployment.sh \
+            --namespace ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
+            --timeout 10m
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          helm rollback backend -n ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
