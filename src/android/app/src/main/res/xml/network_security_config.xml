@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Base configuration applied to all connections -->
+    <base-config cleartextTrafficPermitted="false">
+        <!-- Enable and enforce certificate transparency -->
+        <certificate-transparency-config>
+            <enabled>true</enabled>
+            <enforced>true</enforced>
+        </certificate-transparency-config>
+    </base-config>
+
+    <!-- Main application domain configuration -->
+    <domain-config>
+        <domain includeSubdomains="true">emrtask.com</domain>
+        <pin-set expiration="2025-01-01">
+            <!-- Primary certificate pin -->
+            <pin digest="SHA-256">primary_pin_hash</pin>
+            <!-- Backup certificate pin -->
+            <pin digest="SHA-256">backup_pin_hash</pin>
+        </pin-set>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Epic FHIR endpoint configuration -->
+    <domain-config>
+        <domain>fhir.epic.com</domain>
+        <pin-set expiration="2025-01-01">
+            <!-- Epic primary certificate pin -->
+            <pin digest="SHA-256">epic_primary_pin_hash</pin>
+            <!-- Epic backup certificate pin -->
+            <pin digest="SHA-256">epic_backup_pin_hash</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- Cerner FHIR endpoint configuration -->
+    <domain-config>
+        <domain>fhir.cerner.com</domain>
+        <pin-set expiration="2025-01-01">
+            <!-- Cerner primary certificate pin -->
+            <pin digest="SHA-256">cerner_primary_pin_hash</pin>
+            <!-- Cerner backup certificate pin -->
+            <pin digest="SHA-256">cerner_backup_pin_hash</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- Disable debug overrides for production security -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
