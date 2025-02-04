@@ -1,0 +1,63 @@
+# Fastlane Match Configuration
+# Version: 2.212.2
+# Purpose: Secure management of iOS code signing certificates and provisioning profiles
+
+# Import app identifier from Appfile
+require_relative 'Appfile'
+
+# Git repository URL for storing certificates and profiles
+git_url(ENV['MATCH_GIT_URL'])
+
+# Use Git storage mode for team sharing and version control
+storage_mode("git")
+
+# Certificate type (development, appstore, adhoc, enterprise)
+type("development")
+
+# Enable readonly mode for CI environments
+readonly(true)
+
+# App bundle identifiers to manage certificates for
+app_identifier(["com.emrtask.app"])
+
+# Apple Developer account credentials
+username(ENV['APPLE_ID'])
+team_id(ENV['TEAM_ID'])
+
+# Git branch for certificate storage
+git_branch("master")
+
+# Force certificate regeneration for new devices
+force_for_new_devices(true)
+
+# Certificate template name
+template_name("EMRTask-Certificates")
+
+# Enable verbose logging for debugging
+verbose(true)
+
+# Fail if certificate name is already taken
+fail_on_name_taken(true)
+
+# Skip interactive confirmations in CI
+skip_confirmation(true)
+
+# Platform specification
+platform("ios")
+
+# Generate Apple certificates if missing
+generate_apple_certs(true)
+
+# Certificate validity period in days
+certificate_validity_days(365)
+
+# Additional security settings
+ENV["MATCH_KEYCHAIN_NAME"] ||= "login.keychain"
+ENV["MATCH_PASSWORD"] # Encryption password for certificates
+ENV["MATCH_KEYCHAIN_PASSWORD"] # Keychain password for certificate access
+
+# Advanced options for enhanced security
+shallow_clone(true) # Faster cloning by fetching only latest revision
+clone_branch_directly(true) # Clone only the specified branch
+readonly(ENV['MATCH_READONLY'] == 'true') # Support for read-only mode override
+api_key_path(ENV['MATCH_API_KEY_PATH']) # Path to App Store Connect API key for authentication
