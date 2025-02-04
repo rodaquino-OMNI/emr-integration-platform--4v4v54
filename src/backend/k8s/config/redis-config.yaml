@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: default
+  labels:
+    app: healthcare-task-platform
+    component: cache
+    tier: data
+  annotations:
+    description: "Redis configuration for high-availability caching and distributed storage"
+    version: "redis/7.0"  # Redis version annotation for tracking
+data:
+  # Cluster configuration for high availability
+  REDIS_MODE: "cluster"  # Enables Redis cluster mode for HA
+  REDIS_CLUSTER_NODES: "6"  # 3 masters + 3 replicas for optimal distribution
+  REDIS_CLUSTER_REPLICAS: "1"  # 1 replica per master for fault tolerance
+  
+  # Memory management settings
+  REDIS_MAXMEMORY: "2gb"  # Maximum memory per node
+  REDIS_MAXMEMORY_POLICY: "allkeys-lru"  # Least Recently Used eviction
+  
+  # Performance optimization
+  REDIS_TIMEOUT: "500"  # 500ms timeout for sync resolution SLA
+  REDIS_KEEPALIVE: "60"  # 60s TCP keepalive for stable connections
+  REDIS_IO_THREADS: "4"  # Parallel I/O processing
+  
+  # Connection and resource limits
+  REDIS_MAX_CLIENTS: "10000"  # Maximum concurrent connections
+  
+  # Persistence configuration
+  REDIS_SAVE_FREQUENCY: "900 1 300 10"  # Save after 900s if 1 key changed, 300s if 10 keys
+  
+  # Additional Redis configuration settings
+  redis.conf: |
+    # Networking
+    tcp-backlog 511
+    tcp-keepalive 60
+    
+    # Replication
+    repl-diskless-sync yes
+    repl-diskless-sync-delay 5
+    
+    # Security limits
+    maxmemory-samples 5
+    
+    # Lazy freeing
+    lazyfree-lazy-eviction yes
+    lazyfree-lazy-expire yes
+    
+    # Logging
+    loglevel notice
+    
+    # Slow log configuration
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    
+    # Latency monitoring
+    latency-monitor-threshold 100
+    
+    # Client output buffer limits
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit replica 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    
+    # Memory management
+    activerehashing yes
+    aof-use-rdb-preamble yes
+    
+    # Defrag settings for memory optimization
+    activedefrag yes
+    active-defrag-ignore-bytes 100mb
+    active-defrag-threshold-lower 10
+    active-defrag-threshold-upper 100
+    
+    # TLS configuration (if needed)
+    # tls-port 6379
+    # tls-cert-file /path/to/cert
+    # tls-key-file /path/to/key
+    # tls-auth-clients yes
