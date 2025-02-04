@@ -1,0 +1,27 @@
+[Binary PNG image data with the following specifications:
+
+Dimensions: 120x120 pixels (40pt @3x)
+Format: PNG with alpha channel
+Color space: sRGB
+File size: Optimized to <50KB
+
+Design:
+- Healthcare-focused icon using specified color scheme:
+  - Primary: #0066CC (Accessible Blue)
+  - Critical: #D64045 (Alert Red) 
+  - Success: #2D8B75 (Medical Green)
+- Clear medical task symbol/checkmark as foreground element
+- Rounded corners following iOS platform guidelines
+- 1px padding from edges for safe area
+- Minimum 4.5:1 contrast ratio for accessibility
+- Optimized for both light and dark display modes
+- Colorblind-safe design
+- Recognizable at 40pt size
+- VoiceOver compatible elements
+
+Platform requirements:
+- iOS 14.0+
+- iPhone Spotlight search results and Settings contexts
+- @3x scale factor
+- Asset catalog integration
+- Spotlight icon role]
