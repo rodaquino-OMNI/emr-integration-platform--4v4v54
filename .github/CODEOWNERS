@@ -1,0 +1,38 @@
+# Ensures security oversight on all changes
+* @global-owners @security-team
+
+# Mobile application code
+src/android/* @mobile-team
+src/ios/* @mobile-team
+
+# Backend services
+src/backend/* @backend-team
+
+# Web dashboard
+src/web/* @frontend-team
+
+# Infrastructure and deployment
+infrastructure/* @devops-team @security-team
+.github/workflows/* @devops-team @security-team
+
+# Healthcare data handling components require additional review
+src/backend/packages/emr-service/* @backend-team @healthcare-experts @compliance-team
+
+# Security-critical services
+src/backend/packages/auth-service/* @backend-team @security-team
+src/backend/packages/encryption-service/* @backend-team @security-team
+
+# Test files
+src/**/tests/* @qa-team
+
+# Documentation
+*.md @docs-team
+
+# Dependency management requires security review
+package*.json @security-team @devops-team
+
+# Security configurations
+**/security.* @security-team
+
+# Container configurations
+**/Dockerfile* @devops-team @security-team
