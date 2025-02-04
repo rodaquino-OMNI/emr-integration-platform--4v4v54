@@ -1,0 +1,172 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "filebeat.fullname" . }}
+  labels:
+    app.kubernetes.io/name: filebeat
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: observability
+    # Version label for tracking
+    app.kubernetes.io/version: {{ .Values.filebeat.image.tag | quote }}
+  annotations:
+    # Checksum annotation to force pod updates when config changes
+    checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    # Documentation for configuration source
+    helm.sh/configuration-source: "https://www.elastic.co/guide/en/beats/filebeat/current/running-on-kubernetes.html"
+
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: filebeat
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  
+  # Rolling update strategy to maintain log collection
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: filebeat
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: logging
+      annotations:
+        # Prometheus metrics scraping configuration
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5066"
+        prometheus.io/path: "/metrics"
+        # Enable Elastic Common Schema (ECS) logging
+        co.elastic.logs/enabled: "true"
+
+    spec:
+      serviceAccountName: {{ template "filebeat.fullname" . }}
+      terminationGracePeriodSeconds: 30
+      # Required for container log access
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      
+      # Security context for the pod
+      securityContext:
+        runAsNonRoot: false
+        fsGroup: 0
+
+      containers:
+      - name: filebeat
+        image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
+        imagePullPolicy: {{ .Values.filebeat.image.pullPolicy }}
+        args: ["-c", "/etc/filebeat.yml", "-e"]
+        
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: ELASTICSEARCH_HOSTS
+          value: {{ template "elasticsearch.fullname" . }}-headless:9200
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        # Add beat.k8s fields
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+
+        securityContext:
+          runAsUser: 0
+          # Required for log file access
+          privileged: true
+
+        resources:
+          requests:
+            cpu: {{ .Values.filebeat.resources.requests.cpu | quote }}
+            memory: {{ .Values.filebeat.resources.requests.memory | quote }}
+          limits:
+            cpu: {{ .Values.filebeat.resources.limits.cpu | quote }}
+            memory: {{ .Values.filebeat.resources.limits.memory | quote }}
+
+        volumeMounts:
+        - name: config
+          mountPath: /etc/filebeat.yml
+          subPath: filebeat.yml
+          readOnly: true
+        - name: data
+          mountPath: /usr/share/filebeat/data
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+
+        # Health checks
+        livenessProbe:
+          exec:
+            command:
+            - filebeat
+            - test
+            - config
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 10
+          
+        readinessProbe:
+          exec:
+            command:
+            - filebeat
+            - test
+            - output
+          initialDelaySeconds: 15
+          periodSeconds: 30
+          timeoutSeconds: 5
+
+        # Lifecycle hooks for graceful shutdown
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/usr/bin/filebeat", "stop"]
+
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "filebeat.fullname" . }}-config
+          defaultMode: 0600
+      - name: data
+        hostPath:
+          path: /var/lib/filebeat-data
+          type: DirectoryOrCreate
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: varlog
+        hostPath:
+          path: /var/log
+
+      # Node affinity to ensure proper scheduling
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
+      # Tolerate all taints to ensure log collection on all nodes
+      tolerations:
+      - operator: Exists
+
+      # Ensure Filebeat pods are spread across nodes
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfied: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: filebeat
+            app.kubernetes.io/instance: {{ .Release.Name }}
