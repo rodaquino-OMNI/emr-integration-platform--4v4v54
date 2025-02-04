@@ -1,0 +1,290 @@
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A2B3C4D5E6F7G8H9I0J /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3C4D5E6F7G8H9I0J1A /* AppDelegate.swift */; };
+		2B3C4D5E6F7G8H9I0J1A /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4D5E6F7G8H9I0J1A2B /* SceneDelegate.swift */; };
+		3C4D5E6F7G8H9I0J1A2B /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5E6F7G8H9I0J1A2B3C /* Constants.swift */; };
+		4D5E6F7G8H9I0J1A2B3C /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6F7G8H9I0J1A2B3C4D /* Logger.swift */; };
+		5E6F7G8H9I0J1A2B3C4D /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7G8H9I0J1A2B3C4D5E /* NetworkMonitor.swift */; };
+		6F7G8H9I0J1A2B3C4D5E /* OfflineDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7G8H9I0J1A2B3C4D5E6F /* OfflineDatabase.swift */; };
+		7G8H9I0J1A2B3C4D5E6F /* DatabaseMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8H9I0J1A2B3C4D5E6F7G /* DatabaseMigration.swift */; };
+		8H9I0J1A2B3C4D5E6F7G /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9I0J1A2B3C4D5E6F7G8H /* SyncManager.swift */; };
+		9I0J1A2B3C4D5E6F7G8H /* CRDTManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0J1A2B3C4D5E6F7G8H9I /* CRDTManager.swift */; };
+		0J1A2B3C4D5E6F7G8H9I /* SyncWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J /* SyncWorker.swift */; };
+		/* Firebase Dependencies */
+		A1B2C3D4E5F6G7H8I9J0 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B2C3D4E5F6G7H8I9J0A1 /* FirebaseAnalytics */; };
+		B2C3D4E5F6G7H8I9J0A1 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = C3D4E5F6G7H8I9J0A1B2 /* FirebaseCrashlytics */; };
+		/* KeychainAccess Dependencies */
+		C3D4E5F6G7H8I9J0A1B2 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D4E5F6G7H8I9J0A1B2C3 /* KeychainAccess */; };
+		/* Realm Dependencies */
+		D4E5F6G7H8I9J0A1B2C3 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E5F6G7H8I9J0A1B2C3D4 /* RealmSwift */; };
+		/* MLKit Dependencies */
+		E5F6G7H8I9J0A1B2C3D4 /* MLKitBarcodeScanning in Frameworks */ = {isa = PBXBuildFile; productRef = F6G7H8I9J0A1B2C3D4E5 /* MLKitBarcodeScanning */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		2B3C4D5E6F7G8H9I0J1A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		3C4D5E6F7G8H9I0J1A2B /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		4D5E6F7G8H9I0J1A2B3C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		5E6F7G8H9I0J1A2B3C4D /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		6F7G8H9I0J1A2B3C4D5E /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		7G8H9I0J1A2B3C4D5E6F /* OfflineDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineDatabase.swift; sourceTree = "<group>"; };
+		8H9I0J1A2B3C4D5E6F7G /* DatabaseMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseMigration.swift; sourceTree = "<group>"; };
+		9I0J1A2B3C4D5E6F7G8H /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
+		0J1A2B3C4D5E6F7G8H9I /* CRDTManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CRDTManager.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F7G8H9I0J /* SyncWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncWorker.swift; sourceTree = "<group>"; };
+		/* Configuration Files */
+		F7G8H9I0J1A2B3C4D5E6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		G8H9I0J1A2B3C4D5E6F7 /* EMRTask.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EMRTask.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		H9I0J1A2B3C4D5E6F7G8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D4E5F6G7H8I9J0 /* FirebaseAnalytics in Frameworks */,
+				B2C3D4E5F6G7H8I9J0A1 /* FirebaseCrashlytics in Frameworks */,
+				C3D4E5F6G7H8I9J0A1B2 /* KeychainAccess in Frameworks */,
+				D4E5F6G7H8I9J0A1B2C3 /* RealmSwift in Frameworks */,
+				E5F6G7H8I9J0A1B2C3D4 /* MLKitBarcodeScanning in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		I0J1A2B3C4D5E6F7G8H9 = {
+			isa = PBXGroup;
+			children = (
+				J1A2B3C4D5E6F7G8H9I0 /* EMRTask */,
+				K2B3C4D5E6F7G8H9I0J1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		J1A2B3C4D5E6F7G8H9I0 /* EMRTask */ = {
+			isa = PBXGroup;
+			children = (
+				L3C4D5E6F7G8H9I0J1A2 /* Application */,
+				M4D5E6F7G8H9I0J1A2B3 /* Utils */,
+				N5E6F7G8H9I0J1A2B3C4 /* Database */,
+				O6F7G8H9I0J1A2B3C4D5 /* Sync */,
+				P7G8H9I0J1A2B3C4D5E6 /* Supporting Files */,
+			);
+			path = EMRTask;
+			sourceTree = "<group>";
+		};
+		L3C4D5E6F7G8H9I0J1A2 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				2B3C4D5E6F7G8H9I0J1A /* AppDelegate.swift */,
+				3C4D5E6F7G8H9I0J1A2B /* SceneDelegate.swift */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		M4D5E6F7G8H9I0J1A2B3 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				4D5E6F7G8H9I0J1A2B3C /* Constants.swift */,
+				5E6F7G8H9I0J1A2B3C4D /* Logger.swift */,
+				6F7G8H9I0J1A2B3C4D5E /* NetworkMonitor.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		N5E6F7G8H9I0J1A2B3C4 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				7G8H9I0J1A2B3C4D5E6F /* OfflineDatabase.swift */,
+				8H9I0J1A2B3C4D5E6F7G /* DatabaseMigration.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		O6F7G8H9I0J1A2B3C4D5 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				9I0J1A2B3C4D5E6F7G8H /* SyncManager.swift */,
+				0J1A2B3C4D5E6F7G8H9I /* CRDTManager.swift */,
+				1A2B3C4D5E6F7G8H9I0J /* SyncWorker.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
+		P7G8H9I0J1A2B3C4D5E6 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				F7G8H9I0J1A2B3C4D5E6 /* Info.plist */,
+				G8H9I0J1A2B3C4D5E6F7 /* EMRTask.entitlements */,
+			);
+			path = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		Q8H9I0J1A2B3C4D5E6F7G /* EMRTask */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = R9I0J1A2B3C4D5E6F7G8H /* Build configuration list for PBXNativeTarget "EMRTask" */;
+			buildPhases = (
+				S0J1A2B3C4D5E6F7G8H9I /* SwiftLint */,
+				T1A2B3C4D5E6F7G8H9I0J /* Sources */,
+				U2B3C4D5E6F7G8H9I0J1A /* Frameworks */,
+				V3C4D5E6F7G8H9I0J1A2B /* Resources */,
+				W4D5E6F7G8H9I0J1A2B3C /* Firebase Crashlytics */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EMRTask;
+			packageProductDependencies = (
+				X5E6F7G8H9I0J1A2B3C4D /* FirebaseAnalytics */,
+				Y6F7G8H9I0J1A2B3C4D5E /* FirebaseCrashlytics */,
+				Z7G8H9I0J1A2B3C4D5E6F /* KeychainAccess */,
+				A8H9I0J1A2B3C4D5E6F7G /* RealmSwift */,
+				B9I0J1A2B3C4D5E6F7G8H /* MLKitBarcodeScanning */,
+			);
+			productName = EMRTask;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin XCBuildConfiguration section */
+		C0J1A2B3C4D5E6F7G8H9I /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_ENTITLEMENTS = EMRTask/EMRTask.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emrtask.app;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D1A2B3C4D5E6F7G8H9I0J /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_ENTITLEMENTS = EMRTask/EMRTask.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emrtask.app;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E2B3C4D5E6F7G8H9I0J1A /* Build configuration list for PBXProject "EMRTask" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0J1A2B3C4D5E6F7G8H9I /* Debug */,
+				D1A2B3C4D5E6F7G8H9I0J /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F3C4D5E6F7G8H9I0J1A2B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.0.0;
+			};
+		};
+		G4D5E6F7G8H9I0J1A2B3C /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.2.0;
+			};
+		};
+		H5E6F7G8H9I0J1A2B3C4 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.42.0;
+			};
+		};
+		I6F7G8H9I0J1A2B3C4D5 /* XCRemoteSwiftPackageReference "mlkit-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlesamples/mlkit-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+	};
+	rootObject = J7G8H9I0J1A2B3C4D5E6 /* Project object */;
+}
