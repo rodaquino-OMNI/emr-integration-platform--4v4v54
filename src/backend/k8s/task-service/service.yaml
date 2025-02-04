@@ -1,0 +1,53 @@
+# Kubernetes Service configuration for Task Management Service
+# Version: v1
+# External dependency: kubernetes/k8s-api v1
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: task-service
+  namespace: default
+  labels:
+    app: task-service
+    component: backend
+    part-of: emr-task-platform
+    version: v1
+    managed-by: kubernetes
+  annotations:
+    # Prometheus monitoring configuration
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+    # Istio service mesh integration
+    sidecar.istio.io/inject: "true"
+    service.istio.io/canonical-name: "task-service"
+    service.istio.io/canonical-revision: "v1"
+
+spec:
+  # Internal cluster access only for security
+  type: ClusterIP
+  
+  # Service ports configuration
+  ports:
+    # Main application port
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+    # Metrics collection port
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: metrics
+  
+  # Pod selector for service-pod matching
+  selector:
+    app: task-service
+    component: backend
+  
+  # Session handling configuration
+  sessionAffinity: None
+  
+  # Pod readiness configuration
+  publishNotReadyAddresses: false
