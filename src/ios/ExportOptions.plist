@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Distribution method set to App Store for controlled release -->
+    <key>method</key>
+    <string>app-store</string>
+
+    <!-- Apple Developer Team ID for secure code signing -->
+    <key>teamID</key>
+    <string>$(DEVELOPMENT_TEAM)</string>
+
+    <!-- Automated code signing for consistent security -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- Provisioning profile mapping for secure distribution -->
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.emrtask.app</key>
+        <string>EMRTask_AppStore_Profile</string>
+    </dict>
+
+    <!-- Enable Swift symbol stripping for optimized size -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+
+    <!-- Disable bitcode compilation for faster updates -->
+    <key>compileBitcode</key>
+    <false/>
+
+    <!-- No thinning to support all device variants -->
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+
+    <!-- Enable debug symbol upload for monitoring -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Disable bitcode upload to optimize distribution -->
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Production environment for iCloud services -->
+    <key>iCloudContainerEnvironment</key>
+    <string>Production</string>
+</dict>
+</plist>
