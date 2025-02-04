@@ -1,0 +1,36 @@
+apiVersion: v2
+name: emr-logging
+version: 1.0.0
+appVersion: 1.0.0
+description: Centralized logging stack for EMR Task Management platform with Elasticsearch, Kibana, and Filebeat, optimized for healthcare compliance and monitoring
+type: application
+
+keywords:
+  - logging
+  - elasticsearch
+  - kibana
+  - filebeat
+  - healthcare
+  - emr
+  - hipaa-compliant
+  - audit-logging
+
+maintainers:
+  - name: EMR Task Platform Team
+    email: platform@emrtask.com
+
+dependencies:
+  - name: elasticsearch
+    version: 7.17.3
+    repository: https://helm.elastic.co
+    condition: elasticsearch.enabled
+  
+  - name: kibana
+    version: 7.17.3
+    repository: https://helm.elastic.co
+    condition: kibana.enabled
+  
+  - name: filebeat
+    version: 7.17.3
+    repository: https://helm.elastic.co
+    condition: filebeat.enabled
