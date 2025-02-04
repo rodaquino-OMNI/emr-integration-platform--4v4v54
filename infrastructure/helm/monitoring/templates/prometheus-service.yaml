@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.prometheus.server.service.name | default "prometheus-server" }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: prometheus
+    component: server
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    {{- if .Values.prometheus.server.service.labels }}
+    {{- toYaml .Values.prometheus.server.service.labels | nindent 4 }}
+    {{- end }}
+  annotations:
+    # Enable Prometheus service discovery
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+    # Internal load balancer annotation for AWS
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+    {{- if .Values.prometheus.server.service.annotations }}
+    {{- toYaml .Values.prometheus.server.service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.prometheus.server.service.type | default "ClusterIP" }}
+  {{- if eq .Values.prometheus.server.service.type "LoadBalancer" }}
+  loadBalancerIP: {{ .Values.prometheus.server.service.loadBalancerIP | quote }}
+  {{- end }}
+  ports:
+    - port: {{ .Values.prometheus.server.service.servicePort | default 9090 }}
+      targetPort: {{ .Values.prometheus.server.service.targetPort | default 9090 }}
+      protocol: TCP
+      name: http-prometheus
+      {{- if .Values.prometheus.server.service.nodePort }}
+      nodePort: {{ .Values.prometheus.server.service.nodePort }}
+      {{- end }}
+  selector:
+    app: prometheus
+    component: server
+    release: {{ .Release.Name }}
+  sessionAffinity: {{ .Values.prometheus.server.service.sessionAffinity | default "None" }}
+  {{- if .Values.prometheus.server.service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+    {{- toYaml .Values.prometheus.server.service.sessionAffinityConfig | nindent 4 }}
+  {{- end }}
+  publishNotReadyAddresses: {{ .Values.prometheus.server.service.publishNotReadyAddresses | default false }}
+  {{- if .Values.prometheus.server.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.prometheus.server.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if .Values.prometheus.server.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml .Values.prometheus.server.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
