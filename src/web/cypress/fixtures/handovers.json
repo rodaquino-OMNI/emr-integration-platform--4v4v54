@@ -1,0 +1,253 @@
+// @version 1.0.0
+// Core types for handover package management in EMR-integrated task system
+
+import { DateTime } from 'luxon'; // @version 3.4.0
+import { v4 as uuidv4 } from 'uuid'; // @version 9.0.0
+
+// Shift types supported by the system
+export enum ShiftType {
+    MORNING = 'MORNING',
+    AFTERNOON = 'AFTERNOON',
+    NIGHT = 'NIGHT'
+}
+
+// Status enums for various components
+export enum HandoverStatus {
+    READY = 'READY',
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+    FAILED = 'FAILED'
+}
+
+export enum VerificationState {
+    PENDING = 'PENDING',
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+    FAILED = 'FAILED'
+}
+
+export enum TaskStatus {
+    PENDING = 'PENDING',
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+    CANCELLED = 'CANCELLED'
+}
+
+export enum Priority {
+    LOW = 'LOW',
+    MEDIUM = 'MEDIUM',
+    HIGH = 'HIGH'
+}
+
+// EMR verification interfaces
+export interface EMRVerification {
+    status: 'VERIFIED' | 'UNVERIFIED' | 'FAILED';
+    timestamp: string;
+    method: 'BARCODE_SCAN' | 'MANUAL' | 'AUTOMATED';
+}
+
+export interface EMRData {
+    system: string;
+    version: string;
+    data: Record<string, any>;
+    verification: EMRVerification;
+}
+
+// Vector clock for distributed consistency
+export interface VectorClock {
+    [key: string]: number;
+}
+
+// Shift information
+export interface Shift {
+    type: ShiftType;
+    startTime: string;
+    endTime: string;
+    staff: string[];
+    department: string;
+}
+
+// Task management
+export interface Task {
+    id: string;
+    title: string;
+    description: string;
+    status: TaskStatus;
+    priority: Priority;
+    dueDate: string;
+    assignedTo: string;
+    patientId: string;
+    emrData: EMRData;
+    verificationStatus: 'VERIFIED' | 'UNVERIFIED' | 'FAILED';
+    handoverStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+    handoverNotes?: string;
+    reassignedTo?: string;
+    vectorClock: VectorClock;
+}
+
+// Critical event tracking
+export interface CriticalEvent {
+    id: string;
+    patientId: string;
+    description: string;
+    timestamp: string;
+    reportedBy: string;
+    priority: Priority;
+    status: 'ACTIVE' | 'RESOLVED';
+    resolution?: {
+        status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+        actions: string[];
+        nextCheck?: string;
+    };
+    emrReference: {
+        system: string;
+        recordId: string;
+        timestamp: string;
+    };
+}
+
+// Offline synchronization status
+export interface OfflineSync {
+    lastSynced: string;
+    pendingChanges: number;
+    conflictResolution: 'NONE' | 'MANUAL' | 'AUTO';
+}
+
+// Verification status tracking
+export interface VerificationStatus {
+    state: VerificationState;
+    lastVerified: string;
+    verifiedBy: string;
+    retryCount: number;
+    timeout?: string;
+}
+
+// Main handover package interface
+export interface HandoverPackage {
+    id: string;
+    fromShift: Shift;
+    toShift: Shift;
+    status: HandoverStatus;
+    verificationStatus: VerificationStatus;
+    tasks: Task[];
+    criticalEvents: CriticalEvent[];
+    notes?: string;
+    createdAt: string;
+    completedAt?: string;
+    vectorClock: VectorClock;
+    offlineSync: OfflineSync;
+}
+
+// Handover package collection
+export interface HandoverPackages {
+    handoverPackages: HandoverPackage[];
+}
+
+// Utility functions for handover package management
+export class HandoverPackageManager {
+    /**
+     * Creates a new handover package
+     */
+    public static createHandoverPackage(
+        fromShift: Shift,
+        toShift: Shift,
+        tasks: Task[],
+        criticalEvents: CriticalEvent[] = []
+    ): HandoverPackage {
+        return {
+            id: uuidv4(),
+            fromShift,
+            toShift,
+            status: HandoverStatus.READY,
+            verificationStatus: {
+                state: VerificationState.PENDING,
+                lastVerified: DateTime.now().toISO(),
+                verifiedBy: fromShift.staff[0],
+                retryCount: 0
+            },
+            tasks,
+            criticalEvents,
+            createdAt: DateTime.now().toISO(),
+            vectorClock: {
+                system: 1,
+                [fromShift.staff[0]]: 1
+            },
+            offlineSync: {
+                lastSynced: DateTime.now().toISO(),
+                pendingChanges: 0,
+                conflictResolution: 'NONE'
+            }
+        };
+    }
+
+    /**
+     * Validates a handover package
+     */
+    public static validateHandoverPackage(handoverPackage: HandoverPackage): boolean {
+        // Validate shift times
+        const fromShiftEnd = DateTime.fromISO(handoverPackage.fromShift.endTime);
+        const toShiftStart = DateTime.fromISO(handoverPackage.toShift.startTime);
+        
+        if (!fromShiftEnd.equals(toShiftStart)) {
+            return false;
+        }
+
+        // Validate tasks
+        for (const task of handoverPackage.tasks) {
+            if (!task.id || !task.patientId || !task.emrData) {
+                return false;
+            }
+        }
+
+        // Validate critical events
+        for (const event of handoverPackage.criticalEvents) {
+            if (!event.id || !event.patientId || !event.emrReference) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Merges vector clocks for conflict resolution
+     */
+    public static mergeVectorClocks(clock1: VectorClock, clock2: VectorClock): VectorClock {
+        const mergedClock: VectorClock = { ...clock1 };
+        
+        for (const [key, value] of Object.entries(clock2)) {
+            mergedClock[key] = Math.max(mergedClock[key] || 0, value);
+        }
+        
+        return mergedClock;
+    }
+
+    /**
+     * Updates handover package status with verification
+     */
+    public static updateVerificationStatus(
+        handoverPackage: HandoverPackage,
+        verifiedBy: string,
+        state: VerificationState
+    ): HandoverPackage {
+        return {
+            ...handoverPackage,
+            verificationStatus: {
+                ...handoverPackage.verificationStatus,
+                state,
+                lastVerified: DateTime.now().toISO(),
+                verifiedBy,
+                retryCount: state === VerificationState.FAILED 
+                    ? handoverPackage.verificationStatus.retryCount + 1 
+                    : handoverPackage.verificationStatus.retryCount
+            },
+            vectorClock: {
+                ...handoverPackage.vectorClock,
+                [verifiedBy]: (handoverPackage.vectorClock[verifiedBy] || 0) + 1,
+                system: handoverPackage.vectorClock.system + 1
+            }
+        };
+    }
+}
+
+export default HandoverPackages;
