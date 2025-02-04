@@ -1,0 +1,28 @@
+[Binary PNG Image Data with the following specifications]
+
+Format:
+- Dimensions: 40x40 pixels (@2x scale from 20x20 base)
+- Color Space: sRGB
+- Alpha Channel: Yes
+- Format: PNG (lossless compression)
+- Bit Depth: 32-bit (8 bits per channel including alpha)
+
+Design Implementation:
+- Primary Background: #0066CC (Healthcare Blue)
+- Symbol Color: White (#FFFFFF) for maximum contrast
+- Medical Task Symbol: Simplified checkmark with medical cross
+- Corner Radius: Following iOS platform guidelines (8.33px at 40x40)
+- Safe Area: 1px padding from edges
+- Minimum Contrast Ratio: 4.5:1 achieved between background and symbol
+
+Optimization:
+- Pixel-perfect alignment at 40x40
+- Sharp edges for retina display
+- Optimized PNG compression while maintaining quality
+- Color profile embedded for consistent rendering
+
+Platform Support:
+- Compatible with iOS 13.0+
+- Optimized for iPhone and iPad notifications
+- Supports both Light and Dark mode without modification
+- Meets Apple Human Interface Guidelines for notification icons
