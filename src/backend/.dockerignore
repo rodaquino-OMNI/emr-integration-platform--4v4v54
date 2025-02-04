@@ -1,0 +1,40 @@
+node_modules
+package-lock.json
+yarn.lock
+
+# Development artifacts
+.git
+.gitignore
+.vscode
+.idea
+*.tsbuildinfo
+
+# Build outputs
+dist
+build
+coverage
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+test
+tests
+
+# Configuration and environment
+.env*
+config/*.json
+
+# Documentation
+*.md
+docs
+
+# Logs and temporary files
+*.log
+*.pid
+*.pid.lock
+
+# Docker files
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+!Dockerfile
