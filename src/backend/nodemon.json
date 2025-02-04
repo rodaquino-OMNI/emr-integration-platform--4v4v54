@@ -1,0 +1,37 @@
+{
+  "watch": [
+    "packages/*/src/**/*.ts",
+    "packages/*/test/**/*.ts",
+    "packages/*/config/**/*.json"
+  ],
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.d.ts",
+    ".git",
+    "node_modules",
+    "dist",
+    "coverage",
+    "docs"
+  ],
+  "ext": "ts,json",
+  "exec": "ts-node -r tsconfig-paths/register ./packages/api-gateway/src/server.ts",
+  "env": {
+    "NODE_ENV": "development",
+    "TS_NODE_PROJECT": "./tsconfig.json",
+    "DEBUG": "app:*"
+  },
+  "delay": "1000",
+  "verbose": true,
+  "restartable": "rs",
+  "colours": true,
+  "events": {
+    "start": "echo '\u001b[32mStarting EMR Task Management API...\u001b[0m'",
+    "restart": "echo '\u001b[33mRestarting EMR Task Management API...\u001b[0m'",
+    "crash": "echo '\u001b[31mEMR Task Management API crashed - waiting for changes before restarting...\u001b[0m'",
+    "exit": "echo '\u001b[36mEMR Task Management API stopped\u001b[0m'"
+  },
+  "legacyWatch": false,
+  "polling": false,
+  "signal": "SIGTERM"
+}
