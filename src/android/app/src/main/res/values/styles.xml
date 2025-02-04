@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    EMR Task Management Application Styles
+    - WCAG 2.1 AA compliant with minimum contrast ratio of 4.5:1
+    - Healthcare-optimized UI components
+    - Minimum touch targets of 48dp
+    - Screen reader and TalkBack support
+    - Dynamic text scaling support
+    - Material Design 1.9.0 base styles
+-->
+<resources>
+    <!-- Base Button Style -->
+    <style name="Widget.EMRTask.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:textColor">@color/color_on_primary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:hapticFeedbackEnabled">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:accessibilityLiveRegion">polite</item>
+        <item name="backgroundTint">@color/color_primary</item>
+        <item name="rippleColor">@color/color_primary_dark</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="elevation">2dp</item>
+    </style>
+
+    <!-- Critical Action Button Style -->
+    <style name="Widget.EMRTask.Button.Critical">
+        <item name="backgroundTint">@color/color_task_critical</item>
+        <item name="rippleColor">@color/color_error_dark</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:contentDescription">Critical action button</item>
+    </style>
+
+    <!-- Success Action Button Style -->
+    <style name="Widget.EMRTask.Button.Success">
+        <item name="backgroundTint">@color/color_task_success</item>
+        <item name="rippleColor">@color/color_secondary_dark</item>
+        <item name="android:contentDescription">Success action button</item>
+    </style>
+
+    <!-- Task Card Style -->
+    <style name="Widget.EMRTask.TaskCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardElevation">2dp</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="contentPadding">16dp</item>
+        <item name="cardBackgroundColor">@color/color_card_background</item>
+        <item name="rippleColor">@color/color_primary_variant</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:stateListAnimator">@animator/card_state_list_anim</item>
+        <item name="android:minHeight">88dp</item>
+    </style>
+
+    <!-- Task Card Title Style -->
+    <style name="TextAppearance.EMRTask.TaskCard.Title" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Task Card Body Style -->
+    <style name="TextAppearance.EMRTask.TaskCard.Body" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <!-- Scanner View Style -->
+    <style name="Widget.EMRTask.Scanner" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:keepScreenOn">true</item>
+        <item name="android:importantForAccessibility">yes</item>
+        <item name="android:contentDescription">Barcode scanner view</item>
+    </style>
+
+    <!-- Scanner Overlay Style -->
+    <style name="Widget.EMRTask.Scanner.Overlay">
+        <item name="android:background">@drawable/scanner_overlay_background</item>
+        <item name="scannerBorderColor">@color/color_primary</item>
+        <item name="scannerBorderWidth">2dp</item>
+        <item name="android:contentDescription">Scanner targeting overlay</item>
+    </style>
+
+    <!-- Form Input Style -->
+    <style name="Widget.EMRTask.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/color_primary</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
+        <item name="errorTextColor">@color/color_error</item>
+        <item name="errorIconTint">@color/color_error</item>
+        <item name="hintTextColor">@color/color_primary</item>
+        <item name="android:minHeight">56dp</item>
+    </style>
+
+    <!-- Status Badge Style -->
+    <style name="Widget.EMRTask.StatusBadge">
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:textColor">@color/color_on_primary</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:minHeight">24dp</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <!-- Critical Status Badge Style -->
+    <style name="Widget.EMRTask.StatusBadge.Critical">
+        <item name="android:background">@color/color_task_critical</item>
+        <item name="android:contentDescription">Critical status indicator</item>
+    </style>
+
+    <!-- Success Status Badge Style -->
+    <style name="Widget.EMRTask.StatusBadge.Success">
+        <item name="android:background">@color/color_task_success</item>
+        <item name="android:contentDescription">Success status indicator</item>
+    </style>
+
+    <!-- Divider Style -->
+    <style name="Widget.EMRTask.Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/color_divider</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+</resources>
