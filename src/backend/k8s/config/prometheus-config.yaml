@@ -1,0 +1,151 @@
+# Prometheus Server Configuration v2.44+
+# Implements comprehensive monitoring for EMR Task Management platform
+# Supports 99.99% uptime SLA monitoring with optimized scraping
+
+global:
+  # Global settings with optimized intervals for high-frequency monitoring
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    environment: production
+    cluster: emr-task
+    region: ${REGION}
+    datacenter: ${DATACENTER}
+
+# Comprehensive rule files for alerts and recording rules
+rule_files:
+  - /etc/prometheus/rules/alert.rules
+  - /etc/prometheus/rules/recording.rules
+  - /etc/prometheus/rules/sla.rules
+  - /etc/prometheus/rules/emr.rules
+
+# Scrape configurations for various Kubernetes components
+scrape_configs:
+  # Kubernetes API Server monitoring
+  - job_name: kubernetes-apiservers
+    kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - default
+            - emr-task
+            - monitoring
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      insecure_skip_verify: false
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+  # Node monitoring configuration
+  - job_name: kubernetes-nodes
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+      - source_labels: [__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone]
+        target_label: zone
+
+  # Service monitoring with annotation-based discovery
+  - job_name: kubernetes-services
+    kubernetes_sd_configs:
+      - role: service
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+
+  # Pod monitoring with metrics port discovery
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: metrics
+
+  # EMR Service specific monitoring
+  - job_name: emr-service
+    metrics_path: /metrics
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names: [emr-task]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        action: keep
+        regex: emr-service
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+
+  # API Gateway monitoring
+  - job_name: api-gateway
+    metrics_path: /metrics
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names: [emr-task]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        action: keep
+        regex: api-gateway
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+
+# High-availability Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager-0.alertmanager:9093
+          - alertmanager-1.alertmanager:9093
+          - alertmanager-2.alertmanager:9093
+      scheme: http
+      timeout: 5s
+      api_version: v2
+
+# Additional scrape configs for SLA monitoring
+  - job_name: sla-monitoring
+    metrics_path: /metrics
+    scrape_interval: 10s
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names: [emr-task]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_sla]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_sla_target]
+        target_label: sla_target
+
+  # Performance metrics collection
+  - job_name: performance-metrics
+    metrics_path: /metrics
+    scrape_interval: 30s
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_performance]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod_name
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
