@@ -1,0 +1,46 @@
+# Istio Gateway configuration v1beta1
+# External traffic entry point for EMR Task Management platform
+# TLS version: 1.2+
+# Certificate rotation: 90 days
+# High-availability ingress with security features
+
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: emr-task-gateway
+  namespace: emr-task
+  labels:
+    app: emr-task
+    component: gateway
+    version: v1
+  annotations:
+    cert-manager.io/rotation-deadline: "90d"
+    monitoring.istio.io/scrape: "true"
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    # Primary HTTPS server configuration
+    - port:
+        number: 443
+        name: https-primary
+        protocol: HTTPS
+      hosts:
+        - "*.emrtask.com"
+      tls:
+        mode: SIMPLE
+        credentialName: emrtask-tls-cert
+        minProtocolVersion: TLSV1_2
+        cipherSuites:
+          - ECDHE-ECDSA-AES256-GCM-SHA384
+          - ECDHE-RSA-AES256-GCM-SHA384
+
+    # HTTP redirect server configuration
+    - port:
+        number: 80
+        name: http-redirect
+        protocol: HTTP
+      hosts:
+        - "*.emrtask.com"
+      tls:
+        httpsRedirect: true
