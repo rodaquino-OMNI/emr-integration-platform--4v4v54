@@ -1,0 +1,117 @@
+# Default values for handover-service Helm chart
+# This is a YAML-formatted file.
+
+# Number of replicas for high availability (99.99% uptime)
+replicaCount: 3
+
+# Override name and fullname if needed
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  # Docker image repository
+  repository: handover-service
+  # Image pull policy
+  pullPolicy: IfNotPresent
+  # Image tag (immutable tags are recommended)
+  tag: "1.0.0"
+
+service:
+  # Service type
+  type: ClusterIP
+  # Service port
+  port: 3000
+  # Service annotations for Prometheus metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
+    prometheus.io/path: "/metrics"
+
+# Resource limits and requests for production workloads
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Health check probe configuration
+probes:
+  liveness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  readiness:
+    httpGet:
+      path: /ready
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+  startup:
+    httpGet:
+      path: /startup
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+    successThreshold: 1
+
+# Security context for container hardening
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+
+# Node selector for Linux nodes
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Pod tolerations
+tolerations: []
+
+# Pod anti-affinity for high availability
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - handover-service
+          topologyKey: kubernetes.io/hostname
+
+# Pod disruption budget for availability
+podDisruptionBudget:
+  minAvailable: 2
+
+# Horizontal pod autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
