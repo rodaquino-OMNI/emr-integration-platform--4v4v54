@@ -1,0 +1,15 @@
+# Fastlane Appfile
+# Version: 2.212.2
+# Purpose: Global Apple credentials and app identifiers configuration for automated iOS build and deployment
+
+# App bundle identifier for the EMR Task Management Platform
+app_identifier("com.emrtask.app")
+
+# Apple Developer account email from environment variable for security
+apple_id(ENV["APPLE_ID"])
+
+# Apple Developer Team ID from environment variable
+team_id(ENV["TEAM_ID"])
+
+# App Store Connect Team ID from environment variable
+itc_team_id(ENV["ITC_TEAM_ID"])
