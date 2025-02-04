@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base EMR Task Management application theme for night mode -->
+    <style name="Theme.EMRTask" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand colors -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryVariant">@color/color_primary_variant</item>
+        <item name="colorPrimaryDark">@color/color_primary_dark</item>
+        <item name="colorOnPrimary">@color/color_on_primary</item>
+
+        <!-- Secondary brand colors -->
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_variant</item>
+        <item name="colorOnSecondary">@color/color_on_secondary</item>
+
+        <!-- Status colors -->
+        <item name="colorError">@color/color_error</item>
+        <item name="colorCritical">@color/color_task_critical</item>
+        <item name="colorSuccess">@color/color_task_success</item>
+        <item name="colorWarning">@color/color_task_warning</item>
+        <item name="colorInfo">@color/color_task_info</item>
+
+        <!-- Surface colors -->
+        <item name="android:colorBackground">@color/color_background</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnBackground">@color/color_on_background</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+        <item name="colorOnError">@color/color_on_error</item>
+
+        <!-- System bars -->
+        <item name="android:statusBarColor">@color/color_status_bar</item>
+        <item name="android:navigationBarColor">@color/color_navigation_bar</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/color_on_background</item>
+        <item name="android:textColorSecondary">@color/color_on_surface</item>
+        <item name="android:textColorHint">#78FFFFFF</item>
+
+        <!-- Material theme attributes -->
+        <item name="elevationOverlayEnabled">true</item>
+        <item name="elevationOverlayColor">@color/color_surface</item>
+        <item name="materialCardViewStyle">@style/Widget.EMRTask.CardView</item>
+        <item name="materialButtonStyle">@style/Widget.EMRTask.Button</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.EMRTask.MaterialAlertDialog</item>
+    </style>
+
+    <!-- No action bar theme variant for immersive medical task views -->
+    <style name="Theme.EMRTask.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <!-- Card style for medical task cards -->
+    <style name="Widget.EMRTask.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/color_card_background</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="contentPadding">16dp</item>
+    </style>
+
+    <!-- Button style optimized for night visibility -->
+    <style name="Widget.EMRTask.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/color_on_primary</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.025</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <!-- Alert dialog style for critical notifications -->
+    <style name="ThemeOverlay.EMRTask.MaterialAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+        <item name="alertDialogStyle">@style/MaterialAlertDialog.EMRTask</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.EMRTask.Title</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.EMRTask.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.EMRTask.Button.Text</item>
+    </style>
+
+    <!-- Alert dialog specific styles -->
+    <style name="MaterialAlertDialog.EMRTask" parent="MaterialAlertDialog.MaterialComponents">
+        <item name="shapeAppearance">@style/ShapeAppearance.EMRTask.MediumComponent</item>
+        <item name="backgroundTint">@color/color_surface</item>
+    </style>
+
+    <style name="MaterialAlertDialog.EMRTask.Title" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/color_on_surface</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Text button style -->
+    <style name="Widget.EMRTask.Button.Text" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/color_primary</item>
+        <item name="rippleColor">@color/color_primary_variant</item>
+    </style>
+
+    <!-- Shape appearance for medium components -->
+    <style name="ShapeAppearance.EMRTask.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerSize">8dp</item>
+    </style>
+</resources>
