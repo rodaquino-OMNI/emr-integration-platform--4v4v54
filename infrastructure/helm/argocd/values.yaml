@@ -1,0 +1,228 @@
+# Global settings for all ArgoCD components
+global:
+  image:
+    repository: argoproj/argocd
+    tag: v2.8.0
+    pullPolicy: IfNotPresent
+  
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    fsGroup: 999
+
+# Server component configuration
+server:
+  replicas: 2
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 300
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+      labels:
+        release: prometheus
+
+  ha:
+    enabled: true
+    gRPC:
+      maxRecvMsgSize: 100M
+      maxSendMsgSize: 100M
+
+# Repository server configuration
+repoServer:
+  replicas: 2
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+
+# Application controller configuration
+applicationController:
+  replicas: 2
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+
+  processors:
+    operation: 10
+    status: 20
+
+# Redis configuration for HA setup
+redis:
+  enabled: true
+  architecture: replication
+  
+  auth:
+    enabled: true
+    sentinel: true
+    password: ${REDIS_PASSWORD}
+    existingSecret: argocd-redis-secret
+
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: gp2
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 400m
+        memory: 512Mi
+
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: gp2
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 400m
+        memory: 512Mi
+
+# Prometheus monitoring configuration
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+  
+  alertmanager:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 10Gi
+
+# High availability configuration
+ha:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Additional configuration for EMR platform requirements
+configs:
+  secret:
+    createSecret: true
+    argocdServerAdminPassword: ${ARGOCD_ADMIN_PASSWORD}
+  
+  params:
+    server.insecure: "false"
+    server.tls.minVersion: "TLS1.2"
+    server.rootpath: ""
+    controller.operation.processors: "10"
+    controller.status.processors: "20"
+    reposerver.parallelism.limit: "0"
+
+  cm:
+    timeout.reconciliation: 180s
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    exec.enabled: "false"
+    admin.enabled: "true"
+    statusbadge.enabled: "true"
+    resource.customizations: |
+      argoproj.io/Application:
+        health.lua: |
+          health_status = {}
+          if obj.status ~= nil then
+            if obj.status.health ~= nil then
+              health_status.status = obj.status.health.status
+              health_status.message = obj.status.health.message
+            end
+          end
+          return health_status
+
+# RBAC configuration
+rbac:
+  policy.default: role:readonly
+  policy.csv: |
+    p, role:org-admin, applications, *, */*, allow
+    p, role:org-admin, clusters, get, *, allow
+    p, role:org-admin, repositories, get, *, allow
+    p, role:org-admin, repositories, create, *, allow
+    p, role:org-admin, repositories, update, *, allow
+    p, role:org-admin, repositories, delete, *, allow
+
+# TLS configuration
+tls:
+  enabled: true
+  certs:
+    secretName: argocd-tls-certs
+
+# SSO configuration
+sso:
+  enabled: true
+  provider: oidc
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
+  issuer: ${OIDC_ISSUER_URL}
+
+# Ingress configuration
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  hosts:
+    - argocd.emrtask.com
+  tls:
+    - secretName: argocd-tls
+      hosts:
+        - argocd.emrtask.com
