@@ -1,0 +1,47 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    
+    // Project References
+    "composite": true,
+    
+    // Type Declaration Generation
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    
+    // Strict Type Checking
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    
+    // Decorator Support
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Type Definitions
+    "types": [
+      "node",
+      "jest"
+    ]
+  },
+  
+  // Source Files
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  
+  // File Exclusions
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage"
+  ]
+}
