@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup rules configuration for EMR Task application
+    Ensures HIPAA, GDPR, and LGPD compliance by excluding sensitive data from backups
+    Version: 1.0
+-->
+<full-backup-content xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Authentication & Security -->
+    <exclude
+        domain="sharedpref"
+        path="auth_credentials.xml" />
+    <exclude
+        domain="file"
+        path="encryption_keys" />
+    <exclude
+        domain="file"
+        path="security_certificates" />
+
+    <!-- EMR & Patient Data (HIPAA Compliance) -->
+    <exclude
+        domain="database"
+        path="emr_offline.db" />
+    <exclude
+        domain="file"
+        path="patient_data" />
+    <exclude
+        domain="file"
+        path="patient_cache" />
+    <exclude
+        domain="sharedpref"
+        path="emr_preferences.xml" />
+
+    <!-- Sync & Temporary Data -->
+    <exclude
+        domain="database"
+        path="sync_metadata.db" />
+    <exclude
+        domain="file"
+        path="temp_cache" />
+    <exclude
+        domain="file"
+        path="offline_queue" />
+
+    <!-- Application State -->
+    <exclude
+        domain="sharedpref"
+        path="app_state.xml" />
+    <exclude
+        domain="database"
+        path="task_cache.db" />
+    <exclude
+        domain="file"
+        path="debug_logs" />
+</full-backup-content>
