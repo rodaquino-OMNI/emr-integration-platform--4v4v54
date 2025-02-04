@@ -1,0 +1,58 @@
+import UIKit
+
+// Create 152x152 image context with scale factor 2
+let size = CGSize(width: 152, height: 152)
+UIGraphicsBeginImageContextWithOptions(size, false, 2.0)
+let context = UIGraphicsGetCurrentContext()!
+
+// Calculate icon corner radius (22.5% of width)
+let cornerRadius = size.width * 0.225
+
+// Create rounded rectangle path for icon background
+let bounds = CGRect(origin: .zero, size: size)
+let backgroundPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius)
+context.saveGState()
+backgroundPath.addClip()
+
+// Create gradient background
+let gradient = CGGradient(
+    colorsSpace: CGColorSpaceCreateDeviceRGB(),
+    colors: [
+        UIColor(red: 0/255, green: 102/255, blue: 204/255, alpha: 1).cgColor,  // #0066CC
+        UIColor(red: 45/255, green: 139/255, blue: 117/255, alpha: 1).cgColor  // #2D8B75
+    ] as CFArray,
+    locations: [0, 1]
+)!
+
+context.drawLinearGradient(
+    gradient,
+    start: CGPoint(x: 0, y: 0),
+    end: CGPoint(x: size.width, y: size.height),
+    options: []
+)
+
+// Create checkmark symbol path
+let checkmarkPath = UIBezierPath()
+let checkmarkCenter = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
+checkmarkPath.move(to: CGPoint(x: checkmarkCenter.x - 30, y: checkmarkCenter.y))
+checkmarkPath.addLine(to: CGPoint(x: checkmarkCenter.x - 10, y: checkmarkCenter.y + 20))
+checkmarkPath.addLine(to: CGPoint(x: checkmarkCenter.x + 30, y: checkmarkCenter.y - 20))
+
+// Draw checkmark with shadow
+context.saveGState()
+context.setShadow(offset: CGSize(width: 0, height: 2), blur: 4, color: UIColor.black.withAlphaComponent(0.3).cgColor)
+context.setLineWidth(12)
+context.setLineCap(.round)
+context.setLineJoin(.round)
+context.setStrokeColor(UIColor.white.cgColor)
+checkmarkPath.stroke()
+context.restoreGState()
+
+// Get final image and save to PNG file
+let image = UIGraphicsGetImageFromCurrentImageContext()!
+UIGraphicsEndImageContext()
+
+// Save image to file path
+if let pngData = image.pngData() {
+    try? pngData.write(to: URL(fileURLWithPath: "Icon-76@2x.png"))
+}
