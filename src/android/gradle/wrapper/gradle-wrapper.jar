@@ -1,0 +1,16 @@
+To set up this file properly:
+
+1. Download the official Gradle 7.5 distribution from:
+   https://services.gradle.org/distributions/gradle-7.5-all.zip
+
+2. Copy the gradle-wrapper.jar from the downloaded distribution's gradle/wrapper directory
+
+3. Place it in your project at:
+   src/android/gradle/wrapper/gradle-wrapper.jar
+
+Do not attempt to generate or modify this binary file as it contains compiled Java bytecode essential for Gradle's proper operation.
+
+The corresponding gradle-wrapper.properties file should be configured with:
+
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-all.zip
+distributionBase=GRADLE_USER_HOME
