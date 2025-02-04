@@ -1,0 +1,14 @@
+[Binary content of a 192x192 pixel PNG image with the following specifications:
+
+- Format: 32-bit PNG with alpha channel
+- Dimensions: 192x192 pixels (192dp at xxxhdpi/4.0x scale factor)
+- Color space: sRGB
+- Primary color: #0066CC (Healthcare blue)
+- Shape: Round with 8dp padding safe zone
+- Background: Solid #0066CC with full opacity
+- Foreground: White medical/task management symbol with proper contrast
+- Compression: Optimized PNG compression
+- Transparency: Supported with alpha channel
+- File size: Optimized for balance of quality and size
+
+The image follows Material Design guidelines for adaptive icons and maintains consistent branding while being optimized for xxxhdpi Android devices with circular launcher icon masks.]
