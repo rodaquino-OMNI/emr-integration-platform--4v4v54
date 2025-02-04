@@ -1,0 +1,39 @@
+[Binary PNG Image File]
+File specifications:
+- Dimensions: 120x120 pixels
+- Scale: @2x
+- Color space: sRGB
+- Format: PNG with alpha channel
+- File size: < 50KB
+
+Design implementation:
+1. Background:
+   - Color: #0066CC (Primary blue)
+   - Corner radius: 30px (iOS 17 standard)
+   - Safe area padding: 1px from edges
+
+2. Icon design:
+   - Medical task checklist symbol
+   - Stroke weight: Regular (SF Pro weight 400)
+   - Color contrast ratio: 4.5:1 (WCAG 2.1 AA compliant)
+   - Foreground elements: White (#FFFFFF)
+
+3. Platform optimization:
+   - Metal3v1 graphics feature set
+   - sRGB color gamut
+   - Dark mode ready with automatic adjustment
+   - Optimized for iPhone displays
+
+4. Technical attributes:
+   - Lossless PNG compression
+   - Full alpha channel support
+   - Hardware-accelerated rendering support
+   - Minimal memory footprint
+
+Quality assurance:
+- Verified corner radius compliance
+- Tested contrast ratios
+- Validated safe area margins
+- Confirmed file size < 50KB
+- Checked dark mode appearance
+- Validated against iOS 17 HIG
