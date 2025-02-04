@@ -1,0 +1,253 @@
+# Fastfile for EMR Task iOS Application
+# Version: 2.212.2
+# Purpose: Automated build, test, and deployment with enhanced security and EMR verification
+
+# Import required plugins with specific versions for security
+fastlane_require 'fastlane-plugin-firebase_app_distribution' # ~> 0.4.0
+fastlane_require 'xcodeproj' # ~> 1.22.0
+fastlane_require 'fastlane-plugin-versioning' # ~> 4.0.0
+
+# Import configuration from Appfile and Matchfile
+import 'Appfile'
+import 'Matchfile'
+
+# Global constants
+WORKSPACE = "EMRTask.xcworkspace"
+SCHEME = "EMRTask"
+BUILD_NUMBER = number_of_commits
+CERTIFICATE_ROTATION_DAYS = 90
+MAX_RETRY_ATTEMPTS = 3
+DEPLOYMENT_TIMEOUT = 900 # 15 minutes SLA requirement
+
+# Platform configuration
+platform :ios do
+  before_all do |lane|
+    # Verify environment variables
+    ensure_env_vars(
+      env_vars: [
+        'MATCH_PASSWORD',
+        'FIREBASE_TOKEN',
+        'APPLE_ID',
+        'TEAM_ID',
+        'EMR_API_KEY',
+        'EMR_ENDPOINT'
+      ]
+    )
+    
+    # Setup error handling and logging
+    setup_ci if is_ci
+    ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "120"
+    ENV["FASTLANE_XCODE_LIST_TIMEOUT"] = "120"
+  end
+
+  desc "Setup and validate code signing certificates"
+  private_lane :setup_certificates do |options|
+    environment = options[:environment]
+    force_rotation = options[:force_rotation] || false
+
+    # Certificate rotation check
+    cert_info = get_certificates_info
+    if force_rotation || cert_expiring?(cert_info, CERTIFICATE_ROTATION_DAYS)
+      UI.important("Rotating certificates for security compliance")
+      match_nuke(type: environment)
+    end
+
+    # Setup certificates with retry mechanism
+    MAX_RETRY_ATTEMPTS.times do |attempt|
+      begin
+        match(
+          type: environment,
+          readonly: !force_rotation,
+          app_identifier: app_identifier,
+          git_url: match_config[:git_url],
+          force_for_new_devices: true,
+          verbose: true
+        )
+        break
+      rescue => ex
+        UI.error("Certificate setup attempt #{attempt + 1} failed: #{ex.message}")
+        raise if attempt == MAX_RETRY_ATTEMPTS - 1
+      end
+    end
+
+    # Verify certificate installation
+    verify_certificates_installation
+  end
+
+  desc "Verify EMR integration"
+  private_lane :verify_emr_integration do |options|
+    environment = options[:environment]
+    
+    # EMR integration verification
+    begin
+      UI.message("Verifying EMR integration for #{environment}")
+      
+      # Test FHIR endpoint connectivity
+      verify_fhir_connectivity(
+        endpoint: ENV['EMR_ENDPOINT'],
+        api_key: ENV['EMR_API_KEY']
+      )
+
+      # Verify offline sync capabilities
+      verify_offline_sync(environment)
+
+      # Validate data security
+      verify_data_encryption
+
+      UI.success("EMR integration verification successful")
+    rescue => ex
+      UI.error("EMR integration verification failed: #{ex.message}")
+      raise
+    end
+  end
+
+  desc "Run enhanced test suite"
+  private_lane :run_tests do
+    begin
+      # Clean build artifacts
+      clear_derived_data
+      
+      # Run unit and integration tests
+      scan(
+        workspace: WORKSPACE,
+        scheme: SCHEME,
+        devices: ["iPhone 14 Pro"],
+        clean: true,
+        code_coverage: true,
+        parallel_testing: true,
+        concurrent_workers: 2,
+        result_bundle: true,
+        output_directory: "test_results"
+      )
+
+      # Verify minimum coverage requirements
+      verify_test_coverage(minimum: 80)
+      
+      # Archive test results
+      zip(
+        path: "test_results",
+        output_path: "test_results.zip"
+      )
+    rescue => ex
+      UI.error("Test suite execution failed: #{ex.message}")
+      raise
+    end
+  end
+
+  desc "Deploy beta build to Firebase"
+  lane :beta do
+    begin
+      setup_certificates(environment: "adhoc")
+      verify_emr_integration(environment: "staging")
+      
+      # Increment build number
+      increment_build_number(
+        build_number: BUILD_NUMBER,
+        xcodeproj: "EMRTask.xcodeproj"
+      )
+
+      # Build application
+      build_app(
+        workspace: WORKSPACE,
+        scheme: SCHEME,
+        export_method: "ad-hoc",
+        export_options: {
+          provisioningProfiles: {
+            app_identifier => "EMRTask_AdHoc_Profile"
+          }
+        },
+        include_bitcode: false,
+        include_symbols: true
+      )
+
+      # Distribute to Firebase
+      firebase_app_distribution(
+        app: ENV["FIREBASE_APP_ID"],
+        groups: "beta-testers",
+        release_notes: changelog_from_git_commits,
+        firebase_cli_token: ENV["FIREBASE_TOKEN"]
+      )
+
+      # Notify success
+      notification(subtitle: "Beta Deployment", message: "Successfully deployed to Firebase")
+    rescue => ex
+      handle_deployment_failure(ex, "beta")
+      raise
+    end
+  end
+
+  desc "Deploy to App Store"
+  lane :release do
+    begin
+      setup_certificates(environment: "appstore", force_rotation: false)
+      verify_emr_integration(environment: "production")
+      run_tests
+
+      # Version management
+      current_version = get_version_number(
+        xcodeproj: "EMRTask.xcodeproj",
+        target: SCHEME
+      )
+
+      # Build production app
+      build_app(
+        workspace: WORKSPACE,
+        scheme: SCHEME,
+        export_method: "app-store",
+        export_options: {
+          provisioningProfiles: {
+            app_identifier => "EMRTask_AppStore_Profile"
+          }
+        },
+        include_bitcode: true,
+        include_symbols: true
+      )
+
+      # Upload to App Store
+      upload_to_app_store(
+        force: true,
+        skip_metadata: true,
+        skip_screenshots: true,
+        precheck_include_in_app_purchases: false,
+        submission_information: {
+          add_id_info_uses_idfa: false,
+          export_compliance_uses_encryption: true,
+          export_compliance_is_exempt: false
+        }
+      )
+
+      # Tag release
+      add_git_tag(tag: "v#{current_version}-#{BUILD_NUMBER}")
+      push_git_tags
+
+      # Notify success
+      notification(subtitle: "App Store Deployment", message: "Successfully deployed to App Store")
+    rescue => ex
+      handle_deployment_failure(ex, "release")
+      raise
+    end
+  end
+
+  error do |lane, exception, options|
+    # Error handling and logging
+    error_info = {
+      lane: lane,
+      error: exception.message,
+      timestamp: Time.now.iso8601,
+      build_number: BUILD_NUMBER
+    }
+
+    # Log error details
+    File.write(
+      ENV['AUDIT_LOG_PATH'] || 'fastlane/logs/errors.log',
+      error_info.to_json + "\n",
+      mode: 'a'
+    )
+
+    # Notify team
+    notification(
+      subtitle: "Deployment Failed",
+      message: "#{lane} failed: #{exception.message}"
+    )
+  end
+end
