@@ -1,0 +1,59 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    
+    // Build Configuration
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    
+    // Type Checking
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    
+    // Decorator Support for DI
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Types
+    "types": [
+      "node",
+      "jest"
+    ],
+    
+    // Path Aliases
+    "paths": {
+      "@shared/*": ["../shared/src/*"]
+    }
+  },
+  
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "src/**/*.d.ts"
+  ],
+  
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  
+  "references": [
+    {
+      "path": "../shared"
+    }
+  ]
+}
