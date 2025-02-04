@@ -1,0 +1,124 @@
+{
+  "name": "EMR Task Management Platform",
+  "short_name": "EMR Tasks",
+  "description": "Healthcare task management platform with EMR integration and comprehensive offline capabilities for clinical workflows",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0066CC",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Task Board",
+      "url": "/tasks",
+      "description": "View and manage clinical tasks",
+      "icons": [
+        {
+          "src": "/icons/tasks.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Handover",
+      "url": "/handovers",
+      "description": "Manage shift handovers and task transfers",
+      "icons": [
+        {
+          "src": "/icons/handover.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "EMR Verification",
+      "url": "/verification",
+      "description": "Verify tasks against EMR data",
+      "icons": [
+        {
+          "src": "/icons/verify.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    "healthcare",
+    "medical",
+    "productivity",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/taskboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Task Board View"
+    },
+    {
+      "src": "/screenshots/handover.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Handover Interface"
+    }
+  ],
+  "features": [
+    "EMR Integration",
+    "Offline Support",
+    "Task Management",
+    "Shift Handovers",
+    "Real-time Updates",
+    "Barcode Scanning",
+    "Push Notifications"
+  ],
+  "iarc_rating_id": "",
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            "image/*",
+            "application/pdf"
+          ]
+        }
+      ]
+    }
+  }
+}
