@@ -1,0 +1,100 @@
+{
+  "project_info": {
+    "project_id": "emrtask-app",
+    "project_number": "123456789012",
+    "firebase_url": "https://emrtask-app.firebaseio.com",
+    "storage_bucket": "emrtask-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789012:android:abc123def456",
+        "android_client_info": {
+          "package_name": "com.emrtask.app"
+        },
+        "oauth_client": [
+          {
+            "client_id": "123456789012-abcdefghijklmnopqrstuvwxyz012345.apps.googleusercontent.com",
+            "client_type": 3,
+            "android_info": {
+              "package_name": "com.emrtask.app",
+              "certificate_hash": "APP-SIGNING-SHA256"
+            }
+          }
+        ]
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh",
+          "restrictions": {
+            "android_restrictions": {
+              "allowed_applications": ["com.emrtask.app"],
+              "package_name": "com.emrtask.app",
+              "sha256_cert_fingerprints": ["APP-SIGNING-SHA256"]
+            },
+            "api_target_restrictions": [
+              {
+                "services": [
+                  "cloud_messaging_service",
+                  "analytics_service",
+                  "performance_monitoring_service",
+                  "crashlytics_service"
+                ]
+              }
+            ],
+            "ip_restrictions": {
+              "allowed_ip_ranges": ["ALLOWED-IP-RANGES"],
+              "deny_all_other": true
+            },
+            "http_referrers": {
+              "allowed_referrers": ["*.emrtask.app"],
+              "deny_all_other": true
+            }
+          }
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1,
+          "analytics_property": {
+            "tracking_id": "UA-TRACKING-ID",
+            "collection_enabled": true,
+            "analytics_collection_deactivated": false
+          }
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": [
+            {
+              "bundle_id": "com.emrtask.app",
+              "team_id": "APPLE-TEAM-ID",
+              "key_id": "APNS-KEY-ID",
+              "token_key": "APNS-AUTH-KEY"
+            }
+          ],
+          "token_expiry_interval": 604800
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "performance_monitoring_service": {
+          "status": 1,
+          "data_collection_enabled": true
+        },
+        "crashlytics_service": {
+          "status": 1,
+          "data_collection_enabled": true
+        }
+      },
+      "oauth_scopes": [
+        "email",
+        "profile",
+        "https://www.googleapis.com/auth/firebase.messaging",
+        "https://www.googleapis.com/auth/monitoring",
+        "https://www.googleapis.com/auth/logging.write"
+      ]
+    }
+  ],
+  "configuration_version": "1"
+}
