@@ -1,0 +1,12 @@
+Image Specifications:
+- Dimensions: 120x120 points at 1x scale
+- Format: PNG with lossless compression
+- Color Space: sRGB
+- Background: Transparent
+- Primary Color: #0066CC (Healthcare-optimized blue)
+- Minimum Contrast Ratio: 4.5:1
+- Target Devices: Universal (iPhone/iPad)
+- iOS Deployment Target: 14.0+
+- Optimization: Vector-derived raster image with minimal file size
+
+This file should be created by a graphic designer or developer using appropriate image editing software (e.g., Sketch, Figma, Adobe XD) following these exact specifications.
