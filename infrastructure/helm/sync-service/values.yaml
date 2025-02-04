@@ -1,0 +1,142 @@
+# Default values for sync-service
+# This is a YAML-formatted file.
+
+# Number of replicas to run
+replicaCount: 3
+
+# Container image configuration
+image:
+  repository: emrtask/sync-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    http: 3000
+    metrics: 9090
+
+# Application configuration
+config:
+  maxBatchSize: 1000
+  syncTimeoutMs: 30000
+  retryAttempts: 3
+  retryDelayMs: 500
+  vectorClockTTLMs: 86400000  # 24 hours
+  maxConcurrentSyncs: 100
+  conflictResolutionStrategy: last-write-wins
+
+# Resource requests and limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Health check probes
+probes:
+  liveness:
+    path: /health/live
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 3
+
+# Metrics configuration
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "15s"
+    scrapeTimeout: "10s"
+    labels:
+      release: prometheus
+  dashboards:
+    enabled: true
+    labels:
+      grafana_dashboard: "1"
+
+# Redis configuration
+redis:
+  host: redis-master
+  port: 6379
+  lockTTLMs: 30000
+  sentinel:
+    enabled: true
+    masterSet: mymaster
+  pool:
+    maxConnections: 100
+    minConnections: 10
+    idleTimeoutMs: 30000
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Node selection and scheduling
+nodeSelector:
+  kubernetes.io/role: worker
+  topology.kubernetes.io/zone: us-east-1a
+
+# Pod tolerations
+tolerations: []
+
+# Pod affinity rules
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: sync-service
+          topologyKey: kubernetes.io/hostname
+
+# Network policies
+networkPolicy:
+  enabled: true
+  ingressRules:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: api-gateway
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: task-service
+
+# Horizontal Pod Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/sync-service-role
