@@ -1,0 +1,26 @@
+Image Specifications:
+- Format: PNG (32-bit with alpha channel)
+- Dimensions: 72x72 pixels
+- DPI: 240 (hdpi)
+- Color Space: sRGB
+- Primary Color: #0066CC (Accessible Blue)
+- Shape: Round with Material Design styling
+- Background: Solid #0066CC with proper padding
+- Compression: Optimized for Android
+- Anti-aliasing: Enabled
+- Safe zone: 44dp x 44dp centered
+- Shadow: 1dp elevation with rgba(0,0,0,0.25)
+
+The image should be created using professional image editing software following these guidelines:
+1. Create a 72x72 pixel canvas at 240dpi
+2. Use the specified #0066CC as primary color
+3. Implement proper Material Design icon guidelines
+4. Include 2dp padding around edges
+5. Apply anti-aliasing for smooth edges
+6. Enable alpha channel for transparency
+7. Optimize for Android launcher display
+8. Ensure high contrast ratio (4.5:1)
+9. Test visibility in both light and dark modes
+10. Verify proper display across different Android launchers
+
+The binary file should be tracked using Git LFS due to its binary nature.
