@@ -1,0 +1,185 @@
+name: Android CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/android/**'
+      - 'build.gradle'
+      - 'gradle.properties'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/android/**'
+      - 'build.gradle'
+      - 'gradle.properties'
+
+env:
+  JAVA_VERSION: '17'
+  GRADLE_VERSION: '8.0'
+  ANDROID_SDK: '33'
+  HIPAA_SCAN_LEVEL: 'strict'
+
+jobs:
+  security_scan:
+    name: HIPAA Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: HIPAA Compliance Check
+        uses: aquasecurity/trivy-action@v0.10.0
+        with:
+          scan-type: 'fs'
+          security-checks: 'vuln,config,secret'
+          severity: 'CRITICAL,HIGH'
+          scan-ref: '.'
+          exit-code: '1'
+        env:
+          HIPAA_COMPLIANCE_KEY: ${{ secrets.HIPAA_COMPLIANCE_KEY }}
+
+      - name: Dependency Security Scan
+        uses: aquasecurity/trivy-action@v0.10.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Security Results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  build_and_test:
+    name: Build and Test
+    needs: security_scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+          cache-read-only: false
+          
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 -d > app/release.keystore
+          echo "keystore.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> local.properties
+          echo "key.alias=${{ secrets.ANDROID_KEY_ALIAS }}" >> local.properties
+          echo "key.password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> local.properties
+
+      - name: Decode Google Services
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Run Instrumented Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_SDK }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: ./gradlew connectedCheck
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      - name: Sign Release APK
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 14
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: app/build/reports/tests/
+          retention-days: 14
+
+  deploy:
+    name: Deploy to Play Store
+    needs: [build_and_test, security_scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'internal' }}
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Release APK
+        uses: actions/download-artifact@v3
+        with:
+          name: app-release
+          path: release
+
+      - name: Verify APK Signature
+        run: |
+          jarsigner -verify -verbose -certs release/app-release.apk
+
+      - name: Deploy to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_CONFIG }}
+          packageName: com.emrtask.app
+          releaseFiles: release/app-release.apk
+          track: ${{ github.ref == 'refs/heads/main' && 'production' || 'internal' }}
+          status: completed
+          inAppUpdatePriority: 3
+          userFraction: 0.1
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+
+      - name: Notify Deployment Status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
