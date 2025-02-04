@@ -1,0 +1,51 @@
+Binary PNG Image File Specifications:
+
+Dimensions: 167x167 pixels @2x scale
+Format: PNG with alpha channel
+Color Space: sRGB
+Compression: Lossless
+
+Design Elements:
+- Background: Solid #0066CC (Healthcare Blue)
+- Foreground: #FFFFFF (White)
+- Corner Radius: 41.75px (25% of width)
+- Safe Area Inset: 8.35px (5% of width)
+- Symbol: Medical task list icon
+  - Stroke Weight: Regular (2.5px)
+  - Position: Centered
+  - Size: 100.2px (60% of width)
+
+Visual Specifications:
+1. Base Layer:
+   - 167x167px canvas
+   - Solid fill #0066CC
+   - Corner radius 41.75px
+   - Anti-aliased edges
+
+2. Icon Symbol:
+   - Centered task list symbol
+   - White (#FFFFFF) fill
+   - 2.5px stroke width
+   - Three horizontal lines with checkmark
+   - Safe area inset 8.35px from edges
+
+3. Optimization:
+   - PNG-24 with alpha channel
+   - Lossless compression
+   - Color profile: sRGB IEC61966-2.1
+   - No metadata
+
+Platform Requirements:
+- Target: iPad Pro
+- iOS 14.0+
+- Dark mode compatible
+- Display locations: Home Screen, Settings, Spotlight, Multitasking
+
+Quality Metrics:
+- Contrast ratio: 7:1 (WCAG 2.1 AA compliant)
+- Sharp edges at 100% scale
+- Clear silhouette at small sizes
+- Grid-aligned for iPad Pro home screen
+
+File Size: ~8-12KB optimized
+*/
