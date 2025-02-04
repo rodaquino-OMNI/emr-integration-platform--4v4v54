@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "emr-service.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ template "emr-service.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: emr-integration
+    app.kubernetes.io/part-of: healthcare-platform
+    security-tier: restricted
+    data-classification: phi
+    istio-injection: enabled
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ .Values.service.ports.metrics }}"
+    prometheus.io/path: "/metrics"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http-fhir
+      port: {{ .Values.service.ports.http }}
+      targetPort: http
+      protocol: TCP
+    - name: tcp-hl7
+      port: {{ .Values.service.ports.hl7 }}
+      targetPort: hl7
+      protocol: TCP
+    - name: metrics
+      port: {{ .Values.service.ports.metrics }}
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: {{ template "emr-service.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: emr-integration
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
