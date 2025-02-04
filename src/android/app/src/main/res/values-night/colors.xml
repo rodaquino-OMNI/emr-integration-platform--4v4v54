@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary colors -->
+    <color name="color_primary">#1A8AFF</color>
+    <color name="color_primary_dark">#0066CC</color>
+    <color name="color_primary_variant">#3399FF</color>
+    <color name="color_on_primary">#000000</color>
+
+    <!-- Secondary colors -->
+    <color name="color_secondary">#3DAA91</color>
+    <color name="color_secondary_dark">#2D8B75</color>
+    <color name="color_secondary_variant">#4DBFA3</color>
+    <color name="color_on_secondary">#000000</color>
+
+    <!-- Background colors -->
+    <color name="color_background">#121212</color>
+    <color name="color_surface">#1E1E1E</color>
+    <color name="color_on_background">#FFFFFF</color>
+    <color name="color_on_surface">#FFFFFF</color>
+
+    <!-- Error colors -->
+    <color name="color_error">#FF5C62</color>
+    <color name="color_error_dark">#D64045</color>
+    <color name="color_on_error">#000000</color>
+
+    <!-- Task status colors -->
+    <color name="color_task_critical">#FF5C62</color>
+    <color name="color_task_warning">#FFB74D</color>
+    <color name="color_task_success">#3DAA91</color>
+    <color name="color_task_info">#1A8AFF</color>
+
+    <!-- UI element colors -->
+    <color name="color_divider">#2D2D2D</color>
+    <color name="color_card_background">#1E1E1E</color>
+    <color name="color_status_bar">#000000</color>
+    <color name="color_navigation_bar">#121212</color>
+</resources>
