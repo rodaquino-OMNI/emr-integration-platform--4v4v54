@@ -1,0 +1,23 @@
+[Binary PNG file with the following specifications]
+
+Format: PNG
+Dimensions: 432x432 pixels (144dp @ 3.0x scale factor)
+Color Space: sRGB
+Primary Color: #0066CC (Healthcare Blue)
+Transparency: Enabled
+Shape: Round with Material Design styling
+
+Key Implementation Details:
+- Circular icon with 432x432 pixel dimensions
+- Safe zone of 108x108dp (324x324 pixels)
+- 18dp padding (54 pixels) on all sides
+- Material Design elevation with 1dp shadow:
+  - Ambient shadow: 20% opacity
+  - Key shadow: 30% opacity
+- Optimized PNG compression (target < 50KB)
+- XXHDPI density qualifier (~480dpi)
+- Minimum contrast ratio of 4.5:1
+- Color-blind friendly design
+- Distinctive medical/healthcare silhouette
+- System-level caching optimized
+- Adaptive icon compatible
