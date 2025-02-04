@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emr-service
+  namespace: healthcare
+  labels:
+    app: emr-service
+    version: 1.0.0
+    tier: backend
+    security-tier: restricted
+    data-classification: phi
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "emr-service"
+    vault.hashicorp.com/agent-pre-populate-only: "true"
+
+spec:
+  # High availability with 3 replicas
+  replicas: 3
+  
+  # Zero-downtime updates with rolling deployment
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+      
+  # Pod selector for the deployment
+  selector:
+    matchLabels:
+      app: emr-service
+      
+  template:
+    metadata:
+      labels:
+        app: emr-service
+        version: 1.0.0
+        
+    spec:
+      # Service account for RBAC
+      serviceAccountName: emr-service-sa
+      
+      # Security context for container hardening
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+        readOnlyRootFilesystem: true
+        
+      containers:
+      - name: emr-service
+        image: emrtask/emr-service:1.0.0
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8080
+          name: http
+          
+        # Resource quotas
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+            
+        # Health monitoring
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          
+        # Environment configuration  
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: EMR_TIMEOUT
+          value: "30000"
+          
+        # Volume mounts
+        volumeMounts:
+        - name: emr-secrets
+          mountPath: /etc/emr
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+          
+      # Volume definitions  
+      volumes:
+      - name: emr-secrets
+        secret:
+          secretName: emr-secrets
+      - name: tmp
+        emptyDir: {}
