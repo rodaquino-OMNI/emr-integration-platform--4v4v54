@@ -1,0 +1,145 @@
+/* tailwindcss v3.3.0 */
+/* @tailwindcss/forms v0.5.0 */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Healthcare-optimized base styles */
+  body {
+    font-family: "SF Pro", "Roboto", system-ui, -apple-system;
+    color-scheme: light dark;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* WCAG 2.1 AA compliant heading hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "SF Pro Display", system-ui;
+    font-weight: 600;
+    color: theme(colors.text.primary);
+    line-height: 1.2;
+    margin-bottom: theme(spacing.4);
+  }
+
+  /* Medical device-compatible form inputs */
+  input, select, textarea {
+    font-size: 16px; /* Prevents iOS zoom */
+    touch-action: manipulation;
+    min-height: 44px; /* WCAG 2.1 touch target size */
+  }
+}
+
+@layer components {
+  /* Healthcare task management components */
+  .task-card {
+    border-radius: theme(borderRadius.DEFAULT);
+    padding: theme(spacing.4);
+    background: theme(colors.background.light);
+    dark:background: theme(colors.background.dark);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s;
+    touch-action: manipulation;
+    min-height: 88px; /* Double WCAG touch target */
+  }
+
+  /* Status indicators for clinical tasks */
+  .status-badge {
+    padding: theme(spacing.1) theme(spacing.3);
+    border-radius: theme(borderRadius.full);
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: theme(spacing.2);
+  }
+
+  /* Shift handover interface components */
+  .handover-summary {
+    border: 1px solid theme(colors.primary);
+    border-radius: theme(borderRadius.lg);
+    padding: theme(spacing.6);
+    background: theme(colors.background.card);
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  /* Critical medical alerts */
+  .medical-alert {
+    background: theme(colors.critical);
+    color: white;
+    font-weight: bold;
+    padding: theme(spacing.2) theme(spacing.4);
+    border-radius: theme(borderRadius.md);
+    animation: pulse 2s infinite;
+  }
+}
+
+@layer utilities {
+  /* Healthcare-specific utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Hide scrollbars while maintaining functionality */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* WCAG 2.1 AA compliant touch targets */
+  .medical-touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+    @media (pointer: fine) {
+      min-width: 32px;
+      min-height: 32px;
+    }
+  }
+}
+
+/* Responsive breakpoints for medical devices */
+@media (max-width: 768px) {
+  .task-card {
+    margin-bottom: theme(spacing.4);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .handover-summary {
+    max-height: calc(100vh - 160px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .medical-display {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary: #0052A3;
+    --color-critical: #B22D31;
+    --color-success: #1A5F4E;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
