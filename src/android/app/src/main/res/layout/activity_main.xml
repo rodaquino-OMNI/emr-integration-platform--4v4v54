@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Main Activity Layout
+  Version: 1.0
+  External Dependencies:
+  - androidx.coordinatorlayout:coordinatorlayout:1.2.0
+  - androidx.swiperefreshlayout:swiperefreshlayout:1.1.0
+  - androidx.recyclerview:recyclerview:1.3.0
+  - com.google.android.material:material:1.9.0
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:hardwareAccelerated="true">
+
+    <!-- App Bar with Healthcare Theme -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"
+        android:background="@color/medical_surface"
+        android:contentDescription="@string/app_bar_description">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:minHeight="?attr/actionBarSize"
+            app:titleTextAppearance="@style/TextAppearance.Medical.Headline6"
+            app:titleTextColor="@color/medical_on_surface"
+            app:menu="@menu/top_app_bar"
+            android:importantForAccessibility="yes" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content Area with Pull-to-Refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/refresh_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:contentDescription="@string/pull_to_refresh_description">
+
+        <!-- Task Board RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/task_board"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="80dp"
+            android:paddingHorizontal="8dp"
+            android:minHeight="48dp"
+            android:scrollbarStyle="outsideOverlay"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:contentDescription="@string/task_board_description"
+            android:importantForAccessibility="yes"
+            app:fastScrollEnabled="true"
+            app:fastScrollHorizontalThumbDrawable="@drawable/fastscroll_thumb"
+            app:fastScrollHorizontalTrackDrawable="@drawable/fastscroll_track"
+            app:fastScrollVerticalThumbDrawable="@drawable/fastscroll_thumb"
+            app:fastScrollVerticalTrackDrawable="@drawable/fastscroll_track" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Offline Sync Status Indicator -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/offline_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/medical_warning"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="24dp"
+        android:contentDescription="@string/offline_mode_description">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/offline_mode_active"
+            android:textColor="@color/medical_on_warning"
+            android:padding="8dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Barcode Scanner Integration -->
+    <include
+        android:id="@+id/barcode_scanner"
+        layout="@layout/barcode_scanner_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:contentDescription="@string/barcode_scanner_description" />
+
+    <!-- Bottom Navigation with Large Touch Targets -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/navigation_background"
+        android:minHeight="56dp"
+        app:itemIconSize="28dp"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:itemRippleColor="@color/bottom_nav_ripple"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_navigation"
+        android:contentDescription="@string/bottom_navigation_description"
+        app:itemPaddingTop="8dp"
+        app:itemPaddingBottom="8dp"
+        android:elevation="8dp"
+        app:itemTextAppearanceActive="@style/TextAppearance.Medical.BottomNavigation.Active"
+        app:itemTextAppearanceInactive="@style/TextAppearance.Medical.BottomNavigation" />
+
+    <!-- Floating Action Button for New Task -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_new_task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:text="@string/new_task"
+        android:contentDescription="@string/add_new_task_description"
+        app:icon="@drawable/ic_add_task"
+        app:iconTint="@color/medical_on_primary"
+        android:textColor="@color/medical_on_primary"
+        app:backgroundTint="@color/medical_primary"
+        android:minHeight="56dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:elevation="6dp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
