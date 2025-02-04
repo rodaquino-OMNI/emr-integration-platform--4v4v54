@@ -1,0 +1,72 @@
+# Istio Gateway Configuration v1.18+
+# Implements secure ingress traffic management with TLS termination and HTTPS redirection
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  {{- template "istio.metadata" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Values.global.gateway.version | quote }}
+    app.kubernetes.io/component: gateway
+    istio.io/rev: {{ .Values.global.istioRevision | default "default" }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "15020"
+    prometheus.io/path: /stats/prometheus
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+
+spec:
+  selector:
+    # Gateway pod selection criteria
+    istio: ingressgateway
+    app: {{ .Values.global.gateway.name }}
+    version: {{ .Values.global.gateway.version }}
+
+  servers:
+    # Primary HTTPS server configuration
+    - port:
+        number: 443
+        name: https-primary
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: {{ .Values.global.tls.credentialName }}
+        # Enforce TLS 1.3 for enhanced security
+        minProtocolVersion: TLSV1_3
+        # Strong cipher suite selection
+        cipherSuites:
+        - ECDHE-ECDSA-AES256-GCM-SHA384  # Preferred
+        - ECDHE-RSA-AES256-GCM-SHA384     # Fallback
+      hosts:
+      - {{ .Values.global.domain | quote }}
+      - {{ printf "*.%s" .Values.global.domain | quote }}
+
+    # HTTP to HTTPS redirect configuration
+    - port:
+        number: 80
+        name: http-redirect
+        protocol: HTTP
+      hosts:
+      - {{ .Values.global.domain | quote }}
+      - {{ printf "*.%s" .Values.global.domain | quote }}
+      tls:
+        httpsRedirect: true  # Force HTTPS redirect
+
+    # Health check endpoint (if enabled)
+    {{- if .Values.global.gateway.healthCheck.enabled }}
+    - port:
+        number: {{ .Values.global.gateway.healthCheck.port | default 15021 }}
+        name: status-port
+        protocol: HTTP
+      hosts:
+      - {{ .Values.global.domain | quote }}
+      tls:
+        httpsRedirect: false  # Allow HTTP for health checks
+    {{- end }}
+
+  {{- if .Values.global.gateway.extraServers }}
+  # Additional server configurations from values
+  {{- toYaml .Values.global.gateway.extraServers | nindent 4 }}
+  {{- end }}
