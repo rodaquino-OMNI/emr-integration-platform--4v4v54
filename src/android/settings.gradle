@@ -1,0 +1,46 @@
+pluginManagement {
+    repositories {
+        // Plugin repositories with versions
+        // com.android.application:8.0.0
+        // org.jetbrains.kotlin.android:1.8.0
+        // com.google.gms.google-services:4.3.15
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoryMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Set root project name for EMR Task Management Platform
+rootProject.name = "EMRTask"
+
+// Include main application module with offline capabilities
+include ':app'
+
+// Enable build features for performance optimization
+enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
+enableFeaturePreview('VERSION_CATALOGS')
+
+// Configure Gradle settings for optimal build performance
+gradle.projectsLoaded {
+    rootProject.allprojects {
+        // Enable parallel execution for faster builds
+        tasks.withType(JavaCompile).configureEach {
+            options.fork = true
+        }
+        
+        // Configure build cache for faster subsequent builds
+        buildCache {
+            local {
+                enabled = true
+            }
+        }
+    }
+}
