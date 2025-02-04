@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "1.0.0",
+  "npmClient": "npm",
+  "packages": [
+    "packages/*"
+  ],
+  "command": {
+    "version": {
+      "exact": true,
+      "conventionalCommits": true,
+      "message": "chore(release): publish %s",
+      "allowBranch": [
+        "main",
+        "develop"
+      ],
+      "changelogPreset": "angular"
+    },
+    "publish": {
+      "conventionalCommits": true,
+      "message": "chore(release): publish %s",
+      "registry": "https://registry.npmjs.org/",
+      "access": "restricted",
+      "verifyAccess": true
+    },
+    "bootstrap": {
+      "npmClientArgs": [
+        "--no-package-lock"
+      ],
+      "hoist": true,
+      "nohoist": [
+        "@emr-task/*"
+      ]
+    }
+  }
+}
