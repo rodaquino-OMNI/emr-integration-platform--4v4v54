@@ -1,0 +1,115 @@
+# HashiCorp Vault Helm Chart Values
+# Version: 1.13.0
+
+server:
+  image:
+    repository: hashicorp/vault
+    tag: "1.13.0"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+  ha:
+    enabled: true
+    replicas: 3
+    raft:
+      enabled: true
+      setNodeId: true
+      config:
+        retryJoin: true
+        autopilot:
+          enabled: true
+          cleanupDeadServers: true
+
+  serviceAccount:
+    create: true
+    name: vault
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/vault-server"
+      iam.gke.io/gcp-service-account: "vault-server@${PROJECT_ID}.iam.gserviceaccount.com"
+
+  auditStorage:
+    enabled: true
+    size: "50Gi"
+    storageClass: "gp3"
+    accessModes:
+      - ReadWriteOnce
+    annotations:
+      backup.velero.io/backup-volumes: "audit-storage"
+
+  dataStorage:
+    enabled: true
+    size: "100Gi"
+    storageClass: "gp3"
+    accessModes:
+      - ReadWriteOnce
+    annotations:
+      backup.velero.io/backup-volumes: "data-storage"
+
+ui:
+  enabled: true
+  serviceType: ClusterIP
+  externalPort: 8200
+  targetPort: 8200
+  serviceAnnotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+
+security:
+  securityContext:
+    runAsUser: 100
+    runAsGroup: 1000
+    fsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  
+  podSecurityContext:
+    capabilities:
+      add:
+        - IPC_LOCK
+      drop:
+        - ALL
+
+  networkPolicy:
+    enabled: true
+    allowInternalTraffic: true
+    ingressLabels:
+      app.kubernetes.io/name: istio-ingressgateway
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    scrapeTimeout: "10s"
+    labels:
+      release: prometheus
+  prometheusRules:
+    enabled: true
+    rules:
+      - alert: VaultDown
+        expr: vault_up == 0
+        for: "5m"
+        severity: critical
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: istio
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  hosts:
+    - host: vault.emrtask.internal
+      paths:
+        - /
+  tls:
+    - secretName: vault-tls
+      hosts:
+        - vault.emrtask.internal
