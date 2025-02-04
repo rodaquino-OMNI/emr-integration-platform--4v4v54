@@ -1,0 +1,34 @@
+[Binary PNG Image Data with the following specifications]
+
+Image Properties:
+- Dimensions: 180x180 pixels
+- Color Depth: 32-bit RGBA
+- Color Profile: sRGB IEC61966-2.1
+- File Format: PNG (optimized)
+- Scale Factor: @3x
+
+Design Implementation:
+- Background: Solid #0066CC (Primary Healthcare Blue)
+- Icon Safe Zone: 160x160 pixels (10px inset)
+- Corner Radius: Auto-applied by iOS (~41.67px)
+- Foreground: Medical task symbol in white (#FFFFFF)
+- Shadow/Depth: Subtle 2px bottom shadow at 10% opacity
+
+Color Specifications:
+- Primary: #0066CC (Healthcare Blue)
+- Critical: #D64045 (Alert Red, used in accent)
+- Success: #2D8B75 (Medical Green, used in accent)
+- Background: Solid #0066CC
+- Foreground Elements: #FFFFFF
+
+Optimization:
+- PNG Compression: Optimized
+- Alpha Channel: Preserved
+- Color Space: sRGB
+- File Size Target: <100KB
+
+Platform Compatibility:
+- iOS 13.0+
+- @3x Retina Displays
+- Light/Dark Mode Compatible
+- iPhone X and later models
