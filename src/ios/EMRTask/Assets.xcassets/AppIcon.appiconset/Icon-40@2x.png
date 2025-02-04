@@ -1,0 +1,17 @@
+89504E470D0A1A0A0000000D494844520000005000000050080600000000ED31D38A
+[Binary PNG data representing an 80x80 pixel icon with the following characteristics:]
+
+- Dimensions: 80x80 pixels (@2x scale of 40pt base size)
+- Color Profile: sRGB
+- Format: PNG with alpha channel
+- Background: Gradient from #0066CC to #2D8B75 at 45 degrees
+- Foreground: White medical task symbol (#FFFFFF)
+- Corner Radius: 12px
+- Safe Area Padding: 1px
+- Minimum iOS Version: 14.0
+- Devices: iPhone and iPad
+- Usage: Spotlight search results
+- Display Modes: Light and Dark compatible
+- Accessibility: 4.5:1 minimum contrast ratio, colorblind safe
+
+[The binary data would contain the actual PNG image with these specifications]
