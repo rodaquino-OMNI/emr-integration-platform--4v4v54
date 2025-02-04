@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    EMR Task Management Application Theme (Light Mode)
+    - Healthcare-optimized theme with WCAG 2.1 AA compliance
+    - Minimum contrast ratio of 4.5:1 for medical environment readability
+    - Material Design 3 components integration (v1.9.0)
+    - Accessibility-focused with 44dp minimum touch targets
+-->
+<resources>
+    <!-- Base application theme for healthcare environment -->
+    <style name="Theme.EMRTask" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand colors -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryVariant">@color/color_primary_dark</item>
+        <item name="colorOnPrimary">@color/color_on_primary</item>
+        
+        <!-- Secondary brand colors -->
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_dark</item>
+        <item name="colorOnSecondary">@color/color_on_secondary</item>
+        
+        <!-- Error colors for critical medical alerts -->
+        <item name="colorError">@color/color_error</item>
+        <item name="colorOnError">@color/color_on_error</item>
+        
+        <!-- Background colors optimized for medical interfaces -->
+        <item name="android:colorBackground">@color/color_background</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnBackground">@color/color_on_background</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+
+        <!-- System bars configuration -->
+        <item name="android:statusBarColor">@color/color_status_bar</item>
+        <item name="android:navigationBarColor">@color/color_navigation_bar</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        
+        <!-- Typography configuration -->
+        <item name="android:fontFamily">@string/font_family_regular</item>
+        <item name="fontFamily">@string/font_family_regular</item>
+        
+        <!-- Component styles -->
+        <item name="materialButtonStyle">@style/Widget.EMRTask.Button</item>
+        <item name="materialCardViewStyle">@style/Widget.EMRTask.TaskCard</item>
+        <item name="toolbarStyle">@style/Widget.EMRTask.Toolbar</item>
+        
+        <!-- Accessibility configurations -->
+        <item name="minTouchTargetSize">44dp</item>
+        <item name="android:minHeight">44dp</item>
+        
+        <!-- Material elevation overlay for depth perception -->
+        <item name="elevationOverlayEnabled">false</item>
+        
+        <!-- Text colors for optimal readability -->
+        <item name="android:textColorPrimary">@color/color_on_background</item>
+        <item name="android:textColorSecondary">@color/color_on_surface</item>
+        
+        <!-- Ripple effect for touch feedback -->
+        <item name="colorControlHighlight">@color/color_primary_variant</item>
+        
+        <!-- Shape appearance for components -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.EMRTask.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.EMRTask.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.EMRTask.LargeComponent</item>
+    </style>
+
+    <!-- Theme variant without action bar for full-screen medical interfaces -->
+    <style name="Theme.EMRTask.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+    </style>
+
+    <!-- Shape appearances for consistent component styling -->
+    <style name="ShapeAppearance.EMRTask.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="ShapeAppearance.EMRTask.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.EMRTask.LargeComponent" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+</resources>
