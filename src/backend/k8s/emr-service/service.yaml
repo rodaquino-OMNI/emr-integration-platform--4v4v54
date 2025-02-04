@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: emr-service
+  namespace: healthcare-prod
+  labels:
+    app: emr-service
+    version: 1.0.0
+    tier: backend
+    security-tier: restricted
+    istio-injection: enabled
+    app.kubernetes.io/name: emr-service
+    app.kubernetes.io/part-of: healthcare-platform
+    app.kubernetes.io/component: integration
+  annotations:
+    # Prometheus monitoring configuration
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+    
+    # Istio service mesh integration
+    sidecar.istio.io/inject: "true"
+    service.istio.io/canonical-name: "emr-service"
+    service.istio.io/canonical-revision: "v1"
+    
+    # Health check configuration
+    health.check.path: "/health"
+    health.check.port: "8080"
+
+spec:
+  type: ClusterIP
+  ports:
+    # FHIR R4 endpoint
+    - name: http-fhir
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    
+    # HL7 v2 endpoint
+    - name: http-hl7
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+    
+    # Metrics endpoint for monitoring
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  
+  # Pod selector for service-pod matching
+  selector:
+    app: emr-service
+    security-tier: restricted
+  
+  # Session handling configuration
+  sessionAffinity: None
+  
+  # Readiness configuration
+  publishNotReadyAddresses: false
+  
+  # Traffic policy configuration
+  internalTrafficPolicy: Cluster
