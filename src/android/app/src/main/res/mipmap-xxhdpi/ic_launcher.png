@@ -1,0 +1,25 @@
+Format: PNG (Portable Network Graphics)
+Dimensions: 144x144 pixels
+DPI: 480 (xxhdpi)
+Color Space: sRGB
+Transparency: Enabled
+Safe Zone: 132x132 pixels
+
+Design Elements:
+- Primary Color: #0066CC (Accessible Blue)
+- Material Design style icon
+- Healthcare-themed symbol (e.g., medical cross or task checkmark)
+- Clean, minimalist design
+- High contrast for visibility
+- Colorblind-safe implementation
+- Maintains recognizability at size
+
+Technical Requirements:
+- Lossless PNG compression
+- File size target: < 50KB
+- Supports transparency
+- Sharp edges and crisp details at 480dpi
+- Compatible with both light and dark themes
+- Optimized for xxhdpi Android devices
+
+The icon should be created using professional design tools like Adobe Illustrator or Sketch, exported with proper PNG optimization settings, and placed in the mipmap-xxhdpi directory.
