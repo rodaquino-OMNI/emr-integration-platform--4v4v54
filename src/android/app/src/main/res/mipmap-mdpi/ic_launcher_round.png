@@ -1,0 +1,17 @@
+Format: PNG (32-bit ARGB)
+Dimensions: 48x48 pixels
+Density: mdpi (160dpi)
+Shape: Round/Circular
+Primary Color: #0066CC (Healthcare Blue)
+Padding: 
+- Internal: 2dp
+- Safe Zone: 1dp
+Transparency: Enabled
+Compression: Lossless
+Max File Size: 5KB
+Color Profile: sRGB
+Optimization Tool: pngquant
+
+The image should be a circular launcher icon following Material Design guidelines, using the healthcare-optimized blue (#0066CC) as the primary color, with proper padding and visual hierarchy for optimal display on medium-density Android devices.
+
+Note: This is a binary file that needs to be generated using appropriate image creation tools following these exact specifications.
