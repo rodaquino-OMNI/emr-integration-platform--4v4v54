@@ -1,0 +1,14 @@
+Dimensions: 360x360 pixels (3x scale of 120x120 base size)
+Format: PNG with transparency
+Color Space: sRGB
+Primary Color: #0066CC (Healthcare blue)
+Background: Transparent
+Safe Area Inset: 16px on all sides
+Minimum Padding: 36px (10% of width)
+Compression: Optimal level while maintaining quality
+Target File Size: < 100KB
+Minimum iOS Version: 14.0
+
+The image should be created by a graphic designer or generated using appropriate design tools (e.g., Sketch, Figma, Adobe XD) following these exact specifications.
+
+The binary content cannot be represented in text format here.
