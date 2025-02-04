@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Sandbox for security isolation -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- HealthKit integration for EMR data -->
+    <key>com.apple.developer.healthkit</key>
+    <true/>
+
+    <!-- Complete file encryption when device is locked -->
+    <key>com.apple.developer.default-data-protection</key>
+    <string>NSFileProtectionComplete</string>
+
+    <!-- Keychain access group for secure credential sharing -->
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)com.emrtask.app</string>
+    </array>
+
+    <!-- Universal link support for deep linking -->
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>applinks:emrtask.app</string>
+    </array>
+
+    <!-- App group for shared offline data storage -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.emrtask.app</string>
+    </array>
+
+    <!-- Time-sensitive notifications for critical tasks -->
+    <key>com.apple.developer.usernotifications.time-sensitive</key>
+    <true/>
+
+    <!-- Password autofill support -->
+    <key>com.apple.developer.authentication-services.autofill-credential-provider</key>
+    <true/>
+</dict>
+</plist>
