@@ -1,0 +1,120 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: emr-task-virtualservice
+  namespace: emr-task
+  labels:
+    app: emr-task
+    component: routing
+spec:
+  # Define the domain patterns this VirtualService handles
+  hosts:
+    - "*.emrtask.com"
+  
+  # Reference to the Istio Gateway handling ingress traffic
+  gateways:
+    - emr-task-gateway
+  
+  # HTTP traffic routing rules
+  http:
+    # API traffic handling
+    - match:
+        - uri:
+            prefix: "/api/v1"
+      route:
+        - destination:
+            host: api-gateway
+            port:
+              number: 8000
+            subset: v1
+      # Implement retry policy for 99.99% uptime
+      retries:
+        attempts: 3
+        perTryTimeout: "2s"
+        retryOn: "connect-failure,refused-stream,unavailable,cancelled,resource-exhausted"
+      
+      # Set request timeout
+      timeout: "5s"
+      
+      # Circuit breaker configuration
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 100
+      
+      # Load balancing configuration
+      loadBalancer:
+        simple: ROUND_ROBIN
+      
+      # Strict CORS policy for security
+      corsPolicy:
+        allowOrigins:
+          - regex: ".*\\.emrtask\\.com"
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowHeaders:
+          - Authorization
+          - Content-Type
+          - Accept
+          - Origin
+          - X-Requested-With
+          - X-Request-ID
+        exposeHeaders:
+          - X-Request-ID
+        maxAge: "24h"
+        allowCredentials: true
+      
+      # Fault injection for testing (disabled in production)
+      fault:
+        delay:
+          percentage:
+            value: 0
+          fixedDelay: 5s
+        abort:
+          percentage:
+            value: 0
+          httpStatus: 503
+      
+      # Headers management
+      headers:
+        request:
+          set:
+            x-forwarded-proto: https
+            x-request-id: "%REQ(X-Request-Id)%"
+        response:
+          add:
+            strict-transport-security: "max-age=31536000; includeSubDomains"
+            x-content-type-options: "nosniff"
+            x-frame-options: "DENY"
+            x-xss-protection: "1; mode=block"
+
+    # Health check endpoints
+    - match:
+        - uri:
+            prefix: "/health"
+      route:
+        - destination:
+            host: api-gateway
+            port:
+              number: 8000
+      timeout: "2s"
+      retries:
+        attempts: 2
+        perTryTimeout: "1s"
+        retryOn: "connect-failure,refused-stream,unavailable"
+
+    # Metrics endpoints for monitoring
+    - match:
+        - uri:
+            prefix: "/metrics"
+      route:
+        - destination:
+            host: api-gateway
+            port:
+              number: 8000
+      timeout: "3s"
