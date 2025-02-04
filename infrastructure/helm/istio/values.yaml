@@ -1,0 +1,117 @@
+# Istio Service Mesh Configuration Values
+# Version: 1.18+
+
+# Global settings for all Istio components
+global:
+  domain: emrtask.com
+  host: api-gateway-service
+  sni: api.emrtask.com
+  requestId: "{{ randAlphaNum 32 }}"
+  
+  # Mutual TLS settings
+  mtls:
+    enabled: true
+    mode: STRICT
+    autoMTLS: true
+  
+  # Monitoring configuration
+  monitoring:
+    enabled: true
+    retention: 30d
+    scrapeInterval: 15s
+  
+  # Distributed tracing settings
+  tracing:
+    enabled: true
+    sampling: 100
+    zipkin:
+      address: jaeger-collector.monitoring:9411
+
+# Gateway configuration for ingress traffic
+gateways:
+  enabled: true
+  selector:
+    istio: ingressgateway
+  servers:
+    # HTTPS configuration
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: emr-task-cert
+      hosts:
+        - "*.emrtask.com"
+    
+    # HTTP configuration with HTTPS redirect
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.emrtask.com"
+      tls:
+        httpsRedirect: true
+
+# Virtual service configuration for routing
+virtualServices:
+  enabled: true
+  hosts:
+    - "*.emrtask.com"
+  http:
+    - match:
+        - uri:
+            prefix: /api/v1
+      route:
+        - destination:
+            host: api-gateway-service
+            port:
+              number: 8080
+      # Retry policy
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: connect-failure,refused-stream,unavailable,cancelled,resource-exhausted
+      # Request timeout
+      timeout: 10s
+      # CORS policy
+      corsPolicy:
+        allowOrigins:
+          - exact: https://*.emrtask.com
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowHeaders:
+          - Authorization
+          - Content-Type
+        maxAge: 24h
+
+# Destination rules for traffic management
+destinationRules:
+  enabled: true
+  trafficPolicy:
+    # Load balancing configuration
+    loadBalancer:
+      simple: ROUND_ROBIN
+    # Connection pool settings
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 5s
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 100
+        maxRetries: 3
+    # Circuit breaking configuration
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+    # TLS settings
+    tls:
+      mode: ISTIO_MUTUAL
