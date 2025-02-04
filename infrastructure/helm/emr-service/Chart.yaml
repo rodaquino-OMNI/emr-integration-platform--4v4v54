@@ -1,0 +1,40 @@
+apiVersion: v2
+name: emr-service
+description: A secure and highly available EMR Integration Service supporting FHIR R4 and HL7 v2 protocols for Epic and Cerner systems, providing 99.99% uptime with encrypted data transmission and storage
+type: application
+version: 1.0.0
+appVersion: 1.0.0
+
+keywords:
+  - emr
+  - healthcare
+  - fhir
+  - hl7
+  - integration
+  - epic
+  - cerner
+  - medical-records
+  - hipaa-compliant
+
+maintainers:
+  - name: EMR Task Platform Team
+    email: team@emrtask.com
+    url: https://emrtask.com/support
+
+dependencies:
+  - name: common
+    version: 1.x.x
+    repository: file://../common
+    condition: common.enabled
+    tags:
+      - infrastructure
+
+engine:
+  node: ">=18.0.0"
+  helm: ">=3.8.0"
+
+annotations:
+  category: Healthcare Integration
+  compliance: HIPAA, GDPR, LGPD
+  security: AES-256-GCM encryption
+  availability: 99.99% SLA
