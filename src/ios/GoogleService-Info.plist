@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Core Firebase Configuration -->
+    <key>CLIENT_ID</key>
+    <string>com.emrtask.app</string>
+    <key>REVERSED_CLIENT_ID</key>
+    <string>app.emrtask.com</string>
+    <key>API_KEY</key>
+    <string>your-firebase-api-key</string>
+    <key>GCM_SENDER_ID</key>
+    <string>your-gcm-sender-id</string>
+    <key>PLIST_VERSION</key>
+    <string>1</string>
+    <key>BUNDLE_ID</key>
+    <string>com.emrtask.app</string>
+    <key>PROJECT_ID</key>
+    <string>emrtask-prod</string>
+    <key>STORAGE_BUCKET</key>
+    <string>emrtask-prod.appspot.com</string>
+    <key>GOOGLE_APP_ID</key>
+    <string>your-google-app-id</string>
+
+    <!-- Service Configuration -->
+    <key>IS_ADS_ENABLED</key>
+    <false/>
+    <key>IS_ANALYTICS_ENABLED</key>
+    <true/>
+    <key>IS_APPINVITE_ENABLED</key>
+    <false/>
+    <key>IS_GCM_ENABLED</key>
+    <true/>
+    <key>IS_SIGNIN_ENABLED</key>
+    <true/>
+
+    <!-- Cloud Messaging Configuration -->
+    <key>FirebaseMessagingAutoInitEnabled</key>
+    <true/>
+    <key>FirebaseMessagingDeliveryMetricsEnabled</key>
+    <true/>
+    <key>FirebaseMessagingDeliveryRetryEnabled</key>
+    <true/>
+    <key>FirebaseMessagingDeliveryRetryMaxAttempts</key>
+    <integer>3</integer>
+
+    <!-- Analytics Configuration -->
+    <key>FirebaseAnalyticsEnabled</key>
+    <true/>
+    <key>FirebaseAnalyticsCollectionDeactivated</key>
+    <false/>
+    <key>FirebaseAnalyticsBatchSize</key>
+    <integer>20</integer>
+    <key>FirebaseAnalyticsUploadInterval</key>
+    <integer>3600</integer>
+    <key>FirebaseAnalyticsDataRetentionDays</key>
+    <integer>90</integer>
+    <key>FirebaseAnalyticsPHIDataCollectionDisabled</key>
+    <true/>
+
+    <!-- Crashlytics Configuration -->
+    <key>FirebaseCrashlyticsCollectionEnabled</key>
+    <true/>
+    <key>FirebaseCrashlyticsDebugEnabled</key>
+    <false/>
+    <key>FirebaseCrashlyticsCustomKeysEnabled</key>
+    <true/>
+    <key>FirebaseCrashlyticsDataCollectionDeactivated</key>
+    <false/>
+    <key>FirebaseCrashlyticsDeletePreviousReports</key>
+    <true/>
+
+    <!-- Security Configuration -->
+    <key>FirebaseAPIKeyRestrictions</key>
+    <dict>
+        <key>ApplicationRestrictions</key>
+        <string>iOS_BUNDLE_ID</string>
+        <key>AllowedAPIs</key>
+        <array>
+            <string>Cloud Messaging API</string>
+            <string>Firebase Analytics API</string>
+            <string>Firebase Crashlytics API</string>
+        </array>
+        <key>KeyRotationPeriodDays</key>
+        <integer>90</integer>
+        <key>RequestQuotas</key>
+        <dict>
+            <key>DailyLimit</key>
+            <integer>100000</integer>
+            <key>PerMinuteLimit</key>
+            <integer>500</integer>
+        </dict>
+    </dict>
+</dict>
+</plist>
