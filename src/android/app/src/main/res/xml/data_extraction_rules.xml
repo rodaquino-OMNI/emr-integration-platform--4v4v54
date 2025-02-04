@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Data Extraction Rules for EMR Task Management Platform
+    Version: 1.0
+    Purpose: Define HIPAA-compliant rules for data backup and device transfer
+    
+    Security Notes:
+    - Excludes all PHI/EMR data from backups and transfers
+    - Protects encryption keys and security-sensitive files
+    - Maintains offline-first capabilities while ensuring data security
+    - Complies with HIPAA data protection requirements
+-->
+<data-extraction-rules xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Cloud Backup Rules -->
+    <cloud-backup>
+        <!-- Default inclusion of app data -->
+        <include domain="root" path="." />
+        
+        <!-- Exclude sensitive PHI/EMR databases -->
+        <exclude domain="database" path="emr_data.db" />
+        <exclude domain="database" path="patient_data.db" />
+        <exclude domain="database" path="offline_cache.db" />
+        
+        <!-- Exclude sensitive shared preferences -->
+        <exclude domain="sharedpref" path="auth_tokens.xml" />
+        <exclude domain="sharedpref" path="user_credentials.xml" />
+        <exclude domain="sharedpref" path="emr_settings.xml" />
+        
+        <!-- Exclude security-critical files -->
+        <exclude domain="file" path="encryption_keys/" />
+        <exclude domain="file" path="security/" />
+        <exclude domain="file" path="certificates/" />
+        
+        <!-- Exclude offline data containing PHI -->
+        <exclude domain="file" path="offline_data/patient_records/" />
+        <exclude domain="file" path="offline_data/tasks_with_phi/" />
+    </cloud-backup>
+
+    <!-- Device Transfer Rules -->
+    <device-transfer>
+        <!-- Default inclusion of app data -->
+        <include domain="root" path="." />
+        
+        <!-- Exclude sensitive PHI/EMR databases -->
+        <exclude domain="database" path="emr_data.db" />
+        <exclude domain="database" path="patient_data.db" />
+        <exclude domain="database" path="offline_cache.db" />
+        
+        <!-- Exclude sensitive shared preferences -->
+        <exclude domain="sharedpref" path="auth_tokens.xml" />
+        <exclude domain="sharedpref" path="user_credentials.xml" />
+        <exclude domain="sharedpref" path="emr_settings.xml" />
+        
+        <!-- Exclude security-critical files -->
+        <exclude domain="file" path="encryption_keys/" />
+        <exclude domain="file" path="security/" />
+        <exclude domain="file" path="certificates/" />
+        
+        <!-- Exclude offline data containing PHI -->
+        <exclude domain="file" path="offline_data/patient_records/" />
+        <exclude domain="file" path="offline_data/tasks_with_phi/" />
+        
+        <!-- Exclude temporary files that might contain PHI -->
+        <exclude domain="file" path="temp/" />
+        <exclude domain="file" path="cache/" />
+    </device-transfer>
+
+</data-extraction-rules>
