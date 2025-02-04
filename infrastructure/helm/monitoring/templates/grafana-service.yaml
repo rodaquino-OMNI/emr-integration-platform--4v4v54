@@ -1,0 +1,42 @@
+{{/* Grafana Service Template for EMR Task Management Platform */}}
+{{/* Version: 9.5.0 */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.grafana.service.name | default "grafana" }}
+  labels:
+    app: grafana
+    component: monitoring
+    version: {{ .Values.grafana.version }}
+    part-of: monitoring-stack
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    # Prometheus scraping configuration
+    prometheus.io/scrape: {{ .Values.grafana.monitoring.enabled | default "true" | quote }}
+    prometheus.io/port: {{ .Values.grafana.service.port | default "3000" | quote }}
+    prometheus.io/path: /metrics
+    # Load balancer configurations
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "3600"
+    # High availability annotations
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
+spec:
+  type: ClusterIP
+  # Enable session affinity for stable connections
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hour session timeout
+  ports:
+    - name: http
+      port: {{ .Values.grafana.service.port | default 3000 }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: grafana
+    component: monitoring
+    version: {{ .Values.grafana.version }}
