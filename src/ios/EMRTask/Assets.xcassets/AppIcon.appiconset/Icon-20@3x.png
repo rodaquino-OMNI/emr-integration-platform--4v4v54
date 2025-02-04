@@ -1,0 +1,35 @@
+[Binary PNG file content with the following specifications]
+
+Format: PNG
+Dimensions: 60x60 pixels (20pt @3x)
+Color Space: sRGB
+Alpha Channel: Yes
+Compression: Optimized PNG
+
+Design Elements:
+- Background: Solid #0066CC (Healthcare Blue)
+- Foreground: White (#FFFFFF) medical task symbol
+- Corner Radius: iOS standard (approximately 12px)
+- Safe Area: 1px padding from edges
+- Contrast Ratio: >4.5:1 (WCAG 2.1 AA compliant)
+
+Technical Requirements:
+- File Size: Optimized <10KB
+- Color Depth: 24-bit + 8-bit alpha
+- Anti-aliasing: Enabled
+- Dark Mode: Automatic adaptation via asset catalog
+- Compression: PNG optimization for iOS
+
+Platform Compatibility:
+- Minimum iOS: 14.0+
+- Devices: iPhone
+- Usage: Notifications, Settings
+- Scale Factor: 3x
+- Original Size: 20x20pt
+
+Asset Catalog Integration:
+- Idiom: iphone
+- Scale: 3x
+- Role: notification-icon
+- Display Gamut: sRGB
+- Appearances: light, dark
