@@ -1,0 +1,29 @@
+Format: PNG (Portable Network Graphics)
+Dimensions: 96x96 pixels (xhdpi @ 2.0x scale factor)
+Color Space: sRGB
+Color Depth: 32-bit with alpha channel
+Primary Color: #0066CC (Accessible Blue)
+Compression: Optimized lossless PNG compression
+File Size Target: < 50KB
+
+Design Requirements:
+- Material Design adaptive icon guidelines
+- Safe zone: 66dp x 66dp keyline grid
+- Corner radius: 20dp
+- Healthcare-optimized appearance
+- Professional medical aesthetic
+- Culturally neutral symbolism
+- Clear visibility at 24dp minimum size
+- Color contrast ratio ≥ 4.5:1
+- Dark theme support
+- EMR task management focus
+
+Platform Compatibility:
+- Android 7.0+ support
+- Adaptive icon support for Android 8.0+
+- Compatible with major manufacturer UIs
+- Automatic density scaling support
+- xhdpi density bucket (2.0x scale factor)
+
+The actual icon should be created using professional image editing software 
+following these exact specifications.
