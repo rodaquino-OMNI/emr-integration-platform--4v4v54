@@ -1,0 +1,55 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "importHelpers": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    }
+  ]
+}
