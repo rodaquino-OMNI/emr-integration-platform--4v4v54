@@ -1,0 +1,15 @@
+This file should be created using professional image editing software with the following specifications:
+
+Dimensions: 192x192dp (768x768 pixels at xxxhdpi)
+Format: PNG-24 with 8-bit alpha channel
+Color Space: sRGB
+Primary Color: #0066CC
+Background: Solid #0066CC with full opacity
+Foreground: White medical cross symbol and EMR task elements
+Anti-aliasing: 8x MSAA
+Edge Treatment: Sharp with 1px fade
+Compression: Optimized lossless using pngquant
+Target File Size: < 50KB
+Safe Zone: 66dp inset from edges for adaptive icon compatibility
+
+The image should be manually pixel-aligned and optimized for the xxxhdpi density (4.0x baseline) to ensure maximum clarity and crispness across all usage contexts.
