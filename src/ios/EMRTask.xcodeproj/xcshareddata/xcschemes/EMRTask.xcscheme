@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "1430"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "EMRTask"
+               BuildableName = "EMRTask.app"
+               BlueprintName = "EMRTask"
+               ReferencedContainer = "container:EMRTask.xcodeproj">
+            </BuildableReference>
+            <BuildSettings>
+               <SWIFT_ACTIVE_COMPILATION_CONDITIONS>DEBUG EMR_INTEGRATION OFFLINE_ENABLED</SWIFT_ACTIVE_COMPILATION_CONDITIONS>
+               <ENABLE_TESTING_SEARCH_PATHS>YES</ENABLE_TESTING_SEARCH_PATHS>
+               <ONLY_ACTIVE_ARCH>YES</ONLY_ACTIVE_ARCH>
+               <ENABLE_HARDENED_RUNTIME>YES</ENABLE_HARDENED_RUNTIME>
+               <ENABLE_APP_SANDBOX>YES</ENABLE_APP_SANDBOX>
+               <ENABLE_USER_SCRIPT_SANDBOXING>YES</ENABLE_USER_SCRIPT_SANDBOXING>
+            </BuildSettings>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      enableThreadSanitizer = "YES"
+      enableAddressSanitizer = "YES"
+      codeCoverageEnabled = "YES">
+      <TestPlans>
+         <TestPlan
+            reference = "container:EMRTask.xctestplan"
+            default = "YES">
+         </TestPlan>
+         <TestPlan
+            reference = "container:EMRTaskOffline.xctestplan">
+         </TestPlan>
+         <TestPlan
+            reference = "container:EMRTaskSecurity.xctestplan">
+         </TestPlan>
+      </TestPlans>
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES"
+            testExecutionOrdering = "random">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "EMRTaskTests"
+               BuildableName = "EMRTaskTests.xctest"
+               BlueprintName = "EMRTaskTests"
+               ReferencedContainer = "container:EMRTask.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "EMRTaskUITests"
+               BuildableName = "EMRTaskUITests.xctest"
+               BlueprintName = "EMRTaskUITests"
+               ReferencedContainer = "container:EMRTask.xcodeproj">
+            </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "EMRTaskUITests/testLaunchPerformance">
+               </Test>
+            </SkippedTests>
+         </TestableReference>
+      </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "EMRTask"
+            BuildableName = "EMRTask.app"
+            BlueprintName = "EMRTask"
+            ReferencedContainer = "container:EMRTask.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <CommandLineArguments>
+      </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "IS_TESTING"
+            value = "YES"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "USE_MOCK_EMR"
+            value = "YES"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MOCK_EMR_RESPONSE_DELAY"
+            value = "0.5"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "ENABLE_TEST_ENCRYPTION"
+            value = "YES"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      enableThreadSanitizer = "YES"
+      enableAddressSanitizer = "YES"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES"
+      viewDebuggingEnabled = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "EMRTask"
+            BuildableName = "EMRTask.app"
+            BlueprintName = "EMRTask"
+            ReferencedContainer = "container:EMRTask.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "EMR_API_ENDPOINT"
+            value = "$(EMR_API_ENDPOINT)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "OFFLINE_STORAGE_LIMIT"
+            value = "1073741824"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "ENABLE_ENCRYPTION"
+            value = "YES"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "ENCRYPTION_KEY_SIZE"
+            value = "256"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MAX_RETRY_ATTEMPTS"
+            value = "3"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
+      <BackgroundModes>
+         <EnabledMode>remote-notification</EnabledMode>
+         <EnabledMode>fetch</EnabledMode>
+         <EnabledMode>processing</EnabledMode>
+         <EnabledMode>external-accessory</EnabledMode>
+         <EnabledMode>bluetooth-central</EnabledMode>
+      </BackgroundModes>
+      <LocationScenarioReference
+         identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
+         referenceType = "1">
+      </LocationScenarioReference>
+      <Region>US</Region>
+      <Language>en</Language>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "EMRTask"
+            BuildableName = "EMRTask.app"
+            BlueprintName = "EMRTask"
+            ReferencedContainer = "container:EMRTask.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>
