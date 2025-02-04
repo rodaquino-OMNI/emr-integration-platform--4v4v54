@@ -1,0 +1,171 @@
+# Global version control exclusion patterns for all project components
+
+# Dependencies
+node_modules/
+packages/*/node_modules/
+yarn.lock
+package-lock.json
+Pods/
+.gradle/
+.pub-cache/
+.dart_tool/
+pubspec.lock
+vendor/
+go.sum
+
+# Build outputs
+build/
+dist/
+out/
+.next/
+DerivedData/
+**/build/
+*.ipa
+*.apk
+*.aab
+*.bundle.js
+*.min.js
+*.min.css
+
+# Environment & Configuration
+.env
+.env.*
+.env.*.local
+!.env.example
+local.properties
+keystore.properties
+config.*.json
+!config.example.json
+application-*.yml
+!application-example.yml
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+xcuserdata/
+*.xcworkspace
+*.iml
+.project
+.classpath
+.settings/
+*.sublime-*
+.metals/
+.bloop/
+
+# Logs & Reports
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+coverage/
+test-results/
+junit.xml
+report.xml
+allure-results/
+lighthouse/
+*.heapsnapshot
+
+# System Files
+.DS_Store
+Thumbs.db
+*~
+tmp/
+temp/
+*.bak
+*.tmp
+*.swp
+.directory
+
+# Security & Credentials
+*.jks
+*.keystore
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.mobileprovision
+*.provisionprofile
+google-services.json
+GoogleService-Info.plist
+aws.credentials
+gcp-key.json
+firebase-admin.json
+*.der
+*.csr
+
+# Mobile - Android
+android/app/debug/
+android/app/release/
+android/.cxx/
+android/captures/
+android/app/google-services.json
+android/key.properties
+android/app/src/main/assets/crashlytics-build.properties
+
+# Mobile - iOS
+ios/*.xcarchive
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots/**/*.png
+ios/Runner.app.dSYM.zip
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
+# Web - Next.js
+.next/cache/
+public/sw.js
+public/workbox-*.js
+*.tsbuildinfo
+.vercel/
+storybook-static/
+out/
+.env*.local
+
+# Web - Testing
+cypress/videos/
+cypress/screenshots/
+__snapshots__/
+coverage-e2e/
+.nyc_output/
+playwright-report/
+
+# Backend - Build
+packages/*/dist/
+packages/*/build/
+*.js.map
+*.d.ts
+target/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Backend - Testing
+.nyc_output/
+packages/*/coverage/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Infrastructure - Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+override.tf
+override.tf.json
+.terraformrc
+terraform.rc
+
+# Infrastructure - Kubernetes
+kubeconfig
+**/secrets/*.yaml
+**/config/*.local.yaml
+charts/*/charts/
+charts/*/Chart.lock
+values.*.yaml
+!values.example.yaml
