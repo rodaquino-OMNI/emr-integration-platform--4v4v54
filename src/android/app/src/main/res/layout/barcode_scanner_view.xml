@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Barcode Scanner View Layout
+  Version: 1.0
+  External Dependencies:
+  - androidx.constraintlayout:constraintlayout:2.1.4
+  - androidx.camera:camera-view:1.2.3
+  - com.google.android.material:material:1.8.0
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    android:importantForAccessibility="true">
+
+    <!-- Camera Preview Surface -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="@string/camera_preview_description"
+        android:importantForAccessibility="no" />
+
+    <!-- Scanner Target Overlay -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/scanner_overlay"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardElevation="0dp"
+        app:strokeWidth="2dp"
+        app:strokeColor="@color/scanner_overlay_stroke"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="@string/scanner_target_description"
+        app:cardCornerRadius="8dp"
+        android:importantForAccessibility="yes" />
+
+    <!-- User Guidance Text -->
+    <TextView
+        android:id="@+id/scanner_guidance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/scan_barcode_guidance"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:background="@drawable/scanner_guidance_background"
+        app:layout_constraintTop_toBottomOf="@id/scanner_overlay"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:importantForAccessibility="yes"
+        android:contentDescription="@string/scanner_guidance_description"
+        android:textAlignment="center"
+        android:elevation="4dp"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- Accessibility Support Overlay -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/scanner_accessibility_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="scanner_overlay,scanner_guidance"
+        android:importantForAccessibility="yes" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
