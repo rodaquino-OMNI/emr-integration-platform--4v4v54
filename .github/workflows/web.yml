@@ -1,0 +1,195 @@
+name: Web Dashboard CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/web/**'
+      - '.github/workflows/web.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/web/**'
+      - '.github/workflows/web.yml'
+
+env:
+  REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
+  IMAGE_NAME: emr-task-web
+  NODE_VERSION: '18'
+  NEXT_TELEMETRY_DISABLED: 1
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+jobs:
+  test:
+    name: Test and Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: src/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/web
+        run: |
+          npm ci --no-optional
+          npm audit
+
+      - name: Run TypeScript type checking
+        working-directory: src/web
+        run: npm run type-check
+
+      - name: Run ESLint
+        working-directory: src/web
+        run: npm run lint
+
+      - name: Run unit tests with coverage
+        working-directory: src/web
+        run: npm run test:coverage
+
+      - name: Run Cypress E2E tests
+        working-directory: src/web
+        run: npm run cypress:headless
+        env:
+          CYPRESS_BASE_URL: http://localhost:3000
+
+      - name: SonarCloud Analysis
+        uses: SonarSource/sonarcloud-github-action@v1.9
+        with:
+          projectBaseDir: src/web
+          args: >
+            -Dsonar.projectKey=emr-task-web
+            -Dsonar.organization=emr-task
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: src/web/coverage
+
+  build-and-push:
+    name: Build and Push Image
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: infrastructure/docker/web.Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.10.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  deploy:
+    name: Deploy to Production
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    concurrency: production_environment
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set Kubernetes context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          context: production
+
+      - name: Deploy canary
+        uses: azure/k8s-deploy@v4
+        with:
+          namespace: production
+          manifests: |
+            infrastructure/k8s/web/canary.yaml
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          strategy: canary
+          percentage: 20
+          traffic-split-method: pod
+          
+      - name: Wait for canary health check
+        run: |
+          kubectl wait --for=condition=available --timeout=300s deployment/web-canary -n production
+          sleep 30
+
+      - name: Promote to production
+        if: success()
+        uses: azure/k8s-deploy@v4
+        with:
+          namespace: production
+          manifests: |
+            infrastructure/k8s/web/deployment.yaml
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          strategy: blue-green
+          timeout: 300s
+
+      - name: Verify deployment
+        run: |
+          kubectl wait --for=condition=available --timeout=300s deployment/web -n production
+          curl -f https://web.emrtask.com/api/health || exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/web -n production
+          kubectl delete deployment/web-canary -n production
+
+      - name: Notify deployment status
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: 'deployments'
+          slack-message: |
+            *Web Dashboard Deployment Status*: ${{ job.status }}
+            Environment: Production
+            Version: ${{ github.sha }}
+            Deployed by: ${{ github.actor }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
