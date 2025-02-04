@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Core App Information -->
+    <key>CFBundleIdentifier</key>
+    <string>com.emrtask.app</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleName</key>
+    <string>EMR Task</string>
+    <key>CFBundleDisplayName</key>
+    <string>EMR Task</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    
+    <!-- Device Capabilities -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+        <string>arm64</string>
+        <string>camera</string>
+        <string>location-services</string>
+        <string>face-id</string>
+        <string>peer-peer</string>
+    </array>
+    
+    <!-- Background Modes -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+        <string>processing</string>
+    </array>
+    
+    <!-- Permission Usage Descriptions -->
+    <key>NSCameraUsageDescription</key>
+    <string>Camera access is required for scanning patient and medication barcodes to ensure proper task verification and patient safety</string>
+    
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Location is used to verify task completion within the correct healthcare facility and maintain compliance records</string>
+    
+    <key>NSFaceIDUsageDescription</key>
+    <string>Face ID is used for secure authentication to protect sensitive patient information and maintain HIPAA compliance</string>
+    
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Photo library access is required for attaching relevant medical images to tasks while maintaining patient privacy</string>
+    
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Bluetooth is used for connecting to medical devices and maintaining continuous task synchronization</string>
+    
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Microphone access is required for voice notes and dictation in task management</string>
+    
+    <!-- Security Configurations -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>api.emrtask.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <true/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.3</string>
+                <key>NSRequiresCertificateTransparency</key>
+                <true/>
+                <key>NSPinnedDomains</key>
+                <dict>
+                    <key>api.emrtask.com</key>
+                    <dict>
+                        <key>NSIncludesSubdomains</key>
+                        <true/>
+                        <key>NSPinnedCAIdentities</key>
+                        <array>
+                            <dict>
+                                <key>SPKI-SHA256</key>
+                                <string>hash_of_public_key</string>
+                            </dict>
+                        </array>
+                    </dict>
+                </dict>
+            </dict>
+        </dict>
+    </dict>
+    
+    <!-- UI Configuration -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    
+    <!-- Scene Configuration -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Default Configuration</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                    <key>UISceneStoryboardFile</key>
+                    <string>Main</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
+</dict>
+</plist>
