@@ -1,0 +1,43 @@
+# EMR Task Management Platform Crawler Configuration
+# Version: 1.0
+# Last Updated: 2023
+# Purpose: Define crawler access rules to protect sensitive healthcare data (HIPAA compliant)
+
+# Default crawler rules
+User-agent: *
+# Protect sensitive healthcare and administrative routes
+Disallow: /api/
+Disallow: /auth/
+Disallow: /dashboard/
+Disallow: /users/
+Disallow: /audit-logs/
+Disallow: /emr/
+Disallow: /patient/
+Disallow: /clinical/
+Disallow: /settings/
+Disallow: /handover/details/
+Disallow: /tasks/private/
+
+# Allow access to public informational routes
+Allow: /$
+Allow: /public/
+Allow: /about/
+Allow: /contact/
+Allow: /tasks/public/
+Allow: /handovers/public/
+
+# Block AI model crawlers to prevent healthcare data exposure
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+# Rate limit crawler requests
+Crawl-delay: 10
+
+# Specify canonical domain
+Host: https://emrtask.com
+
+# Reference sitemap for allowed public routes
+Sitemap: https://emrtask.com/sitemap.xml
