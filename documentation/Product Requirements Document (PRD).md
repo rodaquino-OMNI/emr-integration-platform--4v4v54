@@ -33,7 +33,7 @@ Key Benefits:
 - Improved continuity of care
 
 System Boundaries:
-- Interfaces with major EMR systems (Epic, Cerner)
+- Interfaces with major EMR systems (eg: Tasy, MV Soul, Epic, Cerner)
 - Mobile applications (iOS, Android) using Flutter
 - Web interface using Next.js
 - Backend microservices architecture
