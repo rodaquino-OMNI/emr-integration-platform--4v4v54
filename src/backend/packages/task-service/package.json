@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.400.0",
-    "@emrtask/shared": "workspace:*",
+    "@emrtask/shared": "file:../shared",
     "@healthcare/hl7": "2.0.0",
     "@nestjs/cache-manager": "2.0.0",
     "@opentelemetry/api": "^1.4.0",

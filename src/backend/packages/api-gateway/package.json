@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.400.0",
-    "@emrtask/shared": "1.0.0",
+    "@emrtask/shared": "file:../shared",
     "@opentelemetry/api": "^1.4.0",
     "axios": "^1.4.0",
     "axios-retry": "3.5.0",
