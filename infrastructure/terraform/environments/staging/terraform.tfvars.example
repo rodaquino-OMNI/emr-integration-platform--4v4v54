@@ -1,0 +1,30 @@
+# Staging Environment Configuration
+# Copy this file to terraform.tfvars and update with actual values
+
+environment = "staging"
+aws_region  = "us-east-1"
+
+# VPC Configuration
+vpc_cidr           = "10.1.0.0/16"
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+public_subnet_cidrs   = ["10.1.1.0/24", "10.1.2.0/24"]
+private_subnet_cidrs  = ["10.1.11.0/24", "10.1.12.0/24"]
+database_subnet_cidrs = ["10.1.21.0/24", "10.1.22.0/24"]
+
+# EKS Configuration
+cluster_name    = "emrtask-staging"
+cluster_version = "1.28"
+
+# RDS Configuration
+db_master_username = "emrtask_admin"
+# db_master_password should be set via environment variable: TF_VAR_db_master_password
+
+# Tags
+tags = {
+  Environment = "staging"
+  Project     = "EMRTask"
+  ManagedBy   = "Terraform"
+  CostCenter  = "Engineering"
+  Owner       = "DevOps Team"
+}
