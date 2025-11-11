@@ -115,18 +115,8 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamps(true, true);
   });
 
-  // Create audit_logs table
-  await knex.schema.createTable('audit_logs', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
-    table.uuid('user_id').references('id').inTable('users').notNullable();
-    table.string('action').notNullable();
-    table.string('entity_type').notNullable();
-    table.uuid('entity_id').notNullable();
-    table.jsonb('changes').notNullable();
-    table.string('ip_address').notNullable();
-    table.string('user_agent').nullable();
-    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
-  });
+  // Note: audit_logs table creation moved to migration 002_add_audit_logs.ts
+  // This avoids duplication and provides enhanced audit logging capabilities
 
   // Create indexes for performance optimization
   await knex.schema.alterTable('tasks', (table) => {
@@ -134,11 +124,6 @@ export async function up(knex: Knex): Promise<void> {
     table.index(['assigned_to', 'status']);
     table.index(['patient_id', 'emr_system']);
     table.index('vector_clock');
-  });
-
-  await knex.schema.alterTable('audit_logs', (table) => {
-    table.index(['entity_type', 'entity_id']);
-    table.index('created_at');
   });
 
   // Set up row-level security policies
@@ -164,7 +149,7 @@ export async function down(knex: Knex): Promise<void> {
   `);
 
   // Drop tables in reverse order
-  await knex.schema.dropTableIfExists('audit_logs');
+  // Note: audit_logs is managed by migration 002_add_audit_logs.ts
   await knex.schema.dropTableIfExists('handovers');
   await knex.schema.dropTableIfExists('emr_verifications');
   await knex.schema.dropTableIfExists('tasks');

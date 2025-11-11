@@ -21,7 +21,7 @@ import {
   EMR_SYSTEMS,
   MergeOperationType,
   VectorClock
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Mock implementations
 jest.mock('../../src/models/handover.model');

@@ -4,6 +4,7 @@ import { trace, Span, SpanStatusCode } from '@opentelemetry/api'; // v1.4.0
 import { CircuitBreaker } from 'circuit-breaker-js'; // v0.0.1
 import { Meter, MetricsCollector } from '@opentelemetry/metrics'; // v1.4.0
 import { injectable, inject } from 'inversify'; // v6.1.0
+import { OAuth2TokenManager } from '@emrtask/shared/utils/oauth2TokenManager'; // SECURITY FIX: OAuth2 token management
 
 import {
   FHIRPatient,
@@ -19,7 +20,7 @@ import {
   EMR_SYSTEMS,
   ValidationError,
   EMRValidationResult
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Enhanced retry configuration with exponential backoff
 const EPIC_RETRY_CONFIG = {
@@ -54,10 +55,12 @@ export class EpicAdapter {
   private readonly circuitBreaker: CircuitBreaker;
   private readonly meter: Meter;
   private readonly tracer = trace.getTracer('epic-adapter');
-  
+  private readonly tokenManager: OAuth2TokenManager; // SECURITY FIX: OAuth2 token manager
+  private readonly oauth2Config: any; // OAuth2 configuration
+
   private readonly baseUrl: string;
   private readonly endpoints: Record<FHIRResourceType, string>;
-  
+
   constructor(
     @inject('CircuitBreakerConfig') circuitBreakerConfig: typeof EPIC_CIRCUIT_BREAKER_CONFIG,
     @inject('MetricsCollector') private readonly metricsCollector: MetricsCollector
@@ -70,15 +73,29 @@ export class EpicAdapter {
       [FHIRResourceType.Observation]: '/Observation'
     };
 
+    // SECURITY FIX: Initialize OAuth2 token manager
+    // Removes client secret from HTTP headers (OAuth2 spec violation)
+    // Implements proper token exchange flow per RFC 6749
+    this.oauth2Config = {
+      tokenEndpoint: process.env.EPIC_TOKEN_ENDPOINT!,
+      clientId: process.env.EPIC_CLIENT_ID!,
+      clientSecret: process.env.EPIC_CLIENT_SECRET!,
+      scope: process.env.EPIC_OAUTH_SCOPE || 'system/*.read system/*.write',
+      grantType: 'client_credentials' as const
+    };
+
+    this.tokenManager = new OAuth2TokenManager();
+
     // Initialize HTTP client with enhanced security and monitoring
+    // Client secret is NO LONGER sent in headers
     this.httpClient = axios.create({
       baseURL: this.baseUrl,
       timeout: 10000,
       headers: {
         'Accept': 'application/fhir+json',
-        'Content-Type': 'application/fhir+json',
-        'X-Epic-Client-ID': process.env.EPIC_CLIENT_ID,
-        'X-Epic-Client-Secret': process.env.EPIC_CLIENT_SECRET
+        'Content-Type': 'application/fhir+json'
+        // SECURITY FIX: Removed X-Epic-Client-Secret from headers
+        // Authentication now handled via OAuth2 Bearer token
       }
     });
 
@@ -113,10 +130,21 @@ export class EpicAdapter {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor for tracing and metrics
-    this.httpClient.interceptors.request.use((config) => {
+    // SECURITY FIX: Request interceptor for OAuth2 token injection
+    // Automatically adds Bearer token to all requests
+    this.httpClient.interceptors.request.use(async (config) => {
       const span = this.tracer.startSpan('epic-request');
       config.headers['X-Trace-ID'] = span.spanContext().traceId;
+
+      // Inject OAuth2 Bearer token (proper authentication per RFC 6749)
+      try {
+        const accessToken = await this.tokenManager.getAccessToken(this.oauth2Config);
+        config.headers['Authorization'] = `Bearer ${accessToken}`;
+      } catch (error) {
+        span.recordException(error as Error);
+        throw new Error(`Failed to obtain OAuth2 access token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
       return config;
     });
 

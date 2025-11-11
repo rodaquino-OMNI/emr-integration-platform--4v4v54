@@ -23,7 +23,7 @@ import {
   ValidationError,
   ValidationWarning,
   EMRDataSchema
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Performance monitoring decorator
 function MetricsTracker() {
@@ -74,7 +74,7 @@ function ValidateInput() {
 }
 
 /**
- * Transforms FHIR R4 resources into Universal Data Model format
+ * Transforms FHIR R4 resources into Universal Data Model format with vendor-specific handling
  */
 @MetricsTracker()
 @ValidateInput()
@@ -96,32 +96,17 @@ export async function transformFHIRToUDM(
     });
   }
 
-  // Type-specific validation and transformation
+  // Type-specific validation and transformation with vendor-specific handling
   let transformedData: any = {};
-  
+
   if (isFHIRPatient(resource)) {
-    transformedData = {
-      resourceType: 'Patient',
-      identifier: resource.identifier,
-      active: resource.active,
-      name: resource.name,
-      gender: resource.gender,
-      birthDate: resource.birthDate,
-      telecom: resource.telecom
-    };
+    transformedData = transformPatientToUDM(resource, system);
   } else if (isFHIRTask(resource)) {
-    transformedData = {
-      resourceType: 'Task',
-      identifier: resource.identifier,
-      status: resource.status,
-      intent: resource.intent,
-      priority: resource.priority,
-      code: resource.code,
-      description: resource.description,
-      authoredOn: resource.authoredOn,
-      lastModified: resource.lastModified
-    };
+    transformedData = transformTaskToUDM(resource, system);
   }
+
+  // Apply vendor-specific extensions and transformations
+  transformedData = applyVendorSpecificTransformations(transformedData, system);
 
   // Validate transformed data against UDM schema
   try {
@@ -160,6 +145,220 @@ export async function transformFHIRToUDM(
   }
 
   return emrData;
+}
+
+/**
+ * Transform FHIR Patient to UDM with vendor-specific handling
+ */
+function transformPatientToUDM(patient: FHIRPatient, system: EMR_SYSTEMS): any {
+  const baseTransform = {
+    resourceType: 'Patient',
+    identifier: patient.identifier,
+    active: patient.active,
+    name: patient.name,
+    gender: patient.gender,
+    birthDate: patient.birthDate,
+    telecom: patient.telecom,
+    address: patient.address,
+    maritalStatus: patient.maritalStatus
+  };
+
+  // Vendor-specific transformations
+  switch (system) {
+    case EMR_SYSTEMS.EPIC:
+      return {
+        ...baseTransform,
+        // Epic-specific fields
+        epicPatientId: patient.identifier?.find(id => id.system?.includes('epic'))?.value,
+        managingOrganization: patient.managingOrganization,
+        generalPractitioner: patient.generalPractitioner
+      };
+
+    case EMR_SYSTEMS.GENERIC_FHIR:
+      return {
+        ...baseTransform,
+        // Generic FHIR may have custom extensions
+        extensions: (patient as any).extension,
+        communication: patient.communication
+      };
+
+    case EMR_SYSTEMS.CERNER:
+      // Cerner typically uses HL7, but if FHIR is available
+      return {
+        ...baseTransform,
+        cernerPatientId: patient.identifier?.find(id => id.system?.includes('cerner'))?.value
+      };
+
+    default:
+      return baseTransform;
+  }
+}
+
+/**
+ * Transform FHIR Task to UDM with vendor-specific handling
+ */
+function transformTaskToUDM(task: FHIRTask, system: EMR_SYSTEMS): any {
+  const baseTransform = {
+    resourceType: 'Task',
+    identifier: task.identifier,
+    status: task.status,
+    intent: task.intent,
+    priority: task.priority,
+    code: task.code,
+    description: task.description,
+    authoredOn: task.authoredOn,
+    lastModified: task.lastModified,
+    for: task.for,
+    requester: task.requester,
+    owner: task.owner
+  };
+
+  // Vendor-specific transformations
+  switch (system) {
+    case EMR_SYSTEMS.EPIC:
+      return {
+        ...baseTransform,
+        // Epic-specific task fields
+        epicWorkflowId: task.identifier?.find(id => id.system?.includes('epic'))?.value,
+        businessStatus: task.businessStatus,
+        performerType: task.performerType
+      };
+
+    case EMR_SYSTEMS.GENERIC_FHIR:
+      return {
+        ...baseTransform,
+        // Generic FHIR extensions
+        extensions: (task as any).extension,
+        reasonCode: task.reasonCode,
+        note: task.note
+      };
+
+    case EMR_SYSTEMS.CERNER:
+      return {
+        ...baseTransform,
+        cernerOrderId: task.identifier?.find(id => id.system?.includes('cerner'))?.value
+      };
+
+    default:
+      return baseTransform;
+  }
+}
+
+/**
+ * Apply vendor-specific transformations and normalizations
+ */
+function applyVendorSpecificTransformations(data: any, system: EMR_SYSTEMS): any {
+  switch (system) {
+    case EMR_SYSTEMS.EPIC:
+      // Normalize Epic-specific codes and references
+      return normalizeEpicData(data);
+
+    case EMR_SYSTEMS.CERNER:
+      // Normalize Cerner-specific codes and references
+      return normalizeCernerData(data);
+
+    case EMR_SYSTEMS.GENERIC_FHIR:
+      // Generic FHIR - minimal normalization
+      return normalizeGenericFHIRData(data);
+
+    default:
+      return data;
+  }
+}
+
+/**
+ * Normalize Epic FHIR data
+ */
+function normalizeEpicData(data: any): any {
+  // Epic uses specific identifier systems
+  if (data.identifier) {
+    data.identifier = data.identifier.map((id: any) => ({
+      ...id,
+      system: id.system?.replace('urn:oid:', 'https://fhir.epic.com/interconnect-fhir-oauth/')
+    }));
+  }
+
+  // Epic may use vendor-specific codes
+  if (data.code?.coding) {
+    data.code.coding = data.code.coding.map((coding: any) => ({
+      ...coding,
+      display: coding.display || getEpicCodeDisplay(coding.code)
+    }));
+  }
+
+  return data;
+}
+
+/**
+ * Normalize Cerner HL7 data
+ */
+function normalizeCernerData(data: any): any {
+  // Cerner identifier normalization
+  if (data.identifier) {
+    data.identifier = data.identifier.map((id: any) => ({
+      ...id,
+      system: id.system || 'https://fhir.cerner.com'
+    }));
+  }
+
+  // Cerner-specific status mappings
+  if (data.status) {
+    data.status = mapCernerStatus(data.status);
+  }
+
+  return data;
+}
+
+/**
+ * Normalize Generic FHIR data
+ */
+function normalizeGenericFHIRData(data: any): any {
+  // Ensure consistent identifier structure
+  if (data.identifier && !Array.isArray(data.identifier)) {
+    data.identifier = [data.identifier];
+  }
+
+  // Normalize references to use relative URLs
+  if (data.subject?.reference) {
+    data.subject.reference = normalizeReference(data.subject.reference);
+  }
+
+  return data;
+}
+
+/**
+ * Get Epic-specific code display text
+ */
+function getEpicCodeDisplay(code: string): string {
+  const epicCodeMap: Record<string, string> = {
+    'LABORDER': 'Laboratory Order',
+    'RADORDER': 'Radiology Order',
+    'MEDORDER': 'Medication Order'
+  };
+
+  return epicCodeMap[code] || code;
+}
+
+/**
+ * Map Cerner status to standard FHIR status
+ */
+function mapCernerStatus(status: string): string {
+  const statusMap: Record<string, string> = {
+    'A': 'active',
+    'P': 'pending',
+    'C': 'completed',
+    'X': 'cancelled'
+  };
+
+  return statusMap[status] || status;
+}
+
+/**
+ * Normalize FHIR reference URLs
+ */
+function normalizeReference(reference: string): string {
+  // Remove absolute URLs and use relative references
+  return reference.replace(/^https?:\/\/[^/]+\//, '');
 }
 
 /**

@@ -1,0 +1,138 @@
+# ============================================================================
+# Handover Service - Helm Values
+# ============================================================================
+# Purpose: Configuration values for Handover Service deployment
+# Override: Use -f values-{env}.yaml for environment-specific configs
+# ============================================================================
+
+replicaCount: 3
+
+image:
+  repository: your-registry/emr-platform/handover-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ""
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8084"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 8084
+  targetPort: 8084
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: handover-service.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: handover-service-tls
+      hosts:
+        - handover-service.example.com
+
+resources:
+  limits:
+    cpu: 1500m
+    memory: 3Gi
+  requests:
+    cpu: 750m
+    memory: 1.5Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - handover-service
+          topologyKey: kubernetes.io/hostname
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8084
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8084
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+env:
+  - name: NODE_ENV
+    value: "production"
+  - name: PORT
+    value: "8084"
+  - name: SERVICE_NAME
+    value: "handover-service"
+
+config:
+  server:
+    port: 8084
+    timeout: 30000
+  handover:
+    notificationEnabled: true
+    retryAttempts: 3
+
+secrets:
+  database:
+    secretName: rds-credentials
+    keys:
+      - connection_string
+  notifications:
+    secretName: notification-credentials
+    keys:
+      - api_key
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+volumes:
+  - name: tmp
+    emptyDir: {}

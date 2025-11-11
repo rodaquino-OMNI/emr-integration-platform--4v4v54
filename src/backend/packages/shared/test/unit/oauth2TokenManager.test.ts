@@ -1,0 +1,299 @@
+import { describe, beforeEach, it, expect, jest } from '@jest/globals';
+import { OAuth2TokenManager } from '../../src/utils/oauth2TokenManager';
+import axios from 'axios';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+describe('OAuth2TokenManager', () => {
+  let tokenManager: OAuth2TokenManager;
+
+  const mockConfig = {
+    tokenEndpoint: 'https://auth.example.com/oauth/token',
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    scope: 'read write'
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    tokenManager = new OAuth2TokenManager(mockConfig);
+  });
+
+  describe('Token Acquisition', () => {
+    it('should acquire access token with client credentials', async () => {
+      const mockTokenResponse = {
+        data: {
+          access_token: 'test-access-token',
+          token_type: 'Bearer',
+          expires_in: 3600,
+          refresh_token: 'test-refresh-token'
+        }
+      };
+
+      mockedAxios.post.mockResolvedValue(mockTokenResponse);
+
+      const token = await tokenManager.getAccessToken();
+
+      expect(token).toBe('test-access-token');
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        mockConfig.tokenEndpoint,
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          })
+        })
+      );
+    });
+
+    it('should include scope in token request', async () => {
+      const mockTokenResponse = {
+        data: {
+          access_token: 'scoped-token',
+          expires_in: 3600
+        }
+      };
+
+      mockedAxios.post.mockResolvedValue(mockTokenResponse);
+
+      await tokenManager.getAccessToken();
+
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('scope=read+write'),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('Token Caching', () => {
+    it('should cache valid tokens', async () => {
+      const mockTokenResponse = {
+        data: {
+          access_token: 'cached-token',
+          expires_in: 3600
+        }
+      };
+
+      mockedAxios.post.mockResolvedValue(mockTokenResponse);
+
+      const token1 = await tokenManager.getAccessToken();
+      const token2 = await tokenManager.getAccessToken();
+
+      expect(token1).toBe(token2);
+      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not use expired tokens', async () => {
+      const mockTokenResponse1 = {
+        data: {
+          access_token: 'expired-token',
+          expires_in: 1 // 1 second
+        }
+      };
+
+      const mockTokenResponse2 = {
+        data: {
+          access_token: 'new-token',
+          expires_in: 3600
+        }
+      };
+
+      mockedAxios.post
+        .mockResolvedValueOnce(mockTokenResponse1)
+        .mockResolvedValueOnce(mockTokenResponse2);
+
+      const token1 = await tokenManager.getAccessToken();
+
+      // Wait for token to expire
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      const token2 = await tokenManager.getAccessToken();
+
+      expect(token1).toBe('expired-token');
+      expect(token2).toBe('new-token');
+      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    });
+
+    it('should refresh token before expiration', async () => {
+      const mockTokenResponse = {
+        data: {
+          access_token: 'refreshed-token',
+          expires_in: 3600
+        }
+      };
+
+      mockedAxios.post.mockResolvedValue(mockTokenResponse);
+
+      const token = await tokenManager.getAccessToken();
+
+      expect(tokenManager.getTokenExpiryTime()).toBeGreaterThan(Date.now());
+    });
+  });
+
+  describe('Token Refresh', () => {
+    it('should refresh token using refresh token', async () => {
+      const initialTokenResponse = {
+        data: {
+          access_token: 'initial-token',
+          refresh_token: 'refresh-token-123',
+          expires_in: 1
+        }
+      };
+
+      const refreshedTokenResponse = {
+        data: {
+          access_token: 'refreshed-token',
+          refresh_token: 'new-refresh-token',
+          expires_in: 3600
+        }
+      };
+
+      mockedAxios.post
+        .mockResolvedValueOnce(initialTokenResponse)
+        .mockResolvedValueOnce(refreshedTokenResponse);
+
+      await tokenManager.getAccessToken();
+
+      // Wait for token to expire
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      const newToken = await tokenManager.getAccessToken();
+
+      expect(newToken).toBe('refreshed-token');
+      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle refresh token expiration', async () => {
+      mockedAxios.post
+        .mockResolvedValueOnce({
+          data: { access_token: 'token1', refresh_token: 'refresh1', expires_in: 1 }
+        })
+        .mockRejectedValueOnce({
+          response: { status: 400, data: { error: 'invalid_grant' } }
+        })
+        .mockResolvedValueOnce({
+          data: { access_token: 'token2', expires_in: 3600 }
+        });
+
+      await tokenManager.getAccessToken();
+
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      const newToken = await tokenManager.getAccessToken();
+
+      expect(newToken).toBe('token2');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle network errors', async () => {
+      mockedAxios.post.mockRejectedValue(new Error('Network error'));
+
+      await expect(tokenManager.getAccessToken()).rejects.toThrow('Network error');
+    });
+
+    it('should handle invalid credentials', async () => {
+      mockedAxios.post.mockRejectedValue({
+        response: {
+          status: 401,
+          data: { error: 'invalid_client' }
+        }
+      });
+
+      await expect(tokenManager.getAccessToken()).rejects.toThrow();
+    });
+
+    it('should retry on transient failures', async () => {
+      mockedAxios.post
+        .mockRejectedValueOnce(new Error('Temporary failure'))
+        .mockResolvedValueOnce({
+          data: { access_token: 'success-token', expires_in: 3600 }
+        });
+
+      const token = await tokenManager.getAccessToken();
+
+      expect(token).toBe('success-token');
+      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('Token Validation', () => {
+    it('should validate token format', () => {
+      const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+      const isValid = tokenManager.validateTokenFormat(validToken);
+
+      expect(isValid).toBe(true);
+    });
+
+    it('should reject invalid token format', () => {
+      const invalidToken = 'invalid-token';
+      const isValid = tokenManager.validateTokenFormat(invalidToken);
+
+      expect(isValid).toBe(false);
+    });
+  });
+
+  describe('Token Revocation', () => {
+    it('should revoke access token', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200 });
+
+      await tokenManager.revokeToken('test-token');
+
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        expect.stringContaining('/revoke'),
+        expect.any(String),
+        expect.any(Object)
+      );
+    });
+
+    it('should clear cached token after revocation', async () => {
+      const mockTokenResponse = {
+        data: {
+          access_token: 'token-to-revoke',
+          expires_in: 3600
+        }
+      };
+
+      mockedAxios.post.mockResolvedValue(mockTokenResponse);
+
+      await tokenManager.getAccessToken();
+
+      mockedAxios.post.mockResolvedValue({ status: 200 });
+      await tokenManager.revokeToken('token-to-revoke');
+
+      mockedAxios.post.mockResolvedValue({
+        data: { access_token: 'new-token', expires_in: 3600 }
+      });
+
+      const newToken = await tokenManager.getAccessToken();
+
+      expect(newToken).toBe('new-token');
+    });
+  });
+
+  describe('Multiple Token Management', () => {
+    it('should manage tokens for multiple services', async () => {
+      const service1Config = { ...mockConfig, scope: 'service1' };
+      const service2Config = { ...mockConfig, scope: 'service2' };
+
+      const manager1 = new OAuth2TokenManager(service1Config);
+      const manager2 = new OAuth2TokenManager(service2Config);
+
+      mockedAxios.post
+        .mockResolvedValueOnce({
+          data: { access_token: 'service1-token', expires_in: 3600 }
+        })
+        .mockResolvedValueOnce({
+          data: { access_token: 'service2-token', expires_in: 3600 }
+        });
+
+      const token1 = await manager1.getAccessToken();
+      const token2 = await manager2.getAccessToken();
+
+      expect(token1).toBe('service1-token');
+      expect(token2).toBe('service2-token');
+    });
+  });
+});

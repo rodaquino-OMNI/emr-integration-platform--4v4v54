@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { ApiResponse, PaginationParams, VectorClock } from '@shared/types';
+import { ApiResponse, PaginationParams, VectorClock } from '@emrtask/shared/types/common.types';
 import { Task, TaskStatus, TaskPriority } from '@task/types';
 
 // Global constants for handover management

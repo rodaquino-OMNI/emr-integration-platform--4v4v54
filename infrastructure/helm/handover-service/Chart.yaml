@@ -1,0 +1,15 @@
+apiVersion: v2
+name: handover-service
+description: Handover Management service for EMR Integration Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - handover-service
+  - emr
+  - healthcare
+  - hipaa
+home: https://github.com/your-org/emr-integration-platform
+maintainers:
+  - name: Platform Team
+    email: platform-team@example.com

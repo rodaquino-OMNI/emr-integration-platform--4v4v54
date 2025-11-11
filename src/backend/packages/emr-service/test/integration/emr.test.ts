@@ -20,7 +20,7 @@ import {
   EMRData, 
   EMR_SYSTEMS,
   EMRValidationResult 
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Test constants
 const TEST_TIMEOUT = 30000;

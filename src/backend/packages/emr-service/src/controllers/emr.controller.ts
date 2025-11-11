@@ -15,7 +15,7 @@ import {
   ApiResponse,
   TracingMetadata,
   PerformanceMetrics
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 import { FHIRResourceType, FHIRTaskStatus, FHIRTaskPriority } from '../types/fhir.types';
 import { HL7MessageType, HL7ValidationError } from '../types/hl7.types';
 

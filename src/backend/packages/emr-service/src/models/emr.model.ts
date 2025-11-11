@@ -33,7 +33,7 @@ import {
   VectorClock,
   MergeOperationType,
   CRDTOperation
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for configuration and timeouts
 const DEFAULT_VALIDATION_TIMEOUT = 5000;

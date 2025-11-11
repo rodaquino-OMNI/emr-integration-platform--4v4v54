@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { EMR_SYSTEMS } from '@shared/constants';
+import { EMR_SYSTEMS } from '@emrtask/shared/constants';
 import { HL7MessageType, HL7SegmentType, HL7Encoding } from '../types/hl7.types';
 
 /**
@@ -270,8 +270,11 @@ export const hl7Config: HL7Config = {
       enabled: true,
       method: 'certificate',
       credentials: {
-        username: process.env.HL7_AUTH_USERNAME || 'hl7_service',
-        password: process.env.HL7_AUTH_PASSWORD || 'default_password'
+        // SECURITY FIX: Removed default password fallback
+        // Credentials MUST be provided via environment variables
+        // Application will fail fast if credentials are not configured
+        username: process.env.HL7_AUTH_USERNAME!,
+        password: process.env.HL7_AUTH_PASSWORD!
       }
     },
     encryption: {
@@ -322,5 +325,50 @@ export const hl7Config: HL7Config = {
     }
   }
 };
+
+/**
+ * SECURITY FIX: Validate HL7 configuration on startup
+ * Ensures critical security credentials are provided
+ * Application will fail fast if configuration is invalid
+ */
+export function validateHL7Config(): void {
+  const errors: string[] = [];
+
+  // Validate authentication credentials
+  if (hl7Config.security.authentication.enabled) {
+    if (!process.env.HL7_AUTH_USERNAME) {
+      errors.push('HL7_AUTH_USERNAME environment variable is required but not set');
+    }
+    if (!process.env.HL7_AUTH_PASSWORD) {
+      errors.push('HL7_AUTH_PASSWORD environment variable is required but not set');
+    }
+  }
+
+  // Validate HL7 connection hosts
+  Object.entries(hl7Config.connections).forEach(([system, config]) => {
+    if (!config.host) {
+      errors.push(`HL7 host is required for ${system} but not configured`);
+    }
+    if (!config.port || config.port < 1 || config.port > 65535) {
+      errors.push(`Valid HL7 port is required for ${system} (1-65535)`);
+    }
+  });
+
+  // Fail fast if configuration is invalid
+  if (errors.length > 0) {
+    const errorMessage = [
+      'CRITICAL: HL7 configuration validation failed:',
+      ...errors.map(err => `  - ${err}`),
+      '',
+      'Application cannot start with invalid HL7 configuration.',
+      'Please set all required environment variables and restart.'
+    ].join('\n');
+
+    throw new Error(errorMessage);
+  }
+}
+
+// Validate configuration on module load (fail fast)
+validateHL7Config();
 
 export default hl7Config;

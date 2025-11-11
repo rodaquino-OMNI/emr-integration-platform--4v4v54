@@ -11,8 +11,8 @@ import {
   HandoverQueryParams,
   VectorClock
 } from '../types/handover.types';
-import { errorHandler } from '@shared/middleware';
-import { httpRequestDuration, handoverDuration } from '@shared/metrics';
+import { errorHandler } from '@emrtask/shared/middleware';
+import { httpRequestDuration, handoverDuration } from '@emrtask/shared/metrics';
 
 // Constants for rate limiting and timeouts
 const RATE_LIMIT_WINDOW_MS = 60000;

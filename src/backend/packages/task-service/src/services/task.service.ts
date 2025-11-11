@@ -15,7 +15,7 @@ import {
 } from '../types/task.types';
 
 import { TaskModel } from '../models/task.model';
-import { EMRService } from '@emr-service/services/emr.service';
+import { EMRService } from '../../emr-service/src/services/emr.service';
 
 import {
   EMRData,
@@ -23,7 +23,7 @@ import {
   MergeOperationType,
   CRDTOperation,
   ValidationResult
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for task service configuration
 const CACHE_TTL_MS = 300000; // 5 minutes

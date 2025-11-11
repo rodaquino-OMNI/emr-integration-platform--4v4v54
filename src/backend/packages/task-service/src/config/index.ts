@@ -7,7 +7,7 @@
 
 import { z } from 'zod'; // v3.21.4
 import * as dotenv from 'dotenv'; // v16.3.1
-import { API_VERSIONS, TASK_STATUS, TASK_PRIORITY, EMR_SYSTEMS } from '@shared/constants';
+import { API_VERSIONS, TASK_STATUS, TASK_PRIORITY, EMR_SYSTEMS } from '@emrtask/shared/constants';
 
 // Load environment variables
 dotenv.config();

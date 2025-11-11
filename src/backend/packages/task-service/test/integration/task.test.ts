@@ -17,7 +17,7 @@ import {
   EMRValidationResult,
   VectorClock,
   MergeOperationType 
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Test configuration constants
 const TEST_TIMEOUT_MS = 10000;

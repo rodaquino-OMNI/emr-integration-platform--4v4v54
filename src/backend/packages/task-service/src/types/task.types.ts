@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { EMRData, VectorClock, EMR_SYSTEMS } from '@shared/types';
+import { EMRData, VectorClock, EMR_SYSTEMS } from '@emrtask/shared/types/common.types';
 
 /**
  * Available task states in the Kanban board workflow

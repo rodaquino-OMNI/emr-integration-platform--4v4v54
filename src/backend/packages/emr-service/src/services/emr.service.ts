@@ -25,7 +25,7 @@ import {
   EMRDataSchema,
   EMRValidationResult,
   ValidationError
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for EMR service configuration
 const EMR_TIMEOUT = 30000;

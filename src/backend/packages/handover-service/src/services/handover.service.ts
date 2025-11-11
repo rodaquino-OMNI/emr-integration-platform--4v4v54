@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 
 import { HandoverModel } from '../models/handover.model';
 import { TaskService } from '@task/services';
-import { ApiError } from '@shared/errors';
+import { HttpError } from 'http-errors';
 
 import {
   Handover,
@@ -29,7 +29,7 @@ import {
   EMRData,
   VectorClock,
   MergeOperationType
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for handover service configuration
 const VERIFICATION_TIMEOUT_MS = 30000;
@@ -113,7 +113,7 @@ export class HandoverService {
     try {
       const currentHandover = await this.handoverModel.getHandover(handoverId);
       if (!currentHandover) {
-        throw new ApiError('HANDOVER_NOT_FOUND', `Handover not found: ${handoverId}`);
+        throw new HttpError('HANDOVER_NOT_FOUND', `Handover not found: ${handoverId}`);
       }
 
       // Validate status transition
@@ -160,13 +160,13 @@ export class HandoverService {
     try {
       const handover = await this.handoverModel.getHandover(handoverId);
       if (!handover) {
-        throw new ApiError('HANDOVER_NOT_FOUND', `Handover not found: ${handoverId}`);
+        throw new HttpError('HANDOVER_NOT_FOUND', `Handover not found: ${handoverId}`);
       }
 
       // Verify all tasks one final time
       const verificationResults = await this.verifyHandoverTasks(handover);
       if (!verificationResults.every(result => result)) {
-        throw new ApiError('VERIFICATION_FAILED', 'Not all tasks passed final verification');
+        throw new HttpError('VERIFICATION_FAILED', 'Not all tasks passed final verification');
       }
 
       // Transfer tasks to new shift
@@ -198,14 +198,14 @@ export class HandoverService {
    */
   private validateShiftTransition(fromShift: Shift, toShift: Shift): void {
     if (fromShift.endTime >= toShift.startTime) {
-      throw new ApiError('INVALID_SHIFT_TRANSITION', 'Invalid shift transition timing');
+      throw new HttpError('INVALID_SHIFT_TRANSITION', 'Invalid shift transition timing');
     }
 
     const windowStart = new Date(fromShift.endTime);
     windowStart.setMinutes(windowStart.getMinutes() - HANDOVER_WINDOW_MINUTES);
 
     if (new Date() < windowStart) {
-      throw new ApiError('EARLY_HANDOVER', 'Handover initiated too early');
+      throw new HttpError('EARLY_HANDOVER', 'Handover initiated too early');
     }
   }
 
@@ -305,7 +305,7 @@ export class HandoverService {
     };
 
     if (!validTransitions[currentStatus].includes(newStatus)) {
-      throw new ApiError(
+      throw new HttpError(
         'INVALID_STATUS_TRANSITION',
         `Invalid status transition from ${currentStatus} to ${newStatus}`
       );
@@ -347,11 +347,11 @@ export class HandoverService {
   }
 
   private handleServiceError(error: any): Error {
-    if (error instanceof ApiError) {
+    if (error instanceof HttpError) {
       return error;
     }
 
     this.logger.error('Handover service error', { error });
-    return new ApiError('HANDOVER_SERVICE_ERROR', error.message);
+    return new HttpError('HANDOVER_SERVICE_ERROR', error.message);
   }
 }
