@@ -1,0 +1,35 @@
+{
+  "name": "@emrtask/load-tests",
+  "version": "1.0.0",
+  "description": "Performance and load testing suite for EMR Integration Platform",
+  "private": true,
+  "scripts": {
+    "test:load": "k6 run scenarios/full-load-test.js",
+    "test:stress": "k6 run scenarios/stress-test.js",
+    "test:spike": "k6 run scenarios/spike-test.js",
+    "test:soak": "k6 run scenarios/soak-test.js",
+    "test:api": "k6 run api/api-performance.js",
+    "test:emr": "k6 run api/emr-integration.js",
+    "test:sync": "k6 run api/sync-performance.js",
+    "test:handover": "k6 run api/handover-performance.js",
+    "test:websocket": "k6 run websocket/realtime-updates.js",
+    "report:generate": "node scripts/generate-report.js",
+    "report:html": "k6 report --format html",
+    "dashboard": "k6 cloud"
+  },
+  "dependencies": {
+    "k6": "^0.48.0"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.48.0"
+  },
+  "keywords": [
+    "load-testing",
+    "performance",
+    "k6",
+    "emr",
+    "healthcare"
+  ],
+  "author": "EMR Task Platform Team",
+  "license": "PROPRIETARY"
+}
