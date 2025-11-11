@@ -23,7 +23,7 @@ import {
 import {
   EMR_SYSTEMS,
   EMRValidationResult
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Mock data for testing
 const mockPatientFHIR = {

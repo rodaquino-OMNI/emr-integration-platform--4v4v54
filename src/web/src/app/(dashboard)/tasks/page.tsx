@@ -2,13 +2,14 @@
 
 import React, { useCallback, useEffect } from 'react';
 import { Suspense } from 'react';
+import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast'; // v2.4.1
-import { TaskBoard } from '@/components/dashboard/TaskBoard';
+import TaskBoard from '@/components/dashboard/TaskBoard';
 import { Loading } from '@/components/common/Loading';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuditLog } from '@/lib/audit';
-import { Task, TaskStatus } from '@/lib/types';
+import { Task, TaskStatus, UserRole } from '@/lib/types';
 
 // Page metadata for SEO and accessibility
 export const metadata = {
@@ -26,6 +27,9 @@ export const metadata = {
  * - Comprehensive error handling and audit logging
  */
 export default function TasksPage() {
+  // Get session data for user info
+  const { data: session } = useSession();
+
   // Initialize task management hook with filters
   const {
     tasks,
@@ -43,6 +47,11 @@ export default function TasksPage() {
 
   // Initialize audit logging for HIPAA compliance
   const auditLog = useAuditLog();
+
+  // Extract user information from session
+  const userRole = (session?.user as any)?.role || UserRole.NURSE;
+  const department = (session?.user as any)?.department || 'General';
+  const encryptionKey = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || '';
 
   // Handle task updates with audit logging
   const handleTaskUpdate = useCallback(async (taskId: string, updates: Partial<Task>) => {
@@ -147,8 +156,9 @@ export default function TasksPage() {
           <div id="task-board">
             <TaskBoard
               className="min-h-[600px]"
-              onTaskUpdate={handleTaskUpdate}
-              onError={handleError}
+              department={department}
+              userRole={userRole}
+              encryptionKey={encryptionKey}
             />
           </div>
         </Suspense>

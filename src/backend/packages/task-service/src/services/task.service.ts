@@ -23,7 +23,7 @@ import {
   MergeOperationType,
   CRDTOperation,
   ValidationResult
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for task service configuration
 const CACHE_TTL_MS = 300000; // 5 minutes

@@ -1,5 +1,5 @@
 import { Resource } from 'fhir/r4'; // v4.0.1
-import { EMRData, EMR_SYSTEMS } from '@shared/types';
+import { EMRData, EMR_SYSTEMS } from '@emrtask/shared/types/common.types';
 
 /**
  * FHIR R4 version and configuration constants

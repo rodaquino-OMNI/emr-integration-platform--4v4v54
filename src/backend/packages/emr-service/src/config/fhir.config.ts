@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { EMR_SYSTEMS } from '@shared/constants';
+import { EMR_SYSTEMS } from '@emrtask/shared/constants';
 import { FHIRResourceType } from '../types/fhir.types';
 
 /**

@@ -23,7 +23,7 @@ import {
   ValidationError,
   ValidationWarning,
   EMRDataSchema
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Performance monitoring decorator
 function MetricsTracker() {

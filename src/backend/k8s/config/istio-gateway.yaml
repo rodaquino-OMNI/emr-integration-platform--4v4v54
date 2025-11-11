@@ -1,6 +1,6 @@
 # Istio Gateway configuration v1beta1
 # External traffic entry point for EMR Task Management platform
-# TLS version: 1.2+
+# SECURITY FIX: TLS version upgraded to 1.3 (was 1.2)
 # Certificate rotation: 90 days
 # High-availability ingress with security features
 
@@ -30,10 +30,13 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: emrtask-tls-cert
-        minProtocolVersion: TLSV1_2
+        # SECURITY FIX: Upgraded from TLS 1.2 to TLS 1.3 for enhanced security
+        minProtocolVersion: TLSV1_3
+        # TLS 1.3 cipher suites (TLS 1.3 uses AEAD ciphers only)
         cipherSuites:
-          - ECDHE-ECDSA-AES256-GCM-SHA384
-          - ECDHE-RSA-AES256-GCM-SHA384
+          - TLS_AES_256_GCM_SHA384
+          - TLS_CHACHA20_POLY1305_SHA256
+          - TLS_AES_128_GCM_SHA256
 
     # HTTP redirect server configuration
     - port:

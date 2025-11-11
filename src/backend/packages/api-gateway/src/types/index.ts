@@ -1,25 +1,16 @@
 import { Request, Response } from 'express'; // v4.18.2
 import { JwtPayload } from 'jsonwebtoken'; // v9.0.0
-import { 
-  ApiResponse, 
-  PaginationParams, 
-  EMRData, 
+import {
+  ApiResponse,
+  PaginationParams,
+  EMRData,
   EMR_SYSTEMS,
   EMRValidationResult,
   TracingMetadata
-} from '@shared/types';
-import { 
-  FHIRTask, 
-  FHIRPatient, 
-  FHIRResourceType,
-  FHIRTaskStatus 
-} from '@emr/types';
-import { 
-  Task, 
-  TaskVerification, 
-  TaskStatus,
-  TaskVerificationStatus 
-} from '@task/types';
+} from '@emrtask/shared/types/common.types';
+// TODO: Import from proper service types when available
+// FHIRTask, FHIRPatient, FHIRResourceType, FHIRTaskStatus from emr-service
+// Task, TaskVerification, TaskStatus, TaskVerificationStatus from task-service
 
 /**
  * Enhanced HTTP methods with healthcare-specific requirements

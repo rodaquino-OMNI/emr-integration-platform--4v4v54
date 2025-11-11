@@ -115,18 +115,7 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamps(true, true);
   });
 
-  // Create audit_logs table
-  await knex.schema.createTable('audit_logs', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
-    table.uuid('user_id').references('id').inTable('users').notNullable();
-    table.string('action').notNullable();
-    table.string('entity_type').notNullable();
-    table.uuid('entity_id').notNullable();
-    table.jsonb('changes').notNullable();
-    table.string('ip_address').notNullable();
-    table.string('user_agent').nullable();
-    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
-  });
+  // NOTE: audit_logs table is created in migration 004_add_audit_logs.ts with comprehensive features
 
   // Create indexes for performance optimization
   await knex.schema.alterTable('tasks', (table) => {
@@ -136,10 +125,6 @@ export async function up(knex: Knex): Promise<void> {
     table.index('vector_clock');
   });
 
-  await knex.schema.alterTable('audit_logs', (table) => {
-    table.index(['entity_type', 'entity_id']);
-    table.index('created_at');
-  });
 
   // Set up row-level security policies
   await knex.raw(`
@@ -154,17 +139,10 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 /**
- * Rolls back the initial schema migration while preserving audit logs
+ * Rolls back the initial schema migration
  */
 export async function down(knex: Knex): Promise<void> {
-  // Preserve audit logs by copying to a backup table
-  await knex.raw(`
-    CREATE TABLE audit_logs_backup AS
-    SELECT * FROM audit_logs;
-  `);
-
   // Drop tables in reverse order
-  await knex.schema.dropTableIfExists('audit_logs');
   await knex.schema.dropTableIfExists('handovers');
   await knex.schema.dropTableIfExists('emr_verifications');
   await knex.schema.dropTableIfExists('tasks');

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "api-gateway.fullname" . }}
+  labels:
+    {{- include "api-gateway.labels" . | nindent 4 }}
+data:
+  KONG_DATABASE: {{ .Values.kong.database | quote }}
+  KONG_PG_HOST: {{ .Values.kong.pg_host | quote }}
+  KONG_PG_PORT: {{ .Values.kong.pg_port | quote }}
+  KONG_PG_DATABASE: {{ .Values.kong.pg_database | quote }}
+  KONG_ADMIN_LISTEN: {{ .Values.kong.admin_listen | quote }}
+  KONG_PROXY_LISTEN: {{ .Values.kong.proxy_listen | quote }}

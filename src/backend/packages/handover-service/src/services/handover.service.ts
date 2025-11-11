@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 
 import { HandoverModel } from '../models/handover.model';
 import { TaskService } from '@task/services';
-import { ApiError } from '@shared/errors';
+import { ApiError } from '@emrtask/shared/errors';
 
 import {
   Handover,
@@ -29,7 +29,7 @@ import {
   EMRData,
   VectorClock,
   MergeOperationType
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for handover service configuration
 const VERIFICATION_TIMEOUT_MS = 30000;

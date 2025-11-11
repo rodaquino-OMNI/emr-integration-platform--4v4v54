@@ -19,7 +19,9 @@ import {
   EMR_SYSTEMS,
   ValidationError,
   EMRValidationResult
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
+
+import { OAuth2TokenManager, OAuth2Config } from '../utils/oauth2-token-manager';
 
 // Enhanced retry configuration with exponential backoff
 const EPIC_RETRY_CONFIG = {
@@ -54,10 +56,12 @@ export class EpicAdapter {
   private readonly circuitBreaker: CircuitBreaker;
   private readonly meter: Meter;
   private readonly tracer = trace.getTracer('epic-adapter');
-  
+  private readonly tokenManager: OAuth2TokenManager;
+
   private readonly baseUrl: string;
   private readonly endpoints: Record<FHIRResourceType, string>;
-  
+  private readonly oauth2Config: OAuth2Config;
+
   constructor(
     @inject('CircuitBreakerConfig') circuitBreakerConfig: typeof EPIC_CIRCUIT_BREAKER_CONFIG,
     @inject('MetricsCollector') private readonly metricsCollector: MetricsCollector
@@ -70,15 +74,28 @@ export class EpicAdapter {
       [FHIRResourceType.Observation]: '/Observation'
     };
 
+    // Initialize OAuth2 configuration following SMART-on-FHIR specification
+    this.oauth2Config = {
+      tokenEndpoint: process.env.EPIC_TOKEN_ENDPOINT || `${this.baseUrl}/oauth2/token`,
+      clientId: process.env.EPIC_CLIENT_ID!,
+      clientSecret: process.env.EPIC_CLIENT_SECRET!,
+      scope: process.env.EPIC_SCOPE || 'system/Patient.read system/Task.read system/Observation.read',
+      grantType: 'client_credentials'
+    };
+
+    // Initialize OAuth2 token manager
+    this.tokenManager = new OAuth2TokenManager();
+
     // Initialize HTTP client with enhanced security and monitoring
+    // SECURITY FIX: Removed client secret from headers - using OAuth2 client credentials flow
     this.httpClient = axios.create({
       baseURL: this.baseUrl,
       timeout: 10000,
       headers: {
         'Accept': 'application/fhir+json',
-        'Content-Type': 'application/fhir+json',
-        'X-Epic-Client-ID': process.env.EPIC_CLIENT_ID,
-        'X-Epic-Client-Secret': process.env.EPIC_CLIENT_SECRET
+        'Content-Type': 'application/fhir+json'
+        // NOTE: Authorization header with Bearer token is added via request interceptor
+        // after obtaining token through OAuth2 client credentials flow (RFC 6749)
       }
     });
 
@@ -113,10 +130,16 @@ export class EpicAdapter {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor for tracing and metrics
-    this.httpClient.interceptors.request.use((config) => {
+    // Request interceptor for OAuth2 authentication, tracing and metrics
+    this.httpClient.interceptors.request.use(async (config) => {
       const span = this.tracer.startSpan('epic-request');
       config.headers['X-Trace-ID'] = span.spanContext().traceId;
+
+      // SECURITY FIX: Implement OAuth2 client credentials flow (RFC 6749 Section 4.4)
+      // Obtain access token and add as Bearer token in Authorization header
+      const authHeader = await this.tokenManager.getAuthorizationHeader(this.oauth2Config);
+      config.headers['Authorization'] = authHeader;
+
       return config;
     });
 
@@ -126,11 +149,21 @@ export class EpicAdapter {
         this.meter.createCounter('epic.request.success').add(1);
         return response;
       },
-      (error) => {
+      async (error) => {
         this.meter.createCounter('epic.request.error').add(1, {
           status: error.response?.status,
           endpoint: error.config?.url
         });
+
+        // Handle token expiration (401 Unauthorized)
+        if (error.response?.status === 401) {
+          // Clear cached token and retry
+          this.tokenManager.clearToken(this.oauth2Config);
+          const newAuthHeader = await this.tokenManager.getAuthorizationHeader(this.oauth2Config);
+          error.config.headers['Authorization'] = newAuthHeader;
+          return this.httpClient.request(error.config);
+        }
+
         throw error;
       }
     );
@@ -296,4 +329,5 @@ export class EpicAdapter {
       lastValidated: new Date()
     };
   }
+
 }

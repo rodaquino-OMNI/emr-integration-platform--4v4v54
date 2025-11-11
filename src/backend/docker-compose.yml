@@ -15,7 +15,10 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - API_VERSION=v1
-      - CORS_ORIGIN=*
+      # SECURITY FIX: Removed wildcard CORS - use environment variable with specific domains
+      # Set CORS_ORIGIN in .env file with comma-separated list of allowed origins
+      # Example: CORS_ORIGIN=https://app.emrtask.com,https://admin.emrtask.com
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://localhost:3000}
       - API_RATE_LIMIT=1000
       - API_RATE_WINDOW=60000
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}

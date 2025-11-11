@@ -1,0 +1,225 @@
+// Prisma schema for Task Service
+// Generator configuration for Prisma Client v4.16.2
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums matching database types
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+  PENDING_VERIFICATION
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum UserRole {
+  NURSE
+  DOCTOR
+  ADMIN
+  SUPERVISOR
+}
+
+enum EmrSystem {
+  EPIC
+  CERNER
+  GENERIC_FHIR
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+// Users table
+model User {
+  id                String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username          String            @unique
+  email             String            @unique
+  role              UserRole
+  passwordHash      String            @map("password_hash")
+  mfaSecret         String?           @map("mfa_secret")
+  isActive          Boolean           @default(true) @map("is_active")
+  lastLogin         DateTime?         @map("last_login") @db.Timestamptz
+  preferences       Json              @default("{}")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  assignedTasks     Task[]            @relation("AssignedTasks")
+  createdTasks      Task[]            @relation("CreatedTasks")
+  supervisedShifts  Shift[]           @relation("SupervisedShifts")
+  verifications     EmrVerification[]
+
+  @@map("users")
+}
+
+// Departments table
+model Department {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  shifts      Shift[]
+  tasks       Task[]
+
+  @@map("departments")
+}
+
+// Shifts table
+model Shift {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  departmentId String    @map("department_id") @db.Uuid
+  startTime    DateTime  @map("start_time") @db.Timestamptz
+  endTime      DateTime  @map("end_time") @db.Timestamptz
+  supervisorId String    @map("supervisor_id") @db.Uuid
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  department   Department @relation(fields: [departmentId], references: [id])
+  supervisor   User       @relation("SupervisedShifts", fields: [supervisorId], references: [id])
+  tasks        Task[]
+
+  @@map("shifts")
+}
+
+// Patients table
+model Patient {
+  id            String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  mrn           String     @unique @db.VarChar(50)
+  firstName     String     @map("first_name") @db.VarChar(100)
+  lastName      String     @map("last_name") @db.VarChar(100)
+  dateOfBirth   DateTime   @map("date_of_birth") @db.Date
+  emrSystem     EmrSystem  @map("emr_system")
+  emrId         String     @map("emr_id") @db.VarChar(100)
+  encryptedData Json       @default("{}") @map("encrypted_data")
+  isActive      Boolean    @default(true) @map("is_active")
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime?  @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  tasks         Task[]
+
+  @@unique([emrSystem, emrId], name: "idx_patients_emr_unique")
+  @@index([mrn], name: "idx_patients_mrn")
+  @@index([emrSystem, emrId], name: "idx_patients_emr_lookup")
+  @@index([isActive], name: "idx_patients_active")
+  @@index([createdAt], name: "idx_patients_created_at")
+  @@map("patients")
+}
+
+// Tasks table
+model Task {
+  id                   String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title                String
+  description          String?
+  status               TaskStatus          @default(TO_DO)
+  priority             TaskPriority        @default(MEDIUM)
+  assignedTo           String?             @map("assigned_to") @db.Uuid
+  createdBy            String              @map("created_by") @db.Uuid
+  departmentId         String              @map("department_id") @db.Uuid
+  shiftId              String?             @map("shift_id") @db.Uuid
+  dueDate              DateTime?           @map("due_date") @db.Timestamptz
+  emrSystem            EmrSystem           @map("emr_system")
+  patientId            String              @map("patient_id") @db.Uuid
+  emrData              Json                @map("emr_data")
+  vectorClock          BigInt              @map("vector_clock")
+  vectorClockNodeId    String              @map("vector_clock_node_id") @db.VarChar(50)
+  vectorClockCounter   BigInt              @default(0) @map("vector_clock_counter")
+  vectorClockTimestamp BigInt              @map("vector_clock_timestamp")
+  version              Int                 @default(1)
+  requiresVerification Boolean             @default(false) @map("requires_verification")
+  createdAt            DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt            DateTime?           @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  assignee             User?               @relation("AssignedTasks", fields: [assignedTo], references: [id])
+  creator              User                @relation("CreatedTasks", fields: [createdBy], references: [id])
+  department           Department          @relation(fields: [departmentId], references: [id])
+  shift                Shift?              @relation(fields: [shiftId], references: [id])
+  patient              Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  verifications        EmrVerification[]
+
+  @@index([departmentId, status, dueDate], name: "idx_tasks_dept_status_due")
+  @@index([assignedTo, status], name: "idx_tasks_assigned_status")
+  @@index([patientId], name: "idx_tasks_patient_id")
+  @@index([vectorClock], name: "idx_tasks_vector_clock_old")
+  @@index([vectorClockNodeId, vectorClockCounter, vectorClockTimestamp], name: "idx_tasks_vector_clock")
+  @@index([vectorClockTimestamp], name: "idx_tasks_vector_timestamp")
+  @@map("tasks")
+}
+
+// EMR Verifications table
+model EmrVerification {
+  id                   String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  taskId               String             @map("task_id") @db.Uuid
+  verifiedBy           String             @map("verified_by") @db.Uuid
+  status               VerificationStatus
+  barcodeData          String?            @map("barcode_data")
+  verificationMetadata Json               @map("verification_metadata")
+  failureReason        String?            @map("failure_reason")
+  verifiedAt           DateTime           @map("verified_at") @db.Timestamptz
+  vectorClockNodeId    String             @map("vector_clock_node_id") @db.VarChar(50)
+  vectorClockCounter   BigInt             @default(0) @map("vector_clock_counter")
+  vectorClockTimestamp BigInt             @map("vector_clock_timestamp")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  task                 Task               @relation(fields: [taskId], references: [id])
+  verifier             User               @relation(fields: [verifiedBy], references: [id])
+
+  @@index([vectorClockNodeId, vectorClockCounter, vectorClockTimestamp], name: "idx_emr_verifications_vector_clock")
+  @@index([vectorClockTimestamp], name: "idx_emr_verifications_vector_timestamp")
+  @@map("emr_verifications")
+}
+
+// Audit Logs table (read-only for querying)
+model AuditLog {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  action          String
+  entityType      String   @map("entity_type")
+  entityId        String   @map("entity_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  changes         Json
+  createdAt       DateTime @map("created_at") @db.Timestamptz
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  sessionId       String?  @map("session_id") @db.Uuid
+  emrSystem       String?  @map("emr_system")
+  emrPatientId    String?  @map("emr_patient_id")
+  emrContext      Json?    @map("emr_context")
+  requestId       String   @map("request_id") @db.Uuid
+  metadata        Json?
+
+  @@index([entityType, entityId], name: "idx_audit_logs_entity")
+  @@index([createdAt], name: "idx_audit_logs_created_at_brin")
+  @@index([emrSystem, emrPatientId], name: "idx_audit_logs_emr")
+  @@map("audit_logs")
+}

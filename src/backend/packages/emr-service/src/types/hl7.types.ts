@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { EMRData, EMR_SYSTEMS } from '@shared/types';
+import { EMRData, EMR_SYSTEMS } from '@emrtask/shared/types/common.types';
 
 // Global constants for HL7 message parsing and formatting
 export const HL7_VERSION = '2.5.1';

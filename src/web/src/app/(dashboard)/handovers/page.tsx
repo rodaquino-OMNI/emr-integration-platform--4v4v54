@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { HandoverSummary } from '@/components/dashboard/HandoverSummary';
 import { HandoverDetails } from '@/components/dashboard/HandoverDetails';
 import { useHandovers } from '@/hooks/useHandovers';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { useAuditLogger } from '@/lib/audit';
 import { THEME } from '@/lib/constants';
 import { HandoverStatus, TaskPriority, EMRVerificationStatus } from '@/lib/types';

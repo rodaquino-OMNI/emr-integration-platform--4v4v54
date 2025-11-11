@@ -1,0 +1,15 @@
+apiVersion: v2
+name: api-gateway
+description: API Gateway for EMR Integration Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - api-gateway
+  - kong
+  - emr-integration
+home: https://github.com/your-org/emr-integration-platform
+maintainers:
+  - name: Platform Team
+    email: platform-team@example.com
+dependencies: []

@@ -1,0 +1,26 @@
+# Staging environment overrides
+replicaCount: 2
+
+ingress:
+  hosts:
+    - host: api-staging.emr-integration.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-gateway-staging-tls
+      hosts:
+        - api-staging.emr-integration.example.com
+
+resources:
+  limits:
+    cpu: 1500m
+    memory: 1536Mi
+  requests:
+    cpu: 400m
+    memory: 384Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5

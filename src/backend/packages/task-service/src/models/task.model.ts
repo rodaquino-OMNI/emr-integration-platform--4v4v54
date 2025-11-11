@@ -21,7 +21,7 @@ import {
   ValidationError,
   CRDTOperation,
   MergeOperationType
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Constants for task management
 const TABLE_NAME = 'tasks';

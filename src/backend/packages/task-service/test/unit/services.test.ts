@@ -15,7 +15,7 @@ import {
   MergeOperationType,
   CRDTOperation,
   EMRData
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Mock implementations
 jest.mock('../../src/models/task.model');

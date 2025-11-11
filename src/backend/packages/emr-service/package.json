@@ -44,7 +44,7 @@
     "express-sanitizer": "^1.0.6",
     "fhir": "4.0.1",
     "helmet": "7.0.0",
-    "hl7": "^2.5.1",
+    "hl7-standard": "^2.10.3",
     "http-errors": "2.0.0",
     "http-proxy-middleware": "^2.0.6",
     "inversify": "6.0.1",

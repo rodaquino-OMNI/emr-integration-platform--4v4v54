@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { EMR_SYSTEMS } from '@shared/constants';
+import { EMR_SYSTEMS } from '@emrtask/shared/constants';
 import { HL7MessageType, HL7SegmentType, HL7Encoding } from '../types/hl7.types';
 
 /**
@@ -269,10 +269,14 @@ export const hl7Config: HL7Config = {
     authentication: {
       enabled: true,
       method: 'certificate',
-      credentials: {
-        username: process.env.HL7_AUTH_USERNAME || 'hl7_service',
-        password: process.env.HL7_AUTH_PASSWORD || 'default_password'
-      }
+      // SECURITY FIX: Removed default password fallback - must be provided via environment variables
+      // Required environment variables:
+      // - HL7_AUTH_USERNAME: Service account username for HL7 authentication
+      // - HL7_AUTH_PASSWORD: Service account password (from Vault/Secrets Manager)
+      credentials: process.env.HL7_AUTH_USERNAME && process.env.HL7_AUTH_PASSWORD ? {
+        username: process.env.HL7_AUTH_USERNAME,
+        password: process.env.HL7_AUTH_PASSWORD
+      } : undefined
     },
     encryption: {
       enabled: true,

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from 'react-use-websocket';
-import { TaskBoard } from '../../components/dashboard/TaskBoard';
+import TaskBoard from '../../components/dashboard/TaskBoard';
 import { MetricsCard, MetricType } from '../../components/dashboard/MetricsCard';
 import { HandoverSummary } from '../../components/dashboard/HandoverSummary';
 import { useAuth } from '../../hooks/useAuth';
