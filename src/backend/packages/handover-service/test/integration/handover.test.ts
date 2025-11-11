@@ -6,8 +6,8 @@ import { EMRMock } from '@healthcare/mock-emr';
 
 import { HandoverService } from '../../src/services/handover.service';
 import { HandoverModel } from '../../src/models/handover.model';
-import { DatabaseService } from '@shared/database';
-import { logger } from '@shared/logger';
+import { DatabaseService } from '@emrtask/shared/database';
+import { logger } from '@emrtask/shared/logger';
 
 import {
   Handover,
@@ -30,7 +30,7 @@ import {
   EMR_SYSTEMS,
   VectorClock,
   MergeOperationType
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 
 // Test configuration constants
 const TEST_TIMEOUT = 30000;

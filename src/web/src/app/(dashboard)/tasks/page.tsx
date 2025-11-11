@@ -3,10 +3,11 @@
 import React, { useCallback, useEffect } from 'react';
 import { Suspense } from 'react';
 import toast from 'react-hot-toast'; // v2.4.1
-import { TaskBoard } from '@/components/dashboard/TaskBoard';
+import TaskBoard from '@/components/dashboard/TaskBoard';
 import { Loading } from '@/components/common/Loading';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { useTasks } from '@/hooks/useTasks';
+import { useAuth } from '@/hooks/useAuth';
 import { useAuditLog } from '@/lib/audit';
 import { Task, TaskStatus } from '@/lib/types';
 
@@ -26,6 +27,9 @@ export const metadata = {
  * - Comprehensive error handling and audit logging
  */
 export default function TasksPage() {
+  // Initialize auth hook for user context
+  const { user, isAuthenticated } = useAuth();
+
   // Initialize task management hook with filters
   const {
     tasks,
@@ -43,6 +47,9 @@ export default function TasksPage() {
 
   // Initialize audit logging for HIPAA compliance
   const auditLog = useAuditLog();
+
+  // Encryption key from environment
+  const encryptionKey = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'default-key';
 
   // Handle task updates with audit logging
   const handleTaskUpdate = useCallback(async (taskId: string, updates: Partial<Task>) => {
@@ -147,8 +154,9 @@ export default function TasksPage() {
           <div id="task-board">
             <TaskBoard
               className="min-h-[600px]"
-              onTaskUpdate={handleTaskUpdate}
-              onError={handleError}
+              department={user?.department || ''}
+              userRole={user?.role || 'NURSE'}
+              encryptionKey={encryptionKey}
             />
           </div>
         </Suspense>

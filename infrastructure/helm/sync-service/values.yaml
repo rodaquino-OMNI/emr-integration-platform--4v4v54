@@ -1,0 +1,133 @@
+# ============================================================================
+# Sync Service - Helm Values
+# ============================================================================
+# Purpose: Configuration values for Sync Service deployment
+# Override: Use -f values-{env}.yaml for environment-specific configs
+# ============================================================================
+
+replicaCount: 2
+
+image:
+  repository: your-registry/emr-platform/sync-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ""
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8083"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 8083
+  targetPort: 8083
+
+ingress:
+  enabled: false  # Internal service only
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - sync-service
+          topologyKey: kubernetes.io/hostname
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8083
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8083
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+env:
+  - name: NODE_ENV
+    value: "production"
+  - name: PORT
+    value: "8083"
+  - name: SERVICE_NAME
+    value: "sync-service"
+
+config:
+  server:
+    port: 8083
+    timeout: 120000
+  sync:
+    batchSize: 100
+    intervalSeconds: 60
+    maxConcurrent: 5
+  kafka:
+    consumerGroup: "sync-service-group"
+
+secrets:
+  database:
+    secretName: rds-credentials
+    keys:
+      - connection_string
+  redis:
+    secretName: redis-auth-token
+    keys:
+      - connection_string
+  kafka:
+    secretName: msk-credentials
+    keys:
+      - bootstrap_servers
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+volumes:
+  - name: tmp
+    emptyDir: {}

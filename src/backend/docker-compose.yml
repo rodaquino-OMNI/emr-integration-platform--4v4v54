@@ -15,7 +15,10 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - API_VERSION=v1
-      - CORS_ORIGIN=*
+      # SECURITY FIX: CORS wildcard (*) replaced with environment variable
+      # Set ALLOWED_ORIGINS to specific domains (e.g., "https://app.emrtask.com,https://admin.emrtask.com")
+      # NEVER use wildcard (*) in production as it allows any origin to access the API
+      - CORS_ORIGIN=${ALLOWED_ORIGINS:-http://localhost:3000}
       - API_RATE_LIMIT=1000
       - API_RATE_WINDOW=60000
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}

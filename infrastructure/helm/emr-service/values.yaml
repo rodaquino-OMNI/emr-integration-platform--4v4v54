@@ -1,0 +1,143 @@
+# ============================================================================
+# EMR Service - Helm Values
+# ============================================================================
+# Purpose: Configuration values for EMR Service deployment
+# Override: Use -f values-{env}.yaml for environment-specific configs
+# ============================================================================
+
+replicaCount: 4
+
+image:
+  repository: your-registry/emr-platform/emr-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ""
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8082"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 8082
+  targetPort: 8082
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: emr-service.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: emr-service-tls
+      hosts:
+        - emr-service.example.com
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 4
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - emr-service
+          topologyKey: kubernetes.io/hostname
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8082
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8082
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+env:
+  - name: NODE_ENV
+    value: "production"
+  - name: PORT
+    value: "8082"
+  - name: SERVICE_NAME
+    value: "emr-service"
+
+config:
+  server:
+    port: 8082
+    timeout: 60000
+  emr:
+    apiTimeout: 30000
+    maxRetries: 3
+  fhir:
+    version: "R4"
+    validateResources: true
+
+secrets:
+  database:
+    secretName: rds-credentials
+    keys:
+      - connection_string
+  emrApi:
+    secretName: emr-api-credentials
+    keys:
+      - api_key
+      - api_secret
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+volumes:
+  - name: tmp
+    emptyDir: {}

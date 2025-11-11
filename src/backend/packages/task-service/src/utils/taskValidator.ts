@@ -11,7 +11,7 @@ import {
   validateEMRData, 
   sanitizeInput, 
   validateFHIRResource 
-} from '@shared/utils/validation';
+} from '@emrtask/shared/utils/validation';
 
 // Constants for task validation rules and caching
 const ALLOWED_STATUS_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {

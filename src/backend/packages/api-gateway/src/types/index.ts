@@ -7,7 +7,7 @@ import {
   EMR_SYSTEMS,
   EMRValidationResult,
   TracingMetadata
-} from '@shared/types';
+} from '@emrtask/shared/types/common.types';
 import { 
   FHIRTask, 
   FHIRPatient, 

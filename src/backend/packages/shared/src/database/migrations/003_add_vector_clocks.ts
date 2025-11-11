@@ -81,8 +81,10 @@ export async function up(knex: Knex): Promise<void> {
     );
   });
 
-  // Add vector clock columns to task_verifications table
-  await knex.schema.alterTable('task_verifications', (table) => {
+  // Add vector clock columns to emr_verifications table
+  // Note: Corrected table name from 'task_verifications' to 'emr_verifications'
+  // to match the table created in migration 001_initial_schema.ts
+  await knex.schema.alterTable('emr_verifications', (table) => {
     table.string('vector_clock_node_id', 50).notNullable()
       .comment('Node identifier for CRDT vector clock');
     table.bigInteger('vector_clock_counter').notNullable().defaultTo(0)
@@ -90,24 +92,24 @@ export async function up(knex: Knex): Promise<void> {
     table.bigInteger('vector_clock_timestamp').notNullable()
       .defaultTo(knex.raw('CAST(EXTRACT(EPOCH FROM NOW()) * 1000000 AS BIGINT)'))
       .comment('Hybrid logical clock timestamp in microseconds');
-    
+
     // Create composite index for vector clock components
     table.index(
       ['vector_clock_node_id', 'vector_clock_counter', 'vector_clock_timestamp'],
-      'idx_task_verifications_vector_clock'
+      'idx_emr_verifications_vector_clock'
     );
-    
+
     // Create BRIN index for timestamp range queries
-    table.index('vector_clock_timestamp', 'idx_task_verifications_vector_timestamp', 'BRIN');
-    
+    table.index('vector_clock_timestamp', 'idx_emr_verifications_vector_timestamp', 'BRIN');
+
     // Add constraints
     table.check(
       'vector_clock_counter >= 0',
-      'chk_task_verifications_vector_clock_counter_positive'
+      'chk_emr_verifications_vector_clock_counter_positive'
     );
     table.check(
       'vector_clock_timestamp > 0',
-      'chk_task_verifications_vector_clock_timestamp_positive'
+      'chk_emr_verifications_vector_clock_timestamp_positive'
     );
   });
 
@@ -127,8 +129,8 @@ export async function up(knex: Knex): Promise<void> {
   `);
 
   await knex.raw(`
-    CREATE TRIGGER trg_task_verifications_vector_clock_timestamp
-    BEFORE INSERT OR UPDATE ON task_verifications
+    CREATE TRIGGER trg_emr_verifications_vector_clock_timestamp
+    BEFORE INSERT OR UPDATE ON emr_verifications
     FOR EACH ROW
     EXECUTE FUNCTION update_vector_clock_timestamp();
   `);
@@ -141,8 +143,8 @@ export async function down(knex: Knex): Promise<void> {
   // Drop triggers
   await knex.raw('DROP TRIGGER IF EXISTS trg_tasks_vector_clock_timestamp ON tasks');
   await knex.raw('DROP TRIGGER IF EXISTS trg_handovers_vector_clock_timestamp ON handovers');
-  await knex.raw('DROP TRIGGER IF EXISTS trg_task_verifications_vector_clock_timestamp ON task_verifications');
-  
+  await knex.raw('DROP TRIGGER IF EXISTS trg_emr_verifications_vector_clock_timestamp ON emr_verifications');
+
   // Drop trigger function
   await knex.raw('DROP FUNCTION IF EXISTS update_vector_clock_timestamp()');
 
@@ -164,10 +166,11 @@ export async function down(knex: Knex): Promise<void> {
     table.dropColumn('vector_clock_timestamp');
   });
 
-  // Remove vector clock columns from task_verifications table
-  await knex.schema.alterTable('task_verifications', (table) => {
-    table.dropIndex([], 'idx_task_verifications_vector_clock');
-    table.dropIndex([], 'idx_task_verifications_vector_timestamp');
+  // Remove vector clock columns from emr_verifications table
+  // Corrected table name from 'task_verifications' to 'emr_verifications'
+  await knex.schema.alterTable('emr_verifications', (table) => {
+    table.dropIndex([], 'idx_emr_verifications_vector_clock');
+    table.dropIndex([], 'idx_emr_verifications_vector_timestamp');
     table.dropColumn('vector_clock_node_id');
     table.dropColumn('vector_clock_counter');
     table.dropColumn('vector_clock_timestamp');

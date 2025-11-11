@@ -15,9 +15,9 @@ import {
   TaskSchema,
   TaskQuerySchema
 } from '../types/task.types';
-import { errorHandler } from '@shared/middleware/error.middleware';
-import { logger } from '@shared/logger';
-import { httpRequestDuration, httpRequestTotal } from '@shared/metrics';
+import { errorHandler } from '@emrtask/shared/middleware/error.middleware';
+import { logger } from '@emrtask/shared/logger';
+import { httpRequestDuration, httpRequestTotal } from '@emrtask/shared/metrics';
 
 // Constants for API configuration
 const API_RATE_LIMIT = 1000;
