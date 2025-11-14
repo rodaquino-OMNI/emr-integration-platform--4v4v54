@@ -5,11 +5,8 @@ import rateLimit from 'express-rate-limit'; // v6.7.0
 
 import { HandoverService } from '../services/handover.service';
 import {
-  Handover,
   HandoverStatus,
-  HandoverSchema,
-  HandoverQueryParams,
-  VectorClock
+  HandoverSchema
 } from '../types/handover.types';
 import { errorHandler } from '@emrtask/shared/middleware';
 import { httpRequestDuration, handoverDuration } from '@emrtask/shared/metrics';

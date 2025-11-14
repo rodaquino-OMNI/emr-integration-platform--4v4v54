@@ -1,12 +1,10 @@
 // knex v2.5.1
 import { Knex } from 'knex';
-import { EMR_SYSTEMS } from '../types/common.types';
-
-// Schema version for tracking
-const SCHEMA_VERSION = '1.0.0';
+import { EMR_SYSTEMS } from '../../types/common.types';
 
 /**
  * Creates the initial database schema with HIPAA-compliant tables and comprehensive audit logging
+ * Schema version: 1.0.0
  */
 export async function up(knex: Knex): Promise<void> {
   await knex.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');

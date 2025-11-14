@@ -1,4 +1,5 @@
 import * as client from 'prom-client';
+import { env } from '../config';
 
 // Version: prom-client ^14.2.0
 
@@ -7,9 +8,9 @@ const DEFAULT_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10
 
 // Default labels applied to all metrics for service identification
 const DEFAULT_LABELS = {
-  service: process.env.SERVICE_NAME || 'unknown',
-  environment: process.env.NODE_ENV || 'development',
-  version: process.env.APP_VERSION || 'unknown'
+  service: env.serviceName,
+  environment: env.nodeEnv,
+  version: env.appVersion
 };
 
 // Interface for metrics initialization options
@@ -26,50 +27,23 @@ interface MetricsManagerOptions extends MetricsOptions {
   customBuckets?: number[];
 }
 
-/**
- * Performance-optimized decorator for metrics operations
- */
-function performanceOptimized(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-  const originalMethod = descriptor.value;
-  descriptor.value = function (...args: any[]) {
-    // Ensure non-blocking execution
-    return Promise.resolve().then(() => originalMethod.apply(this, args));
-  };
-  return descriptor;
-}
-
-/**
- * Error boundary decorator for metrics operations
- */
-function errorBoundary(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-  const originalMethod = descriptor.value;
-  descriptor.value = function (...args: any[]) {
-    try {
-      return originalMethod.apply(this, args);
-    } catch (error) {
-      console.error(`Metrics error in ${propertyKey}:`, error);
-      // Ensure metrics errors don't crash the application
-      return undefined;
-    }
-  };
-  return descriptor;
-}
+// Reserved decorators for future performance optimizations
+// performanceOptimized: Ensures non-blocking execution via Promise.resolve()
+// errorBoundary: Ensures metrics errors don't crash the application
 
 /**
  * Singleton class for managing Prometheus metrics collectors
  */
-@singleton
 class MetricsManager {
   private static instance: MetricsManager;
-  private readonly register: client.Registry;
-  private readonly httpRequestDuration: client.Histogram;
-  private readonly httpRequestTotal: client.Counter;
-  private readonly taskCompletionTime: client.Histogram;
-  private readonly syncLatency: client.Histogram;
-  private readonly handoverDuration: client.Histogram;
-  private readonly metricCardinality: Map<string, number>;
-  private readonly maxCardinality: number;
-  private cleanupInterval?: NodeJS.Timeout;
+  public readonly register!: client.Registry;
+  public readonly httpRequestDuration!: client.Histogram;
+  public readonly httpRequestTotal!: client.Counter;
+  public readonly taskCompletionTime!: client.Histogram;
+  public readonly syncLatency!: client.Histogram;
+  public readonly handoverDuration!: client.Histogram;
+  private _cleanupInterval?: NodeJS.Timeout | undefined;
+  private _isDestroyed: boolean = false;
 
   constructor(options: MetricsManagerOptions = {}) {
     if (MetricsManager.instance) {
@@ -77,8 +51,6 @@ class MetricsManager {
     }
 
     this.register = new client.Registry();
-    this.metricCardinality = new Map();
-    this.maxCardinality = options.maxCardinality || 10000;
 
     // Configure default registry settings
     this.register.setDefaultLabels({
@@ -134,66 +106,68 @@ class MetricsManager {
 
     // Setup cleanup interval if enabled
     if (options.enableGC) {
-      this.cleanupInterval = setInterval(
-        () => this.resetMetrics(),
+      this._cleanupInterval = setInterval(
+        () => {
+          // Use catch to prevent unhandled promise rejection
+          this.resetMetrics().catch((error) => {
+            console.error('Failed to reset metrics:', error);
+          });
+        },
         options.gcIntervalMs || 3600000
       );
+      // Unref to prevent keeping process alive unnecessarily
+      this._cleanupInterval.unref();
     }
 
     MetricsManager.instance = this;
   }
 
   /**
-   * Validates metric labels for safety and cardinality
+   * Reserved for future implementation: validateLabels()
+   * Will validate metric label names, enforce length limits, and track cardinality
+   * to prevent metric explosion (max 10,000 unique label combinations)
    */
-  private validateLabels(labels: Record<string, string>): boolean {
-    // Check label name validity
-    const validLabelName = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-    
-    for (const [key, value] of Object.entries(labels)) {
-      // Validate label names
-      if (!validLabelName.test(key)) {
-        console.error(`Invalid label name: ${key}`);
-        return false;
-      }
 
-      // Validate label value length
-      if (value.length > 100) {
-        console.error(`Label value too long: ${key}`);
-        return false;
-      }
-
-      // Track cardinality
-      const cardinalityKey = `${key}:${value}`;
-      const currentCardinality = this.metricCardinality.get(cardinalityKey) || 0;
-      if (currentCardinality >= this.maxCardinality) {
-        console.error(`Label cardinality limit exceeded: ${key}`);
-        return false;
-      }
-      this.metricCardinality.set(cardinalityKey, currentCardinality + 1);
+  /**
+   * Cleanup resources and stop background intervals
+   */
+  async destroy(): Promise<void> {
+    if (this._isDestroyed) {
+      return;
     }
 
-    return true;
+    this._isDestroyed = true;
+
+    if (this._cleanupInterval) {
+      clearInterval(this._cleanupInterval);
+      this._cleanupInterval = undefined;
+    }
+
+    await this.register.clear();
   }
 
   /**
    * Safely resets all metrics collectors with cleanup
    */
-  @performanceOptimized
-  @errorBoundary
   async resetMetrics(): Promise<void> {
-    // Clear existing metrics
-    await this.register.clear();
-    
-    // Reset cardinality tracking
-    this.metricCardinality.clear();
-    
-    // Re-register metrics
-    this.register.registerMetric(this.httpRequestDuration);
-    this.register.registerMetric(this.httpRequestTotal);
-    this.register.registerMetric(this.taskCompletionTime);
-    this.register.registerMetric(this.syncLatency);
-    this.register.registerMetric(this.handoverDuration);
+    if (this._isDestroyed) {
+      return;
+    }
+
+    try {
+      // Clear existing metrics
+      await this.register.clear();
+
+      // Re-register metrics
+      this.register.registerMetric(this.httpRequestDuration);
+      this.register.registerMetric(this.httpRequestTotal);
+      this.register.registerMetric(this.taskCompletionTime);
+      this.register.registerMetric(this.syncLatency);
+      this.register.registerMetric(this.handoverDuration);
+    } catch (error) {
+      console.error('Error resetting metrics:', error);
+      throw error;
+    }
   }
 }
 
@@ -217,8 +191,6 @@ export const {
 /**
  * Initialize metrics system with custom options
  */
-@performanceOptimized
-@errorBoundary
 export function initializeMetrics(options: MetricsOptions = {}): void {
   new MetricsManager({
     ...options,

@@ -14,7 +14,7 @@
     "incremental": true,
     "target": "ES2020",
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -37,15 +37,15 @@
   },
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts",
     "src/**/*.json"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "coverage",
-    "**/*.spec.ts",
-    "**/*.test.ts"
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ],
   "references": [
     {

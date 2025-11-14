@@ -18,7 +18,7 @@ interface RequestLogData {
   headers: Record<string, string>;
   body?: any;
   clientIp: string;
-  userAgent?: string;
+  userAgent?: string | string[] | undefined;
   timestamp: string;
   requestSize: number;
 }
@@ -67,12 +67,21 @@ export default function requestLogger(
   // Capture original end method
   const originalEnd = res.end;
   let responseBody = Buffer.from('');
+  const MAX_RESPONSE_BUFFER = 10 * 1024 * 1024; // 10MB limit to prevent memory issues
+  let responseOverflow = false;
 
   // Override end method to intercept response
   res.end = function(chunk: any, encoding?: any, callback?: () => void): Response {
-    if (chunk) {
-      responseBody = Buffer.concat([responseBody, 
-        Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)]);
+    if (chunk && !responseOverflow) {
+      const newChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      // Check buffer size before concatenating
+      if (responseBody.length + newChunk.length <= MAX_RESPONSE_BUFFER) {
+        responseBody = Buffer.concat([responseBody, newChunk]);
+      } else {
+        responseOverflow = true;
+        responseBody = Buffer.from(''); // Clear buffer to free memory
+        logger.warn('Response body too large for logging', { correlationId });
+      }
     }
 
     // Calculate response time
@@ -82,7 +91,7 @@ export default function requestLogger(
     // Format and log response
     try {
       const responseLog = formatResponseLog(res, correlationId, duration, responseBody);
-      
+
       if (shouldLogDetailed) {
         logger.info('Outgoing response', responseLog);
       }
@@ -96,8 +105,8 @@ export default function requestLogger(
 
       // Audit log for specific status codes or paths
       if (res.statusCode >= 400 || req.path.startsWith('/api/clinical/')) {
-        logger.audit('API Request completed', {
-          ...requestLog,
+        logger.info('API Request completed', {
+          ...formatRequestLog(req, correlationId),
           ...responseLog,
           audit_type: 'api_request'
         });
@@ -107,6 +116,9 @@ export default function requestLogger(
         error,
         correlationId
       });
+    } finally {
+      // Clear response body buffer to free memory
+      responseBody = Buffer.from('');
     }
 
     // Call original end method
@@ -139,7 +151,7 @@ function formatRequestLog(req: Request, correlationId: string): RequestLogData {
   // Filter and sanitize headers
   Object.entries(req.headers).forEach(([key, value]) => {
     if (!SENSITIVE_HEADERS.includes(key.toLowerCase())) {
-      logData.headers[key] = Array.isArray(value) ? value[0] : value || '';
+      logData.headers[key] = Array.isArray(value) ? (value[0] || '') : (value || '');
     } else {
       logData.headers[key] = '[REDACTED]';
     }
@@ -175,7 +187,7 @@ function formatResponseLog(
   // Filter and sanitize response headers
   Object.entries(res.getHeaders()).forEach(([key, value]) => {
     if (!SENSITIVE_HEADERS.includes(key.toLowerCase())) {
-      logData.headers[key] = value.toString();
+      logData.headers[key] = value?.toString() ?? '';
     } else {
       logData.headers[key] = '[REDACTED]';
     }
@@ -203,9 +215,15 @@ function formatResponseLog(
  * Get client IP address from request
  */
 function getClientIp(req: Request): string {
-  return (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() ||
-    req.socket.remoteAddress ||
-    'unknown';
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (forwardedFor) {
+    const forwardedValue = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
+    if (forwardedValue) {
+      const parts = forwardedValue.split(',');
+      return parts[0]?.trim() || 'unknown';
+    }
+  }
+  return req.socket?.remoteAddress || 'unknown';
 }
 
 /**

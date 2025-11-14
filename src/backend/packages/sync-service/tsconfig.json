@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    
+    "module": "Node16",
+    "moduleResolution": "node16",
+
     // Build Configuration
     "composite": true,
     "declaration": true,
@@ -33,13 +35,15 @@
   },
   
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
   ],
-  
+
   "exclude": [
     "node_modules",
     "dist",
-    "coverage"
+    "coverage",
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

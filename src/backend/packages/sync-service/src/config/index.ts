@@ -97,20 +97,20 @@ function loadConfig(): SyncConfig {
   try {
     // Load environment variables with strict type checking
     const config = SyncConfigSchema.parse({
-      maxBatchSize: process.env.SYNC_MAX_BATCH_SIZE 
-        ? parseInt(process.env.SYNC_MAX_BATCH_SIZE, 10) 
+      maxBatchSize: process.env['SYNC_MAX_BATCH_SIZE'] 
+        ? parseInt(process.env['SYNC_MAX_BATCH_SIZE'], 10) 
         : undefined,
-      syncTimeoutMs: process.env.SYNC_TIMEOUT_MS 
-        ? parseInt(process.env.SYNC_TIMEOUT_MS, 10) 
+      syncTimeoutMs: process.env['SYNC_TIMEOUT_MS'] 
+        ? parseInt(process.env['SYNC_TIMEOUT_MS'], 10) 
         : undefined,
-      retryAttempts: process.env.SYNC_RETRY_ATTEMPTS 
-        ? parseInt(process.env.SYNC_RETRY_ATTEMPTS, 10) 
+      retryAttempts: process.env['SYNC_RETRY_ATTEMPTS'] 
+        ? parseInt(process.env['SYNC_RETRY_ATTEMPTS'], 10) 
         : undefined,
-      retryDelayMs: process.env.SYNC_RETRY_DELAY_MS 
-        ? parseInt(process.env.SYNC_RETRY_DELAY_MS, 10) 
+      retryDelayMs: process.env['SYNC_RETRY_DELAY_MS'] 
+        ? parseInt(process.env['SYNC_RETRY_DELAY_MS'], 10) 
         : undefined,
-      vectorClockTTLMs: process.env.VECTOR_CLOCK_TTL_MS 
-        ? parseInt(process.env.VECTOR_CLOCK_TTL_MS, 10) 
+      vectorClockTTLMs: process.env['VECTOR_CLOCK_TTL_MS'] 
+        ? parseInt(process.env['VECTOR_CLOCK_TTL_MS'], 10) 
         : undefined
     });
 

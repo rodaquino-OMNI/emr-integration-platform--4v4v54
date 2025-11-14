@@ -1,5 +1,4 @@
 import { Knex } from 'knex'; // ^2.5.1
-import { VectorClock } from '../../types/common.types';
 
 /**
  * Migration to add vector clock support for CRDT-based synchronization
@@ -43,11 +42,11 @@ export async function up(knex: Knex): Promise<void> {
     // Add constraints
     table.check(
       'vector_clock_counter >= 0',
-      'chk_tasks_vector_clock_counter_positive'
+      { constraintName: 'chk_tasks_vector_clock_counter_positive' }
     );
     table.check(
       'vector_clock_timestamp > 0',
-      'chk_tasks_vector_clock_timestamp_positive'
+      { constraintName: 'chk_tasks_vector_clock_timestamp_positive' }
     );
   });
 
@@ -73,11 +72,11 @@ export async function up(knex: Knex): Promise<void> {
     // Add constraints
     table.check(
       'vector_clock_counter >= 0',
-      'chk_handovers_vector_clock_counter_positive'
+      { constraintName: 'chk_handovers_vector_clock_counter_positive' }
     );
     table.check(
       'vector_clock_timestamp > 0',
-      'chk_handovers_vector_clock_timestamp_positive'
+      { constraintName: 'chk_handovers_vector_clock_timestamp_positive' }
     );
   });
 
@@ -105,11 +104,11 @@ export async function up(knex: Knex): Promise<void> {
     // Add constraints
     table.check(
       'vector_clock_counter >= 0',
-      'chk_emr_verifications_vector_clock_counter_positive'
+      { constraintName: 'chk_emr_verifications_vector_clock_counter_positive' }
     );
     table.check(
       'vector_clock_timestamp > 0',
-      'chk_emr_verifications_vector_clock_timestamp_positive'
+      { constraintName: 'chk_emr_verifications_vector_clock_timestamp_positive' }
     );
   });
 

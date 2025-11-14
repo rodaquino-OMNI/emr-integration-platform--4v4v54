@@ -137,11 +137,20 @@ packages/*/dist/
 packages/*/build/
 *.js.map
 *.d.ts
+*.d.ts.map
+*.js
+!*.config.js
+!jest.config.js
+!webpack.config.js
 target/
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
+
+# Node.js Configuration
+.node-options
+src/backend/.node-options
 
 # Backend - Testing
 .nyc_output/

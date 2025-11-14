@@ -3,6 +3,7 @@ import Redis from 'ioredis'; // ^5.3.0
 import { Kafka } from 'kafkajs'; // ^2.2.4
 import { logger } from './logger';
 import { HEALTH_CHECK } from './constants';
+import { env } from './config';
 
 /**
  * Health check response interface
@@ -54,15 +55,15 @@ export interface CpuMetrics {
  * Health check service class
  */
 export class HealthCheckService {
-  private database?: Knex;
-  private redis?: Redis;
-  private kafka?: Kafka;
+  private database?: Knex | undefined;
+  private redis?: Redis | undefined;
+  private kafka?: Kafka | undefined;
   private consecutiveFailures: number = 0;
 
   constructor(options?: {
-    database?: Knex;
-    redis?: Redis;
-    kafka?: Kafka;
+    database?: Knex | undefined;
+    redis?: Redis | undefined;
+    kafka?: Kafka | undefined;
   }) {
     this.database = options?.database;
     this.redis = options?.redis;
@@ -102,7 +103,7 @@ export class HealthCheckService {
       const result: HealthCheckResult = {
         status,
         timestamp: new Date().toISOString(),
-        version: process.env.APP_VERSION || '1.0.0',
+        version: env.appVersion,
         dependencies,
         system: systemMetrics
       };
@@ -121,7 +122,7 @@ export class HealthCheckService {
       return {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        version: process.env.APP_VERSION || '1.0.0',
+        version: env.appVersion,
         dependencies: {
           database: { status: 'down', responseTime: 0, error: 'Health check failed' },
           redis: { status: 'down', responseTime: 0, error: 'Health check failed' },
@@ -346,9 +347,9 @@ export class HealthCheckService {
  * Create a health check instance
  */
 export function createHealthCheck(options?: {
-  database?: Knex;
-  redis?: Redis;
-  kafka?: Kafka;
+  database?: Knex | undefined;
+  redis?: Redis | undefined;
+  kafka?: Kafka | undefined;
 }): HealthCheckService {
   return new HealthCheckService(options);
 }
@@ -357,7 +358,7 @@ export function createHealthCheck(options?: {
  * Express middleware for health check endpoint
  */
 export function healthCheckMiddleware(healthCheck: HealthCheckService) {
-  return async (req: any, res: any) => {
+  return async (_req: any, res: any) => {
     try {
       const result = await healthCheck.check();
 

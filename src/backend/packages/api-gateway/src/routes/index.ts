@@ -53,7 +53,7 @@ const createProxyOptions = (serviceName: string) => ({
         code: 'SERVICE_ERROR',
         message: `${serviceName} service error`,
         details: { error: err.message },
-        stack: process.env.NODE_ENV === 'development' ? err.stack : ''
+        stack: process.env['NODE_ENV'] === 'development' ? err.stack : ''
       },
       metadata: {
         page: 1,
@@ -176,7 +176,7 @@ router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
       details: { error: err.message },
-      stack: process.env.NODE_ENV === 'development' ? err.stack : ''
+      stack: process.env['NODE_ENV'] === 'development' ? err.stack : ''
     },
     metadata: {
       page: 1,

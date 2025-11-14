@@ -3,10 +3,11 @@ import { HttpError } from 'http-errors'; // ^2.0.0
 import { logger } from '../logger';
 import { ApiResponse, ErrorResponse } from '../types/common.types';
 import { httpRequestTotal } from '../metrics';
+import { env } from '../config';
 
 // Constants for error handling configuration
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const ERROR_RATE_LIMIT = parseInt(process.env.ERROR_RATE_LIMIT || '1000', 10);
+const NODE_ENV = env.nodeEnv;
+const ERROR_RATE_LIMIT = parseInt(env.errorRateLimit || '1000', 10);
 const ERROR_WINDOW_MS = 60000; // 1 minute window for rate limiting
 
 // Error code mappings for standardization
@@ -56,14 +57,12 @@ function getErrorStatusCode(error: Error): number {
 /**
  * Formats error response with HIPAA compliance and correlation tracking
  */
-function formatErrorResponse(error: Error, correlationId: string): ErrorResponse {
-  const timestamp = new Date().toISOString();
+function formatErrorResponse(error: Error): ErrorResponse {
   const errorCode = (error as any).code || ERROR_CODES.INTERNAL_SERVER_ERROR;
-  
+
   // Sanitize error details for HIPAA compliance
   const sanitizedDetails = {
-    ...(error as any).details,
-    stack: NODE_ENV === 'development' ? error.stack : undefined
+    ...(error as any).details
   };
 
   // Remove any potential PHI/PII from error messages
@@ -76,8 +75,7 @@ function formatErrorResponse(error: Error, correlationId: string): ErrorResponse
     code: errorCode,
     message: sanitizedMessage,
     details: sanitizedDetails,
-    correlationId,
-    timestamp
+    stack: NODE_ENV === 'development' ? error.stack || '' : ''
   };
 }
 
@@ -121,8 +119,8 @@ export default function errorHandler(
 
   try {
     // Determine status code and format response
-    const statusCode = getErrorStatusCode(error);
-    const errorResponse = formatErrorResponse(error, correlationId);
+    let statusCode = getErrorStatusCode(error);
+    const errorResponse = formatErrorResponse(error);
 
     // Check rate limiting
     const isRateLimited = checkErrorRateLimit(errorResponse.code);
@@ -131,6 +129,9 @@ export default function errorHandler(
       errorResponse.message = 'Error rate limit exceeded';
       statusCode = 429;
     }
+
+    const [seconds, nanoseconds] = process.hrtime(startTime);
+    const processingTime = seconds * 1000 + nanoseconds / 1000000;
 
     // Log error with context
     logger.error('Request error', {
@@ -146,7 +147,7 @@ export default function errorHandler(
         }
       },
       performance: {
-        processingTime: process.hrtime(startTime)[1] / 1000000 // Convert to ms
+        processingTime
       }
     });
 
@@ -162,24 +163,63 @@ export default function errorHandler(
     const response: ApiResponse<null> = {
       success: false,
       error: errorResponse,
-      data: null
+      data: null,
+      metadata: {
+        page: 1,
+        pageSize: 0,
+        totalCount: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false
+      },
+      tracing: {
+        traceId: correlationId,
+        spanId: correlationId,
+        parentSpanId: '',
+        samplingRate: 1.0
+      },
+      performance: {
+        responseTime: processingTime,
+        processingTime: processingTime,
+        databaseTime: 0,
+        externalServiceTime: 0
+      }
     };
 
     res.status(statusCode).json(response);
   } catch (formatError) {
     // Fallback error handling
     logger.error('Error in error handler', { error: formatError });
-    
+
     const fallbackResponse: ApiResponse<null> = {
       success: false,
       error: {
         code: ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: 'An unexpected error occurred',
         details: {},
-        correlationId,
-        timestamp: new Date().toISOString()
+        stack: ''
       },
-      data: null
+      data: null,
+      metadata: {
+        page: 1,
+        pageSize: 0,
+        totalCount: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false
+      },
+      tracing: {
+        traceId: correlationId,
+        spanId: correlationId,
+        parentSpanId: '',
+        samplingRate: 1.0
+      },
+      performance: {
+        responseTime: 0,
+        processingTime: 0,
+        databaseTime: 0,
+        externalServiceTime: 0
+      }
     };
 
     res.status(500).json(fallbackResponse);

@@ -1,5 +1,5 @@
 import { Knex } from 'knex'; // v2.5.1
-import { EMR_SYSTEMS } from '../types/common.types';
+import { EMR_SYSTEMS } from '../../types/common.types';
 
 // Audit action types
 const AUDIT_ACTION_ENUM = [
@@ -13,16 +13,19 @@ const AUDIT_ACTION_ENUM = [
   'CERNER_VERIFY'
 ] as const;
 
-// Configuration constants
-const RETENTION_PERIOD_DAYS = 2555; // 7 years for healthcare compliance
-const PARTITION_INTERVAL_DAYS = 30; // Monthly partitions
-const HOT_DATA_THRESHOLD_DAYS = 90; // Recent data optimization
+/**
+ * Audit log configuration:
+ * - Retention: 2555 days (7 years for healthcare compliance)
+ * - Partitioning: 30-day intervals (monthly partitions)
+ * - Hot data threshold: 90 days (recent data optimization)
+ */
+const RETENTION_PERIOD_DAYS = 2555;
 
 export async function up(knex: Knex): Promise<void> {
   // Create audit_logs table with EMR tracking
   await knex.schema.createTable('audit_logs', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.string('action').notNullable().checkIn(AUDIT_ACTION_ENUM);
+    table.string('action').notNullable().checkIn(AUDIT_ACTION_ENUM as unknown as string[]);
     table.string('entity_type').notNullable().index();
     table.uuid('entity_id').notNullable().index();
     table.uuid('user_id').notNullable().index();

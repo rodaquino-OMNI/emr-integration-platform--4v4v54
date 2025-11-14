@@ -61,7 +61,7 @@ async function setupMiddleware(app: Express): Promise<void> {
 
   // CORS configuration
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env['CORS_ORIGIN'] || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID', 'X-Vector-Clock'],
     exposedHeaders: ['X-Correlation-ID', 'X-Vector-Clock'],
@@ -93,14 +93,14 @@ async function setupMiddleware(app: Express): Promise<void> {
 async function initializeDatabase(): Promise<any> {
   try {
     database = await createDatabaseConnection({
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-      database: process.env.DATABASE_NAME || 'emrtask',
-      user: process.env.DATABASE_USER || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'postgres',
-      ssl: process.env.NODE_ENV === 'production',
-      poolMin: parseInt(process.env.DATABASE_POOL_MIN || '2', 10),
-      poolMax: parseInt(process.env.DATABASE_POOL_MAX || '10', 10)
+      host: process.env['DATABASE_HOST'] || 'localhost',
+      port: parseInt(process.env['DATABASE_PORT'] || '5432', 10),
+      database: process.env['DATABASE_NAME'] || 'emrtask',
+      user: process.env['DATABASE_USER'] || 'postgres',
+      password: process.env['DATABASE_PASSWORD'] || 'postgres',
+      ssl: process.env['NODE_ENV'] === 'production',
+      poolMin: parseInt(process.env['DATABASE_POOL_MIN'] || '2', 10),
+      poolMax: parseInt(process.env['DATABASE_POOL_MAX'] || '10', 10)
     });
 
     logger.info('Database connection initialized successfully');
@@ -116,7 +116,7 @@ async function initializeDatabase(): Promise<any> {
  */
 async function initializeRedis(): Promise<{ client: Redis; subscriber: Redis }> {
   try {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = process.env['REDIS_URL'] || 'redis://localhost:6379';
 
     // Main Redis client
     redisClient = new Redis(redisUrl, {
@@ -168,7 +168,7 @@ async function initializeRedis(): Promise<{ client: Redis; subscriber: Redis }> 
  */
 async function initializeKafka(): Promise<{ producer: Producer; consumer: Consumer }> {
   try {
-    const brokers = process.env.KAFKA_BROKERS?.split(',') || ['localhost:9092'];
+    const brokers = process.env['KAFKA_BROKERS']?.split(',') || ['localhost:9092'];
 
     const kafka = new Kafka({
       clientId: 'sync-service',
@@ -253,7 +253,7 @@ function setupRoutes(app: Express, container: Container): void {
   app.get('/metrics', (req: Request, res: Response) => {
     res.status(HTTP_STATUS.OK).json({
       service: 'sync-service',
-      version: process.env.APP_VERSION || '1.0.0',
+      version: process.env['APP_VERSION'] || '1.0.0',
       uptime: process.uptime(),
       timestamp: new Date().toISOString()
     });
@@ -286,11 +286,11 @@ function setupRoutes(app: Express, container: Container): void {
  */
 async function startServer(): Promise<void> {
   try {
-    const port = parseInt(process.env.SYNC_SERVICE_PORT || '3003', 10);
-    const environment = process.env.NODE_ENV || 'development';
+    const port = parseInt(process.env['SYNC_SERVICE_PORT'] || '3003', 10);
+    const environment = process.env['NODE_ENV'] || 'development';
 
     logger.info('Starting Sync Service...', {
-      version: process.env.APP_VERSION || '1.0.0',
+      version: process.env['APP_VERSION'] || '1.0.0',
       environment,
       port
     });
@@ -304,7 +304,7 @@ async function startServer(): Promise<void> {
     // Initialize health check
     const kafka = new Kafka({
       clientId: 'sync-service',
-      brokers: process.env.KAFKA_BROKERS?.split(',') || ['localhost:9092']
+      brokers: process.env['KAFKA_BROKERS']?.split(',') || ['localhost:9092']
     });
 
     healthCheck = createHealthCheck({
@@ -324,7 +324,7 @@ async function startServer(): Promise<void> {
       logger.info(`Sync Service started successfully on port ${port}`, {
         port,
         environment,
-        version: process.env.APP_VERSION || '1.0.0'
+        version: process.env['APP_VERSION'] || '1.0.0'
       });
     });
 

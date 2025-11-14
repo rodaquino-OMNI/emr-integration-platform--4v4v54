@@ -66,7 +66,7 @@ export class EpicAdapter {
     @inject('MetricsCollector') private readonly metricsCollector: MetricsCollector
   ) {
     // Initialize base configuration
-    this.baseUrl = process.env.EPIC_FHIR_BASE_URL!;
+    this.baseUrl = process.env['EPIC_FHIR_BASE_URL']!;
     this.endpoints = {
       [FHIRResourceType.Patient]: '/Patient',
       [FHIRResourceType.Task]: '/Task',
@@ -77,10 +77,10 @@ export class EpicAdapter {
     // Removes client secret from HTTP headers (OAuth2 spec violation)
     // Implements proper token exchange flow per RFC 6749
     this.oauth2Config = {
-      tokenEndpoint: process.env.EPIC_TOKEN_ENDPOINT!,
-      clientId: process.env.EPIC_CLIENT_ID!,
-      clientSecret: process.env.EPIC_CLIENT_SECRET!,
-      scope: process.env.EPIC_OAUTH_SCOPE || 'system/*.read system/*.write',
+      tokenEndpoint: process.env['EPIC_TOKEN_ENDPOINT']!,
+      clientId: process.env['EPIC_CLIENT_ID']!,
+      clientSecret: process.env['EPIC_CLIENT_SECRET']!,
+      scope: process.env['EPIC_OAUTH_SCOPE'] || 'system/*.read system/*.write',
       grantType: 'client_credentials' as const
     };
 

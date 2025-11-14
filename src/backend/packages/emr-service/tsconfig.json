@@ -3,9 +3,12 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "./src",
+    "baseUrl": ".",
+    "moduleResolution": "node16",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"],
+      "@emrtask/shared": ["../shared/src"],
+      "@emrtask/shared/*": ["../shared/src/*"]
     },
     "composite": true,
     "declaration": true,
@@ -32,13 +35,15 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "coverage"
+    "coverage",
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ],
   "references": [
     {

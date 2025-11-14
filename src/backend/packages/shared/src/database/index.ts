@@ -1,7 +1,7 @@
 import { Knex, knex } from 'knex'; // ^2.5.1
-import { Pool } from 'pg'; // ^8.11.1
-import { EMRData, VectorClock, MergeOperationType } from '../types/common.types';
+import { VectorClock, MergeOperationType } from '../types/common.types';
 import { logger } from '../logger';
+import { env } from '../config';
 
 // Global configuration constants
 const DEFAULT_POOL_MIN = 2;
@@ -53,11 +53,27 @@ interface HealthStatus {
 // Replication monitor class
 class ReplicationMonitor {
   private knex: Knex;
-  private checkInterval: NodeJS.Timeout;
+  private checkInterval: NodeJS.Timeout | null = null;
+  private isRunning: boolean = false;
 
   constructor(knex: Knex) {
     this.knex = knex;
-    this.checkInterval = setInterval(() => this.checkReplicationLag(), 5000);
+    this.start();
+  }
+
+  private start(): void {
+    if (this.isRunning) {
+      return;
+    }
+    this.isRunning = true;
+    this.checkInterval = setInterval(() => {
+      // Use catch to prevent unhandled promise rejection
+      this.checkReplicationLag().catch((error) => {
+        logger.error('Replication lag check failed', { error });
+      });
+    }, 5000);
+    // Unref to prevent keeping process alive
+    this.checkInterval.unref();
   }
 
   async checkReplicationLag(): Promise<number> {
@@ -65,12 +81,12 @@ class ReplicationMonitor {
       const result = await this.knex.raw(`
         SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp())) * 1000 as lag
       `);
-      const lag = result.rows[0].lag;
-      
-      if (lag > REPLICATION_LAG_THRESHOLD_MS) {
+      const lag = result.rows[0]?.lag ?? -1;
+
+      if (lag > REPLICATION_LAG_THRESHOLD_MS && lag > 0) {
         logger.warn('High replication lag detected', { lag, threshold: REPLICATION_LAG_THRESHOLD_MS });
       }
-      
+
       return lag;
     } catch (error) {
       logger.error('Failed to check replication lag', { error });
@@ -79,32 +95,36 @@ class ReplicationMonitor {
   }
 
   stop(): void {
-    clearInterval(this.checkInterval);
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+    this.isRunning = false;
   }
 }
 
 // Decorator for retry logic
 function retryable(options: { attempts: number; delay: number }) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
+  return function <T>(_target: any, _propertyKey: string, descriptor: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<T> | void {
+    const originalMethod = descriptor.value as any;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (this: any, ...args: any[]) {
       let lastError: Error;
-      
+
       for (let attempt = 1; attempt <= options.attempts; attempt++) {
         try {
           return await originalMethod.apply(this, args);
         } catch (error) {
-          lastError = error;
+          lastError = error instanceof Error ? error : new Error(String(error));
           if (attempt < options.attempts) {
             await new Promise(resolve => setTimeout(resolve, options.delay * attempt));
           }
         }
       }
-      
+
       throw lastError!;
-    };
-    
+    } as any;
+
     return descriptor;
   };
 }
@@ -132,17 +152,20 @@ export async function createDatabaseConnection(config: DatabaseConfig): Promise<
     },
     pool: poolConfig,
     acquireConnectionTimeout: ACQUIRE_TIMEOUT_MS,
-    debug: process.env.NODE_ENV === 'development',
+    debug: env.nodeEnv === 'development',
   };
 
   if (config.replication) {
+    // Note: Knex doesn't have built-in replication support via connection config
+    // This would need to be handled at the application level with separate connections
+    // For now, we'll use the master connection
     knexConfig.connection = {
-      master: {
-        host: config.replication.master.host,
-        port: config.replication.master.port,
-      },
-      slaves: config.replication.slaves,
-      ...knexConfig.connection,
+      host: config.replication.master.host,
+      port: config.replication.master.port,
+      database: config.database,
+      user: config.user,
+      password: config.password,
+      ssl: config.ssl ? { rejectUnauthorized: true } : undefined,
     };
   }
 
@@ -163,15 +186,14 @@ export async function createDatabaseConnection(config: DatabaseConfig): Promise<
 // Main database service class
 export default class DatabaseService {
   private knex: Knex;
-  private config: DatabaseConfig;
   private vectorClock: VectorClock;
   private replicationMonitor: ReplicationMonitor;
+  private errorHandler: ((error: Error) => void) | null = null;
 
-  constructor(knex: Knex, config: DatabaseConfig) {
+  constructor(knex: Knex, _config: DatabaseConfig) {
     this.knex = knex;
-    this.config = config;
     this.vectorClock = {
-      nodeId: process.env.NODE_ID || `node-${Math.random().toString(36).substr(2, 9)}`,
+      nodeId: env.nodeId || `node-${Math.random().toString(36).substr(2, 9)}`,
       counter: 0,
       timestamp: BigInt(Date.now()),
       causalDependencies: new Map(),
@@ -179,10 +201,11 @@ export default class DatabaseService {
     };
     this.replicationMonitor = new ReplicationMonitor(knex);
 
-    // Set up connection error handler
-    knex.on('error', (error: Error) => {
+    // Set up connection error handler with reference for cleanup
+    this.errorHandler = (error: Error) => {
       logger.error('Database error occurred', { error });
-    });
+    };
+    knex.on('error', this.errorHandler);
   }
 
   @retryable({ attempts: RETRY_ATTEMPTS, delay: RETRY_DELAY_MS })
@@ -238,12 +261,12 @@ export default class DatabaseService {
   }
 
   private async getPoolStatus() {
-    const pool = this.knex.client.pool as Pool;
+    const pool = this.knex.client.pool as any;
     return {
-      total: pool.totalCount,
-      active: pool.activeCount,
-      idle: pool.idleCount,
-      waiting: pool.waitingCount,
+      total: pool.totalCount || 0,
+      active: pool.numUsed?.() || 0,
+      idle: pool.numFree?.() || 0,
+      waiting: pool.numPendingAcquires?.() || 0,
     };
   }
 
@@ -270,7 +293,16 @@ export default class DatabaseService {
   }
 
   async cleanup(): Promise<void> {
+    // Stop replication monitor
     this.replicationMonitor.stop();
+
+    // Remove error handler to prevent memory leak
+    if (this.errorHandler) {
+      this.knex.removeListener('error', this.errorHandler);
+      this.errorHandler = null;
+    }
+
+    // Destroy connection pool
     await this.knex.destroy();
   }
 }

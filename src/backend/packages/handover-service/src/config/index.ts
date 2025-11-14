@@ -12,7 +12,6 @@ import { HANDOVER_WINDOW_MINUTES } from '../../../shared/src/constants';
 dotenv.config();
 
 // Global constants
-const ENV = process.env.NODE_ENV || 'development';
 const SERVICE_NAME = 'handover-service';
 
 /**

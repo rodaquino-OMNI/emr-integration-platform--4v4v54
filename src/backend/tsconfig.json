@@ -4,16 +4,18 @@
     "target": "ES2020",
     "module": "commonjs",
     "lib": ["ES2020"],
-    
+
     // Type Declaration and Source Map Generation
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    
+
     // Build Optimization
     "composite": true,
     "incremental": true,
     "skipLibCheck": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "disableSourceOfProjectReferenceRedirect": true,
     
     // Strict Type Checking
     "strict": true,
@@ -43,7 +45,12 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    
+    "baseUrl": ".",
+    "paths": {
+      "@emrtask/shared": ["./packages/shared/src"],
+      "@emrtask/shared/*": ["./packages/shared/src/*"]
+    },
+
     // Decorator Support
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -52,7 +59,11 @@
     "types": [
       "node",
       "jest"
-    ]
+    ],
+
+    // Memory Optimization
+    "preserveWatchOutput": false,
+    "disableReferencedProjectLoad": true
   },
   
   // Project References for Microservices

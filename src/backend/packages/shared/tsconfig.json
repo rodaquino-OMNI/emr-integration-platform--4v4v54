@@ -34,14 +34,16 @@
   
   // Source Files
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
   ],
-  
+
   // File Exclusions
   "exclude": [
     "node_modules",
     "dist",
-    "coverage"
+    "coverage",
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

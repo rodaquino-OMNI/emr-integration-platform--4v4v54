@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'; // ^4.18.0
 import jwt from 'jsonwebtoken'; // ^9.0.0
 import { logger } from '../logger';
 import { HTTP_STATUS } from '../constants';
+import { env } from '../config';
 
 /**
  * User role types
@@ -82,7 +83,7 @@ export function authenticateToken(
     }
 
     // Verify token
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = env.jwtSecret;
     if (!jwtSecret) {
       logger.error('JWT_SECRET not configured', { correlationId });
       throw new Error('JWT configuration error');
@@ -224,25 +225,25 @@ export function authorizeRoles(...allowedRoles: UserRole[]) {
  * Generate JWT token for user
  */
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  const jwtSecret = process.env.JWT_SECRET;
+  const jwtSecret = env.jwtSecret;
   if (!jwtSecret) {
     throw new Error('JWT_SECRET not configured');
   }
 
-  const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
+  const expiresIn = env.jwtExpiresIn;
 
   return jwt.sign(payload, jwtSecret, {
-    expiresIn,
+    expiresIn: expiresIn || '24h',
     issuer: 'emr-integration-platform',
     audience: 'emr-services'
-  });
+  } as jwt.SignOptions);
 }
 
 /**
  * Verify and decode JWT token
  */
 export function verifyToken(token: string): JWTPayload {
-  const jwtSecret = process.env.JWT_SECRET;
+  const jwtSecret = env.jwtSecret;
   if (!jwtSecret) {
     throw new Error('JWT_SECRET not configured');
   }
@@ -256,7 +257,7 @@ export function verifyToken(token: string): JWTPayload {
  */
 export function optionalAuth(
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void {
   const authHeader = req.headers.authorization;
@@ -269,7 +270,7 @@ export function optionalAuth(
   }
 
   try {
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = env.jwtSecret;
     if (!jwtSecret) {
       logger.error('JWT_SECRET not configured');
       next();
@@ -302,12 +303,12 @@ export function optionalAuth(
 export function auditLog(action: string) {
   return (
     req: AuthenticatedRequest,
-    res: Response,
+    _res: Response,
     next: NextFunction
   ): void => {
     const correlationId = (req.headers['x-correlation-id'] as string) || 'unknown';
 
-    logger.audit(`Audit: ${action}`, {
+    logger.info(`Audit: ${action}`, {
       action,
       userId: req.user?.userId || 'anonymous',
       roles: req.user?.roles || [],
