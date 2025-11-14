@@ -130,7 +130,7 @@ function setupRoutes(app: Express): void {
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      version: process.env.APP_VERSION
+      version: process.env['APP_VERSION']
     });
   });
 
@@ -171,10 +171,10 @@ async function startServer(app: Express): Promise<void> {
 
     // Create HTTPS server in production
     let server;
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env['NODE_ENV'] === 'production') {
       const credentials = {
-        key: fs.readFileSync(process.env.SSL_KEY_PATH!),
-        cert: fs.readFileSync(process.env.SSL_CERT_PATH!)
+        key: fs.readFileSync(process.env['SSL_KEY_PATH']!),
+        cert: fs.readFileSync(process.env['SSL_CERT_PATH']!)
       };
       server = https.createServer(credentials, app);
     } else {
@@ -182,12 +182,12 @@ async function startServer(app: Express): Promise<void> {
     }
 
     // Start server
-    const port = process.env.PORT || 3000;
+    const port = process.env['PORT'] || 3000;
     server.listen(port, () => {
       logger.info(`Server started on port ${port}`, {
         port,
-        environment: process.env.NODE_ENV,
-        version: process.env.APP_VERSION
+        environment: process.env['NODE_ENV'],
+        version: process.env['APP_VERSION']
       });
     });
 

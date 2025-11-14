@@ -229,7 +229,7 @@ export function sanitizeInput(input: any): any {
  */
 export function sanitizeMiddleware(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void {
   if (req.body) {

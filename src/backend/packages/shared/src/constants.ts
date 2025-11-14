@@ -83,6 +83,10 @@ export const HEALTH_CHECK = {
   UNHEALTHY_THRESHOLD: 3
 } as const;
 
+// Handover Service Constants
+export const HANDOVER_WINDOW_MINUTES = 30;
+export const HANDOVER_TIMEOUT_MS = 30000;
+
 export type ApiVersion = typeof API_VERSIONS[keyof typeof API_VERSIONS];
 export type TaskStatus = typeof TASK_STATUS[keyof typeof TASK_STATUS];
 export type TaskPriority = typeof TASK_PRIORITY[keyof typeof TASK_PRIORITY];

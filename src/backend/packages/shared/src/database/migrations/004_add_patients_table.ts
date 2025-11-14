@@ -1,5 +1,4 @@
 import { Knex } from 'knex'; // v2.5.1
-import { EMR_SYSTEMS } from '../types/common.types';
 
 /**
  * Migration to add patients table and establish proper relationships

@@ -36,11 +36,14 @@
   "include": [
     "src/**/*.ts"
   ],
-  
+
   // File Exclusions
   "exclude": [
     "node_modules",
     "dist",
-    "coverage"
+    "coverage",
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

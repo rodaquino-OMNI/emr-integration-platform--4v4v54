@@ -191,8 +191,8 @@ export const hl7Config: HL7Config = {
   version: '2.5.1',
   connections: {
     [EMR_SYSTEMS.EPIC]: {
-      host: process.env.EPIC_HL7_HOST || 'epic-hl7.hospital.com',
-      port: parseInt(process.env.EPIC_HL7_PORT || '2575', 10),
+      host: process.env['EPIC_HL7_HOST'] || 'epic-hl7.hospital.com',
+      port: parseInt(process.env['EPIC_HL7_PORT'] || '2575', 10),
       facility: 'MAIN_HOSPITAL',
       application: 'EMR_TASK_SYSTEM',
       keepAlive: true,
@@ -224,8 +224,8 @@ export const hl7Config: HL7Config = {
       }
     },
     [EMR_SYSTEMS.CERNER]: {
-      host: process.env.CERNER_HL7_HOST || 'cerner-hl7.hospital.com',
-      port: parseInt(process.env.CERNER_HL7_PORT || '2575', 10),
+      host: process.env['CERNER_HL7_HOST'] || 'cerner-hl7.hospital.com',
+      port: parseInt(process.env['CERNER_HL7_PORT'] || '2575', 10),
       facility: 'MAIN_HOSPITAL',
       application: 'EMR_TASK_SYSTEM',
       keepAlive: true,
@@ -273,8 +273,8 @@ export const hl7Config: HL7Config = {
         // SECURITY FIX: Removed default password fallback
         // Credentials MUST be provided via environment variables
         // Application will fail fast if credentials are not configured
-        username: process.env.HL7_AUTH_USERNAME!,
-        password: process.env.HL7_AUTH_PASSWORD!
+        username: process.env['HL7_AUTH_USERNAME']!,
+        password: process.env['HL7_AUTH_PASSWORD']!
       }
     },
     encryption: {
@@ -336,10 +336,10 @@ export function validateHL7Config(): void {
 
   // Validate authentication credentials
   if (hl7Config.security.authentication.enabled) {
-    if (!process.env.HL7_AUTH_USERNAME) {
+    if (!process.env['HL7_AUTH_USERNAME']) {
       errors.push('HL7_AUTH_USERNAME environment variable is required but not set');
     }
-    if (!process.env.HL7_AUTH_PASSWORD) {
+    if (!process.env['HL7_AUTH_PASSWORD']) {
       errors.push('HL7_AUTH_PASSWORD environment variable is required but not set');
     }
   }

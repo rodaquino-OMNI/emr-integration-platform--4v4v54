@@ -2,15 +2,16 @@ import winston from 'winston'; // ^3.8.0
 import { ElasticsearchTransport } from 'winston-elasticsearch'; // ^0.17.0
 import { Client } from '@elastic/elasticsearch';
 import { AsyncLocalStorage } from 'async_hooks';
+import { env } from '../config';
 
 // Global constants
-const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
-const ELASTICSEARCH_URL = process.env.ELASTICSEARCH_URL || 'http://elasticsearch:9200';
+const LOG_LEVEL = env.logLevel;
+const ELASTICSEARCH_URL = env.elasticsearchUrl || 'http://elasticsearch:9200';
 const LOG_INDEX_PREFIX = 'emrtask-logs-';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
-const SERVICE_NAME = process.env.SERVICE_NAME || 'unknown-service';
-const ENVIRONMENT = process.env.NODE_ENV || 'development';
+const SERVICE_NAME = env.serviceName;
+const ENVIRONMENT = env.nodeEnv;
 
 // Correlation ID tracking
 const asyncLocalStorage = new AsyncLocalStorage<{ correlationId: string }>();
@@ -29,16 +30,23 @@ class EnhancedElasticsearchTransport extends ElasticsearchTransport {
   private retryLimit: number;
   private retryDelay: number;
   private buffer: any[];
+  private readonly MAX_BUFFER_SIZE = 1000;
+  private isProcessingBuffer = false;
 
   constructor(options: any) {
-    const esClient = new Client({
+    const clientConfig: any = {
       node: ELASTICSEARCH_URL,
       maxRetries: MAX_RETRIES,
       requestTimeout: 10000,
-      ssl: ENVIRONMENT === 'production' ? {
+    };
+
+    if (ENVIRONMENT === 'production') {
+      clientConfig.tls = {
         rejectUnauthorized: true,
-      } : undefined,
-    });
+      };
+    }
+
+    const esClient = new Client(clientConfig);
 
     super({
       client: esClient,
@@ -55,33 +63,42 @@ class EnhancedElasticsearchTransport extends ElasticsearchTransport {
     this.buffer = [];
   }
 
-  async log(info: any, callback: () => void): Promise<void> {
-    const logData = this.sanitizeLogData(info);
-    const index = `${this.indexPrefix}${new Date().toISOString().split('T')[0].replace(/-/g, '.')}`;
+  override async log(info: any, callback: () => void): Promise<void> {
+    const logData = sanitizeLogData(info);
+    const dateString = new Date().toISOString().split('T')[0];
+    const index = `${this.indexPrefix}${dateString?.replace(/-/g, '.')}`;
 
     try {
       await this.client.index({
         index,
         body: logData,
       });
-      
+
       // Process any buffered logs if connection is restored
-      if (this.buffer.length > 0) {
-        await this.processBuffer();
-      }
-      
-      callback();
-    } catch (error) {
-      // Buffer log on connection failure
-      this.buffer.push({ logData, callback });
-      
-      // Implement buffer size limit
-      if (this.buffer.length > 1000) {
-        this.buffer.shift(); // Remove oldest log if buffer exceeds limit
+      if (this.buffer.length > 0 && !this.isProcessingBuffer) {
+        // Process buffer asynchronously without blocking
+        this.processBuffer().catch((error) => {
+          console.error('Failed to process buffer:', error);
+        });
       }
 
-      // Attempt retry with exponential backoff
-      this.retryLog(logData, callback, 1);
+      callback();
+    } catch (error) {
+      // Check buffer size limit before adding
+      if (this.buffer.length >= this.MAX_BUFFER_SIZE) {
+        // Remove oldest logs to prevent unbounded growth
+        const itemsToRemove = Math.floor(this.MAX_BUFFER_SIZE * 0.2); // Remove 20%
+        this.buffer.splice(0, itemsToRemove);
+        console.warn(`Logger buffer exceeded limit. Removed ${itemsToRemove} oldest entries.`);
+      }
+
+      // Buffer log on connection failure
+      this.buffer.push({ logData, callback, timestamp: Date.now() });
+
+      // Attempt retry with exponential backoff (non-blocking)
+      this.retryLog(logData, callback, 1).catch((retryError) => {
+        console.error('Failed to retry log:', retryError);
+      });
     }
   }
 
@@ -96,8 +113,10 @@ class EnhancedElasticsearchTransport extends ElasticsearchTransport {
     await new Promise(resolve => setTimeout(resolve, delay));
 
     try {
+      const dateString = new Date().toISOString().split('T')[0];
+      const indexName = `${this.indexPrefix}${dateString?.replace(/-/g, '.')}`;
       await this.client.index({
-        index: `${this.indexPrefix}${new Date().toISOString().split('T')[0].replace(/-/g, '.')}`,
+        index: indexName,
         body: logData,
       });
       callback();
@@ -107,18 +126,57 @@ class EnhancedElasticsearchTransport extends ElasticsearchTransport {
   }
 
   private async processBuffer(): Promise<void> {
-    while (this.buffer.length > 0) {
-      const { logData, callback } = this.buffer.shift()!;
-      try {
-        await this.client.index({
-          index: `${this.indexPrefix}${new Date().toISOString().split('T')[0].replace(/-/g, '.')}`,
-          body: logData,
-        });
-        callback();
-      } catch (error) {
-        this.buffer.unshift({ logData, callback }); // Put back in buffer if failed
-        break;
+    if (this.isProcessingBuffer) {
+      return;
+    }
+
+    this.isProcessingBuffer = true;
+    const MAX_BATCH_SIZE = 100;
+    const MAX_PROCESSING_TIME = 5000; // 5 seconds
+    const startTime = Date.now();
+
+    try {
+      let processed = 0;
+      while (this.buffer.length > 0 && processed < MAX_BATCH_SIZE) {
+        // Check if we've been processing too long
+        if (Date.now() - startTime > MAX_PROCESSING_TIME) {
+          break;
+        }
+
+        const item = this.buffer.shift();
+        if (!item) break;
+
+        const { logData, callback, timestamp } = item;
+
+        try {
+          // Skip logs older than 1 hour to prevent backlog processing
+          if (timestamp && Date.now() - timestamp > 3600000) {
+            console.warn('Skipping old buffered log entry');
+            callback();
+            continue;
+          }
+
+          const dateString = new Date().toISOString().split('T')[0];
+          const indexName = `${this.indexPrefix}${dateString?.replace(/-/g, '.')}`;
+          await this.client.index({
+            index: indexName,
+            body: logData,
+          });
+          callback();
+          processed++;
+        } catch (error) {
+          // Only put back if buffer isn't too large
+          if (this.buffer.length < this.MAX_BUFFER_SIZE * 0.8) {
+            this.buffer.unshift(item);
+          } else {
+            console.error('Buffer full, dropping log entry');
+            callback();
+          }
+          break;
+        }
       }
+    } finally {
+      this.isProcessingBuffer = false;
     }
   }
 }
@@ -210,4 +268,5 @@ const createLogger = (): winston.Logger => {
 export const logger = createLogger();
 
 // Export individual log methods for convenience
-export const { error, warn, info, debug, audit } = logger;
+export const { error, warn, info, debug } = logger;
+export const audit = (logger as any).audit;

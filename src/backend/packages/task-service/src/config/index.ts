@@ -86,15 +86,15 @@ const configSchema = z.object({
  * Default configuration values
  */
 const defaultConfig = {
-  env: process.env.NODE_ENV || 'development',
+  env: process.env['NODE_ENV'] || 'development',
   service: {
     name: 'task-service',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    port: parseInt(process.env.TASK_SERVICE_PORT || '3002', 10)
+    environment: process.env['NODE_ENV'] || 'development',
+    port: parseInt(process.env['TASK_SERVICE_PORT'] || '3002', 10)
   },
   api: {
-    version: process.env.API_VERSION || API_VERSIONS.V1,
+    version: process.env['API_VERSION'] || API_VERSIONS.V1,
     rateLimit: 1000,
     timeout: 30000
   },
@@ -104,38 +104,38 @@ const defaultConfig = {
     verificationTimeoutMinutes: 30,
     maxDescriptionLength: 1000,
     titleMinLength: 5,
-    lockTimeoutSeconds: parseInt(process.env.TASK_LOCK_TIMEOUT || '300', 10),
+    lockTimeoutSeconds: parseInt(process.env['TASK_LOCK_TIMEOUT'] || '300', 10),
     allowedStatuses: [TASK_STATUS.TODO, TASK_STATUS.IN_PROGRESS, TASK_STATUS.COMPLETED],
     allowedPriorities: [TASK_PRIORITY.LOW, TASK_PRIORITY.MEDIUM, TASK_PRIORITY.HIGH]
   },
   sync: {
-    retryAttempts: parseInt(process.env.SYNC_RETRY_ATTEMPTS || '3', 10),
+    retryAttempts: parseInt(process.env['SYNC_RETRY_ATTEMPTS'] || '3', 10),
     retryDelayMs: 500,
     batchSize: 50,
     maxPendingSync: 1000
   },
   emr: {
-    requestTimeoutMs: parseInt(process.env.EMR_TIMEOUT || '30000', 10),
+    requestTimeoutMs: parseInt(process.env['EMR_TIMEOUT'] || '30000', 10),
     supportedSystems: [EMR_SYSTEMS.EPIC, EMR_SYSTEMS.CERNER],
     maxRetries: 3,
     connectionPoolSize: 10
   },
   offline: {
-    storageLimitMb: parseInt(process.env.OFFLINE_STORAGE_LIMIT || '1024', 10),
+    storageLimitMb: parseInt(process.env['OFFLINE_STORAGE_LIMIT'] || '1024', 10),
     syncIntervalMs: 60000,
     maxPendingSync: 1000
   },
   database: {
-    url: process.env.DATABASE_URL!,
+    url: process.env['DATABASE_URL']!,
     poolSize: 20,
     connectionTimeoutMs: 5000
   },
   redis: {
-    url: process.env.REDIS_URL!,
+    url: process.env['REDIS_URL']!,
     reconnectAttempts: 5
   },
   kafka: {
-    brokers: process.env.KAFKA_BROKERS?.split(',') || [],
+    brokers: process.env['KAFKA_BROKERS']?.split(',') || [],
     clientId: 'task-service',
     groupId: 'task-service-group'
   }

@@ -5,7 +5,7 @@ import { httpRequestDuration, httpRequestTotal } from '../metrics';
 const EXCLUDED_PATHS = ['/health', '/metrics', '/favicon.ico'];
 
 // Cache for path normalization to improve performance
-const PATH_NORMALIZATION_CACHE = new WeakMap<string, string>();
+const PATH_NORMALIZATION_CACHE = new Map<string, string>();
 
 /**
  * Normalizes request paths for consistent metric labels by replacing dynamic segments
@@ -74,10 +74,10 @@ export default function metricsMiddleware(
   });
 
   // Store original end function
-  const originalEnd = res.end;
+  const originalEnd = res.end.bind(res);
 
   // Override end function to capture timing
-  res.end = function(this: Response, ...args: any[]): Response {
+  res.end = ((...args: any[]) => {
     // Restore original end
     res.end = originalEnd;
 
@@ -101,9 +101,9 @@ export default function metricsMiddleware(
       status_code: res.statusCode.toString()
     });
 
-    // Call original end
-    return originalEnd.apply(this, args);
-  };
+    // Call original end with all arguments
+    return originalEnd(...args);
+  }) as typeof res.end;
 
   next();
 }

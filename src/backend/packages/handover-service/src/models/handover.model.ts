@@ -1,12 +1,11 @@
 import { Knex } from 'knex'; // ^2.5.1
 import { z } from 'zod'; // v3.21.4
-import { 
-  HandoverSchema, 
-  Handover, 
-  HandoverStatus, 
-  HandoverTask, 
-  CriticalEvent, 
-  HandoverVerification,
+import {
+  HandoverSchema,
+  Handover,
+  HandoverStatus,
+  HandoverTask,
+  CriticalEvent,
   HandoverVerificationStatus,
   HANDOVER_WINDOW_MINUTES,
   MAX_HANDOVER_RETRIES
@@ -80,7 +79,7 @@ export class HandoverModel {
       return await this.db.executeTransaction(async (trx: Knex.Transaction) => {
         // Initialize vector clock for new handover
         const vectorClock: VectorClock = {
-          nodeId: process.env.NODE_ID || 'default',
+          nodeId: process.env['NODE_ID'] || 'default',
           counter: 1,
           timestamp: BigInt(Date.now()),
           causalDependencies: new Map(),
@@ -138,7 +137,7 @@ export class HandoverModel {
     handoverId: string,
     status: HandoverStatus,
     vectorClock: VectorClock,
-    verification?: HandoverVerification
+    verification?: { status: HandoverVerificationStatus; verifiedBy: string }
   ): Promise<HandoverResult> {
     logger.info('Updating handover status', { handoverId, status });
 
@@ -255,7 +254,7 @@ export class HandoverModel {
     trx: Knex.Transaction
   ): Promise<HandoverResult> {
     const vectorClock: VectorClock = {
-      nodeId: process.env.NODE_ID || 'default',
+      nodeId: process.env['NODE_ID'] || 'default',
       counter: currentHandover.vector_clock.counter + 1,
       timestamp: BigInt(Date.now()),
       causalDependencies: new Map([
@@ -303,5 +302,45 @@ export class HandoverModel {
     // Implement manual resolution queueing logic here
     // This is a placeholder for the actual implementation
     throw new Error('Manual conflict resolution not implemented');
+  }
+
+  async getHandover(handoverId: string): Promise<Handover | null> {
+    logger.info('Retrieving handover', { handoverId });
+
+    try {
+      const handover = await this.db.executeQuery(async (knex) => {
+        return await knex(this.tableName)
+          .where({ id: handoverId })
+          .first();
+      });
+
+      if (!handover) {
+        logger.warn('Handover not found', { handoverId });
+        return null;
+      }
+
+      // Fetch related tasks
+      const tasks = await this.db.executeQuery(async (knex) => {
+        return await knex(TASKS_TABLE)
+          .where({ handover_id: handoverId });
+      });
+
+      // Fetch related critical events
+      const events = await this.db.executeQuery(async (knex) => {
+        return await knex(EVENTS_TABLE)
+          .where({ handover_id: handoverId });
+      });
+
+      logger.info('Handover retrieved successfully', { handoverId });
+
+      return {
+        ...handover,
+        tasks,
+        criticalEvents: events
+      };
+    } catch (error) {
+      logger.error('Failed to retrieve handover', { error, handoverId });
+      throw error;
+    }
   }
 }

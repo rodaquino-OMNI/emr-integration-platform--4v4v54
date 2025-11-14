@@ -346,6 +346,80 @@ export class HandoverService {
     });
   }
 
+  /**
+   * Synchronizes handover changes using CRDT merge operations
+   */
+  async syncHandover(
+    handoverId: string,
+    changes: Partial<Handover>,
+    vectorClock: VectorClock
+  ): Promise<Handover> {
+    this.logger.info('Syncing handover changes', { handoverId });
+
+    try {
+      const currentHandover = await this.handoverModel.getHandover(handoverId);
+      if (!currentHandover) {
+        throw new HttpError('HANDOVER_NOT_FOUND', `Handover not found: ${handoverId}`);
+      }
+
+      // Merge changes using vector clock for conflict resolution
+      const mergedVectorClock = this.mergeVectorClocks(
+        currentHandover.vectorClock,
+        vectorClock
+      );
+
+      // Apply changes and update handover
+      const updatedHandover = await this.handoverModel.updateHandoverStatus(
+        handoverId,
+        changes.status || currentHandover.status,
+        mergedVectorClock
+      );
+
+      this.logger.info('Handover synchronized successfully', { handoverId });
+
+      return updatedHandover;
+    } catch (error) {
+      this.logger.error('Failed to sync handover', { error });
+      throw this.handleServiceError(error);
+    }
+  }
+
+  /**
+   * Retrieves complete handover details including all related data
+   */
+  async getHandoverDetails(handoverId: string): Promise<Handover> {
+    this.logger.info('Retrieving handover details', { handoverId });
+
+    try {
+      const handover = await this.handoverModel.getHandover(handoverId);
+      if (!handover) {
+        throw new HttpError('HANDOVER_NOT_FOUND', `Handover not found: ${handoverId}`);
+      }
+
+      this.logger.info('Handover details retrieved successfully', { handoverId });
+
+      return handover;
+    } catch (error) {
+      this.logger.error('Failed to get handover details', { error });
+      throw this.handleServiceError(error);
+    }
+  }
+
+  private mergeVectorClocks(clock1: VectorClock, clock2: VectorClock): VectorClock {
+    const mergedDependencies = new Map([
+      ...clock1.causalDependencies,
+      ...clock2.causalDependencies
+    ]);
+
+    return {
+      nodeId: clock1.nodeId,
+      counter: Math.max(clock1.counter, clock2.counter) + 1,
+      timestamp: BigInt(Date.now()),
+      causalDependencies: mergedDependencies,
+      mergeOperation: MergeOperationType.LAST_WRITE_WINS
+    };
+  }
+
   private handleServiceError(error: any): Error {
     if (error instanceof HttpError) {
       return error;

@@ -72,8 +72,8 @@ export function validateTaskPriority(priority: string): boolean {
  */
 export async function validateEMRData(data: EMRData): Promise<{
   isValid: boolean;
-  errors?: string[];
-  warnings?: string[];
+  errors?: string[] | undefined;
+  warnings?: string[] | undefined;
 }> {
   try {
     // Validate EMR system
@@ -140,13 +140,16 @@ export async function validateEMRData(data: EMRData): Promise<{
 
     return {
       isValid: true,
-      warnings: warnings.length > 0 ? warnings : undefined
+      warnings: warnings.length > 0 ? warnings : undefined,
+      errors: undefined
     };
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       isValid: false,
-      errors: [`EMR validation error: ${error.message}`]
+      errors: [`EMR validation error: ${errorMessage}`],
+      warnings: undefined
     };
   }
 }
@@ -186,7 +189,7 @@ export function sanitizeInput(
 
   // XSS protection with healthcare considerations
   sanitized = xss(sanitized, {
-    whiteList: options.allowedTags,
+    whiteList: (options.allowedTags ?? []) as any,
     stripIgnoreTag: true,
     stripIgnoreTagBody: ['script', 'style'],
     css: false

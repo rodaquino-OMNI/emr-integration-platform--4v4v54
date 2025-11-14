@@ -85,10 +85,10 @@ export const validateConfig = (): void => {
   }
 
   // Additional security checks
-  if (!process.env.JWT_SECRET && config.server.env === 'production') {
+  if (!process.env['JWT_SECRET'] && config.server.env === 'production') {
     throw new ConfigurationError(
       'JWT_SECRET is required in production',
-      { env: process.env.NODE_ENV }
+      { env: process.env['NODE_ENV'] }
     );
   }
 };
@@ -121,31 +121,31 @@ export const loadConfig = (): object => {
   
   const config = {
     server: {
-      env: process.env.NODE_ENV || 'development',
-      port: parseInt(process.env.PORT || '3000', 10),
-      apiVersion: process.env.API_VERSION || API_VERSIONS.V1
+      env: process.env['NODE_ENV'] || 'development',
+      port: parseInt(process.env['PORT'] || '3000', 10),
+      apiVersion: process.env['API_VERSION'] || API_VERSIONS.V1
     },
     auth: {
-      jwtSecret: process.env.JWT_SECRET,
-      jwtAlgorithm: process.env.JWT_ALGORITHM || 'RS256',
-      jwtExpiry: parseInt(process.env.JWT_EXPIRY || '3600', 10),
-      refreshTokenExpiry: parseInt(process.env.REFRESH_TOKEN_EXPIRY || '2592000', 10)
+      jwtSecret: process.env['JWT_SECRET'],
+      jwtAlgorithm: process.env['JWT_ALGORITHM'] || 'RS256',
+      jwtExpiry: parseInt(process.env['JWT_EXPIRY'] || '3600', 10),
+      refreshTokenExpiry: parseInt(process.env['REFRESH_TOKEN_EXPIRY'] || '2592000', 10)
     },
     rateLimit: {
       enabled: true,
       requestsPerMinute: API_RATE_LIMIT,
-      redisUrl: process.env.REDIS_URL
+      redisUrl: process.env['REDIS_URL']
     },
     cors: {
-      origin: process.env.CORS_ORIGIN || '*'
+      origin: process.env['CORS_ORIGIN'] || '*'
     },
     availability: {
-      requestTimeout: parseInt(process.env.REQUEST_TIMEOUT || '30000', 10),
-      circuitBreakerTimeout: parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT || '10000', 10),
-      gracefulShutdownTimeout: parseInt(process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '10000', 10)
+      requestTimeout: parseInt(process.env['REQUEST_TIMEOUT'] || '30000', 10),
+      circuitBreakerTimeout: parseInt(process.env['CIRCUIT_BREAKER_TIMEOUT'] || '10000', 10),
+      gracefulShutdownTimeout: parseInt(process.env['GRACEFUL_SHUTDOWN_TIMEOUT'] || '10000', 10)
     },
     security: {
-      trustProxy: process.env.TRUST_PROXY === 'true',
+      trustProxy: process.env['TRUST_PROXY'] === 'true',
       helmet: {
         contentSecurityPolicy: true,
         crossOriginEmbedderPolicy: true,

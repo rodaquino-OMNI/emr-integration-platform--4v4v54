@@ -60,7 +60,7 @@ async function setupMiddleware(app: Express): Promise<void> {
 
   // CORS configuration
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env['CORS_ORIGIN'] || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID'],
     exposedHeaders: ['X-Correlation-ID'],
@@ -92,12 +92,12 @@ async function setupMiddleware(app: Express): Promise<void> {
 async function initializeDatabase(): Promise<any> {
   try {
     database = await createDatabaseConnection({
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-      database: process.env.DATABASE_NAME || 'emrtask',
-      user: process.env.DATABASE_USER || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'postgres',
-      ssl: process.env.NODE_ENV === 'production',
+      host: process.env['DATABASE_HOST'] || 'localhost',
+      port: parseInt(process.env['DATABASE_PORT'] || '5432', 10),
+      database: process.env['DATABASE_NAME'] || 'emrtask',
+      user: process.env['DATABASE_USER'] || 'postgres',
+      password: process.env['DATABASE_PASSWORD'] || 'postgres',
+      ssl: process.env['NODE_ENV'] === 'production',
       poolMin: config.database.poolSize,
       poolMax: config.database.poolSize
     });

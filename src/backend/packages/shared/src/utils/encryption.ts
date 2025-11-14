@@ -1,21 +1,24 @@
 import { error, info } from '../logger';
-import { 
-  KMSClient, 
-  EncryptCommand, 
-  DecryptCommand, 
-  GenerateDataKeyCommand 
+import {
+  KMSClient,
+  EncryptCommand,
+  DecryptCommand,
+  GenerateDataKeyCommand
 } from '@aws-sdk/client-kms';
 import * as crypto from 'crypto';
+import { env } from '../config';
 
 // Constants for encryption configuration
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
-const KEY_LENGTH = 32;
 const KEY_ROTATION_INTERVAL = 86400000; // 24 hours
-const MAX_KEY_AGE = 7776000000; // 90 days
 const RETRY_ATTEMPTS = 3;
-const KEY_CACHE_TTL = 3600000; // 1 hour
+
+// Reserved constants for future key lifecycle management:
+// KEY_LENGTH = 32 (AES-256 key size)
+// MAX_KEY_AGE = 7776000000 (90 days)
+// KEY_CACHE_TTL = 3600000 (1 hour)
 
 // Types
 interface RetryConfig {
@@ -48,16 +51,13 @@ export class EncryptionService {
   private kmsClient: KMSClient;
   private keyId: string;
   private keyCache: Map<string, CachedKey>;
-  private retryConfig: RetryConfig;
 
   constructor(keyId: string, retryConfig: RetryConfig = { maxAttempts: RETRY_ATTEMPTS, baseDelay: 100 }) {
-    this.kmsClient = new KMSClient({
-      maxAttempts: retryConfig.maxAttempts,
-      region: process.env.AWS_REGION
-    });
+    this.kmsClient = new KMSClient(
+      env.awsRegion ? { maxAttempts: retryConfig.maxAttempts, region: env.awsRegion } : { maxAttempts: retryConfig.maxAttempts }
+    );
     this.keyId = keyId;
     this.keyCache = new Map();
-    this.retryConfig = retryConfig;
 
     // Setup key rotation interval
     setInterval(() => this.rotateKey(), KEY_ROTATION_INTERVAL);
@@ -173,11 +173,12 @@ export async function decryptField(
 ): Promise<string> {
   try {
     const combined = Buffer.from(encryptedData, 'base64');
-    
+
     // Extract components
     const iv = combined.slice(0, IV_LENGTH);
-    const authTag = combined.slice(-AUTH_TAG_LENGTH - (options.additionalAuthData ? options.additionalAuthData.length : 0), -options.additionalAuthData ? options.additionalAuthData.length : 0);
-    const encrypted = combined.slice(IV_LENGTH, -AUTH_TAG_LENGTH - (options.additionalAuthData ? options.additionalAuthData.length : 0));
+    const aadLength = options.additionalAuthData?.length ?? 0;
+    const authTag = combined.slice(-AUTH_TAG_LENGTH - aadLength, -aadLength || undefined);
+    const encrypted = combined.slice(IV_LENGTH, -AUTH_TAG_LENGTH - aadLength);
 
     const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
@@ -204,11 +205,10 @@ export async function generateEncryptionKey(
 ): Promise<KeyMaterial> {
   try {
     const version = options.version || crypto.randomBytes(16).toString('hex');
-    const key = crypto.randomBytes(KEY_LENGTH);
-    
-    const kmsClient = new KMSClient({ region: process.env.AWS_REGION });
+
+    const kmsClient = new KMSClient(env.awsRegion ? { region: env.awsRegion } : {});
     const command = new GenerateDataKeyCommand({
-      KeyId: process.env.KMS_KEY_ID,
+      KeyId: env.kmsKeyId,
       KeySpec: 'AES_256'
     });
 

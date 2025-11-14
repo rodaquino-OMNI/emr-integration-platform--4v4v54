@@ -1,6 +1,9 @@
 import axios, { AxiosInstance } from 'axios'; // v1.4.0
-import { Logger } from '../logger';
-import { trace, Span, SpanStatusCode } from '@opentelemetry/api'; // v1.4.0
+import { logger } from '../logger';
+import { trace, SpanStatusCode } from '@opentelemetry/api'; // v1.4.0
+
+// Type alias for logger
+type Logger = typeof logger;
 
 /**
  * OAuth2 Token Response Interface
@@ -20,8 +23,8 @@ interface CachedToken {
   accessToken: string;
   tokenType: string;
   expiresAt: number; // Unix timestamp in milliseconds
-  scope?: string;
-  refreshToken?: string;
+  scope?: string | undefined;
+  refreshToken?: string | undefined;
 }
 
 /**
@@ -296,17 +299,17 @@ export class OAuth2TokenManager {
 
     // Add scope if provided
     if (config.scope) {
-      params.scope = config.scope;
+      params['scope'] = config.scope;
     }
 
     // Add audience if provided (SMART-on-FHIR)
     if (config.audience) {
-      params.audience = config.audience;
+      params['audience'] = config.audience;
     }
 
     // Add resource if provided (Epic/Cerner specific)
     if (config.resource) {
-      params.resource = config.resource;
+      params['resource'] = config.resource;
     }
 
     try {
@@ -351,8 +354,8 @@ export class OAuth2TokenManager {
       accessToken: tokenResponse.access_token,
       tokenType: tokenResponse.token_type,
       expiresAt,
-      scope: tokenResponse.scope,
-      refreshToken: tokenResponse.refresh_token
+      scope: tokenResponse.scope ?? undefined,
+      refreshToken: tokenResponse.refresh_token ?? undefined
     };
 
     this.tokenCache.set(cacheKey, cachedToken);
