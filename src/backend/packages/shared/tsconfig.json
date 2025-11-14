@@ -34,8 +34,7 @@
   
   // Source Files
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
   ],
   
   // File Exclusions
