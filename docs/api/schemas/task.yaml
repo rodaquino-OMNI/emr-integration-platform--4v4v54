@@ -1,0 +1,267 @@
+TaskStatus:
+  type: string
+  enum: [TODO, IN_PROGRESS, COMPLETED, BLOCKED, CANCELLED]
+  description: Current status of the task
+  example: IN_PROGRESS
+
+TaskPriority:
+  type: string
+  enum: [LOW, MEDIUM, HIGH, CRITICAL]
+  description: Priority level of the task with clinical significance
+  example: HIGH
+
+TaskVerificationStatus:
+  type: string
+  enum: [PENDING, VERIFIED, FAILED, EXPIRED, RETRY_NEEDED]
+  description: EMR verification status with timeout tracking
+  example: VERIFIED
+
+Task:
+  type: object
+  required:
+    - id
+    - title
+    - description
+    - status
+    - priority
+    - dueDate
+    - assignedTo
+    - patientId
+    - emrData
+    - verificationStatus
+    - vectorClock
+    - lastSyncedAt
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique task identifier
+      example: 550e8400-e29b-41d4-a716-446655440000
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+      description: Task title
+      example: Administer medication - Patient John Doe
+    description:
+      type: string
+      maxLength: 1000
+      description: Detailed task description
+      example: Administer 500mg aspirin orally at 14:00. Patient has no known allergies.
+    status:
+      $ref: '#/TaskStatus'
+    priority:
+      $ref: '#/TaskPriority'
+    dueDate:
+      type: string
+      format: date-time
+      description: Task due date and time
+      example: '2025-11-15T14:00:00Z'
+    assignedTo:
+      type: string
+      format: uuid
+      description: ID of assigned healthcare worker
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    patientId:
+      type: string
+      format: uuid
+      description: Patient identifier
+      example: 2c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f
+    emrData:
+      $ref: './emr.yaml#/EMRData'
+    verificationStatus:
+      $ref: '#/TaskVerificationStatus'
+    vectorClock:
+      $ref: './common.yaml#/VectorClock'
+    lastSyncedAt:
+      type: string
+      format: date-time
+      description: Last synchronization timestamp
+      example: '2025-11-15T13:45:00Z'
+    createdAt:
+      type: string
+      format: date-time
+      description: Task creation timestamp
+      example: '2025-11-15T08:00:00Z'
+    updatedAt:
+      type: string
+      format: date-time
+      description: Last update timestamp
+      example: '2025-11-15T13:30:00Z'
+
+TaskCreate:
+  type: object
+  required:
+    - title
+    - description
+    - priority
+    - dueDate
+    - assignedTo
+    - patientId
+    - emrData
+    - verificationTimeout
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+      description: Task title
+      example: Administer medication - Patient John Doe
+    description:
+      type: string
+      maxLength: 1000
+      description: Detailed task description
+      example: Administer 500mg aspirin orally at 14:00. Patient has no known allergies.
+    priority:
+      $ref: '#/TaskPriority'
+    dueDate:
+      type: string
+      format: date-time
+      description: Task due date and time (must be in future)
+      example: '2025-11-15T14:00:00Z'
+    assignedTo:
+      type: string
+      format: uuid
+      description: ID of assigned healthcare worker
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    patientId:
+      type: string
+      format: uuid
+      description: Patient identifier
+      example: 2c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f
+    emrData:
+      $ref: './emr.yaml#/EMRData'
+    verificationTimeout:
+      type: string
+      format: date-time
+      description: Verification timeout (must be in future)
+      example: '2025-11-15T14:30:00Z'
+
+TaskUpdate:
+  type: object
+  description: Partial update for task (all fields optional)
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+      example: Updated task title
+    description:
+      type: string
+      maxLength: 1000
+      example: Updated task description
+    status:
+      $ref: '#/TaskStatus'
+    priority:
+      $ref: '#/TaskPriority'
+    dueDate:
+      type: string
+      format: date-time
+      example: '2025-11-15T15:00:00Z'
+    assignedTo:
+      type: string
+      format: uuid
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    vectorClock:
+      $ref: './common.yaml#/VectorClock'
+
+TaskVerification:
+  type: object
+  required:
+    - taskId
+    - status
+    - verifiedBy
+    - verifiedAt
+    - emrMatch
+    - barcodeData
+    - verificationTimeout
+    - retryCount
+  properties:
+    taskId:
+      type: string
+      format: uuid
+      description: Task being verified
+      example: 550e8400-e29b-41d4-a716-446655440000
+    status:
+      $ref: '#/TaskVerificationStatus'
+    verifiedBy:
+      type: string
+      format: uuid
+      description: Healthcare worker performing verification
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    verifiedAt:
+      type: string
+      format: date-time
+      description: Verification timestamp
+      example: '2025-11-15T13:55:00Z'
+    emrMatch:
+      type: boolean
+      description: Whether verification matches EMR data
+      example: true
+    barcodeData:
+      type: string
+      description: Scanned barcode data from patient wristband
+      example: PAT-123456-DOE-JOHN
+    verificationTimeout:
+      type: string
+      format: date-time
+      description: When verification expires
+      example: '2025-11-15T14:30:00Z'
+    retryCount:
+      type: integer
+      minimum: 0
+      maximum: 3
+      description: Number of verification retry attempts
+      example: 0
+
+TaskQueryParams:
+  allOf:
+    - $ref: './common.yaml#/PaginationParams'
+    - type: object
+      properties:
+        status:
+          type: array
+          items:
+            $ref: '#/TaskStatus'
+          description: Filter by task status
+          example: [TODO, IN_PROGRESS]
+        priority:
+          type: array
+          items:
+            $ref: '#/TaskPriority'
+          description: Filter by priority
+          example: [HIGH, CRITICAL]
+        assignedTo:
+          type: string
+          format: uuid
+          description: Filter by assigned user
+          example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+        patientId:
+          type: string
+          format: uuid
+          description: Filter by patient
+          example: 2c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f
+        verificationStatus:
+          type: array
+          items:
+            $ref: '#/TaskVerificationStatus'
+          description: Filter by verification status
+          example: [VERIFIED]
+        startDate:
+          type: string
+          format: date-time
+          description: Filter tasks due after this date
+          example: '2025-11-15T00:00:00Z'
+        endDate:
+          type: string
+          format: date-time
+          description: Filter tasks due before this date
+          example: '2025-11-16T00:00:00Z'
+        syncStatus:
+          type: boolean
+          description: Filter by sync status
+          example: true
+        emrSystem:
+          $ref: './common.yaml#/EMRSystem'

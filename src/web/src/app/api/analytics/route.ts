@@ -183,10 +183,5 @@ export const GET = withAuth(
   [UserRole.SUPERVISOR, UserRole.ADMINISTRATOR] // Restrict access to supervisors and administrators
 );
 
-// Export rate limit middleware for use in API route
-export const config = {
-  api: {
-    bodyParser: false,
-    externalResolver: true
-  }
-};
+// Note: bodyParser and externalResolver config is deprecated in App Router
+// These settings are no longer needed in Next.js 13+ App Directory

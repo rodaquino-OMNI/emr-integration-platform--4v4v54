@@ -35,17 +35,6 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
 } as any;
 
-// Mock Capacitor Storage
-jest.mock('@capacitor/storage', () => ({
-  Storage: {
-    get: jest.fn(),
-    set: jest.fn(),
-    remove: jest.fn(),
-    clear: jest.fn(),
-    keys: jest.fn(),
-  }
-}));
-
 // Mock Next.js router
 jest.mock('next/router', () => ({
   useRouter: () => ({

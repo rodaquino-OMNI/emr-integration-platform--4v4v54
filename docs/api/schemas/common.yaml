@@ -1,0 +1,221 @@
+Error:
+  type: object
+  required:
+    - code
+    - message
+  properties:
+    code:
+      type: string
+      description: Error code for programmatic handling
+      example: VALIDATION_ERROR
+    message:
+      type: string
+      description: Human-readable error message
+      example: Invalid input parameters
+    details:
+      type: object
+      description: Additional error details
+      additionalProperties: true
+      example:
+        field: email
+        reason: Invalid email format
+    stack:
+      type: string
+      description: Stack trace (only in development)
+      example: Error at line 42
+
+ApiResponse:
+  type: object
+  required:
+    - success
+    - data
+    - metadata
+    - tracing
+    - performance
+  properties:
+    success:
+      type: boolean
+      description: Indicates if the request was successful
+      example: true
+    data:
+      description: Response data (type varies by endpoint)
+      oneOf:
+        - type: object
+        - type: array
+        - type: object
+          nullable: true
+    error:
+      $ref: '#/Error'
+    metadata:
+      $ref: '#/ResponseMetadata'
+    tracing:
+      $ref: '#/TracingMetadata'
+    performance:
+      $ref: '#/PerformanceMetrics'
+
+ResponseMetadata:
+  type: object
+  required:
+    - page
+    - pageSize
+    - totalCount
+    - totalPages
+    - hasNextPage
+    - hasPreviousPage
+  properties:
+    page:
+      type: integer
+      minimum: 1
+      description: Current page number
+      example: 1
+    pageSize:
+      type: integer
+      minimum: 1
+      maximum: 100
+      description: Number of items per page
+      example: 20
+    totalCount:
+      type: integer
+      minimum: 0
+      description: Total number of items
+      example: 150
+    totalPages:
+      type: integer
+      minimum: 0
+      description: Total number of pages
+      example: 8
+    hasNextPage:
+      type: boolean
+      description: Whether there is a next page
+      example: true
+    hasPreviousPage:
+      type: boolean
+      description: Whether there is a previous page
+      example: false
+
+PaginationParams:
+  type: object
+  properties:
+    page:
+      type: integer
+      minimum: 1
+      default: 1
+      description: Page number
+      example: 1
+    pageSize:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 20
+      description: Items per page
+      example: 20
+    sortBy:
+      type: string
+      description: Field to sort by
+      example: createdAt
+    sortOrder:
+      type: string
+      enum: [ASC, DESC]
+      default: DESC
+      description: Sort direction
+      example: DESC
+
+TracingMetadata:
+  type: object
+  required:
+    - traceId
+    - spanId
+  properties:
+    traceId:
+      type: string
+      description: Distributed trace ID
+      example: 550e8400-e29b-41d4-a716-446655440000
+    spanId:
+      type: string
+      description: Current span ID
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    parentSpanId:
+      type: string
+      description: Parent span ID
+      example: 2c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f
+    samplingRate:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 1
+      description: Sampling rate for traces
+      example: 0.1
+
+PerformanceMetrics:
+  type: object
+  required:
+    - responseTime
+    - processingTime
+    - databaseTime
+    - externalServiceTime
+  properties:
+    responseTime:
+      type: integer
+      description: Total response time in milliseconds
+      example: 245
+    processingTime:
+      type: integer
+      description: Processing time in milliseconds
+      example: 120
+    databaseTime:
+      type: integer
+      description: Database query time in milliseconds
+      example: 85
+    externalServiceTime:
+      type: integer
+      description: External service call time in milliseconds
+      example: 40
+
+VectorClock:
+  type: object
+  description: CRDT vector clock for conflict-free synchronization
+  required:
+    - nodeId
+    - counter
+    - timestamp
+    - mergeOperation
+  properties:
+    nodeId:
+      type: string
+      description: Unique identifier for the node/device
+      example: node-abc123
+    counter:
+      type: integer
+      minimum: 0
+      description: Logical clock counter
+      example: 42
+    timestamp:
+      type: integer
+      format: int64
+      description: High-precision timestamp in microseconds
+      example: 1699876543000000
+    causalDependencies:
+      type: object
+      description: Map of node IDs to their last known counter values
+      additionalProperties:
+        type: integer
+      example:
+        node-abc123: 42
+        node-def456: 38
+    mergeOperation:
+      type: string
+      enum: [LAST_WRITE_WINS, MULTI_VALUE, CUSTOM]
+      description: Conflict resolution strategy
+      example: LAST_WRITE_WINS
+
+EMRSystem:
+  type: string
+  enum: [EPIC, CERNER, GENERIC_FHIR]
+  description: Supported EMR system types
+  example: EPIC
+
+SortOrder:
+  type: string
+  enum: [ASC, DESC]
+  description: Sort order direction
+  example: DESC

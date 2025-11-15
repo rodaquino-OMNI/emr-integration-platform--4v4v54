@@ -1,0 +1,177 @@
+UserRole:
+  type: string
+  enum: [SYSTEM_ADMIN, FACILITY_ADMIN, DOCTOR, NURSE, STAFF, EMR_INTEGRATION]
+  description: Healthcare user role with access levels
+  example: NURSE
+
+EMRAccessLevel:
+  type: string
+  enum: [READ, WRITE, VERIFY, ADMIN]
+  description: EMR system access level
+  example: VERIFY
+
+User:
+  type: object
+  required:
+    - id
+    - email
+    - role
+    - firstName
+    - lastName
+    - department
+    - facility
+    - emrAccess
+    - permissions
+    - active
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique user identifier
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    email:
+      type: string
+      format: email
+      description: User email address
+      example: jane.doe@hospital.com
+    role:
+      $ref: '#/UserRole'
+    firstName:
+      type: string
+      description: User first name
+      example: Jane
+    lastName:
+      type: string
+      description: User last name
+      example: Doe
+    department:
+      type: string
+      description: Hospital department
+      example: Emergency Department
+    facility:
+      type: string
+      description: Healthcare facility name
+      example: General Hospital
+    emrAccess:
+      type: array
+      items:
+        $ref: '#/EMRAccessLevel'
+      description: EMR access levels
+      example: [READ, VERIFY]
+    permissions:
+      type: array
+      items:
+        type: string
+      description: Specific permissions
+      example: ['tasks:create', 'tasks:update', 'handovers:create']
+    active:
+      type: boolean
+      description: Whether user account is active
+      example: true
+    mfaEnabled:
+      type: boolean
+      description: Whether MFA is enabled
+      example: true
+    lastLogin:
+      type: string
+      format: date-time
+      description: Last login timestamp
+      example: '2025-11-15T08:00:00Z'
+    createdAt:
+      type: string
+      format: date-time
+      description: Account creation timestamp
+      example: '2025-01-01T00:00:00Z'
+    updatedAt:
+      type: string
+      format: date-time
+      description: Last update timestamp
+      example: '2025-11-15T08:00:00Z'
+
+UserCreate:
+  type: object
+  required:
+    - email
+    - password
+    - role
+    - firstName
+    - lastName
+    - department
+    - facility
+  properties:
+    email:
+      type: string
+      format: email
+      description: User email address
+      example: jane.doe@hospital.com
+    password:
+      type: string
+      format: password
+      minLength: 12
+      description: User password (min 12 characters)
+      example: SecureP@ssw0rd123!
+    role:
+      $ref: '#/UserRole'
+    firstName:
+      type: string
+      minLength: 1
+      description: User first name
+      example: Jane
+    lastName:
+      type: string
+      minLength: 1
+      description: User last name
+      example: Doe
+    department:
+      type: string
+      description: Hospital department
+      example: Emergency Department
+    facility:
+      type: string
+      description: Healthcare facility name
+      example: General Hospital
+    emrAccess:
+      type: array
+      items:
+        $ref: '#/EMRAccessLevel'
+      description: EMR access levels
+      example: [READ, VERIFY]
+
+UserUpdate:
+  type: object
+  description: Partial user update (all fields optional)
+  properties:
+    email:
+      type: string
+      format: email
+      example: jane.doe@newhospital.com
+    firstName:
+      type: string
+      example: Jane
+    lastName:
+      type: string
+      example: Smith
+    department:
+      type: string
+      example: ICU
+    facility:
+      type: string
+      example: University Hospital
+    emrAccess:
+      type: array
+      items:
+        $ref: '#/EMRAccessLevel'
+      example: [READ, WRITE, VERIFY]
+    permissions:
+      type: array
+      items:
+        type: string
+      example: ['tasks:create', 'tasks:update', 'tasks:delete']
+    active:
+      type: boolean
+      example: true
+    mfaEnabled:
+      type: boolean
+      example: true

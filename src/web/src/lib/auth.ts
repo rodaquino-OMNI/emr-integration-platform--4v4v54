@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import NextAuth from 'next-auth'; // v4.22.1
 import { z } from 'zod'; // v3.21.4
 import jwt from 'jsonwebtoken'; // v9.0.0
-import { createLogger } from 'winston'; // v3.8.2
+import winston from 'winston'; // v3.8.2
 import { User, UserRole, UserSchema } from './types';
 import { TokenManager } from './axios';
 
@@ -20,7 +20,7 @@ const MAX_AUTH_ATTEMPTS = 3;
 const AUTH_ATTEMPT_RESET_MS = 900000; // 15 minutes
 
 // ============= Logger Configuration =============
-const logger = createLogger({
+const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
   defaultMeta: { service: 'auth-service' },
@@ -256,7 +256,7 @@ export const withAuth = (
       return <div>Loading...</div>;
     }
 
-    if (!isAuthenticated || !authManager.checkPermission(user, requiredRoles)) {
+    if (!isAuthenticated || !user || !authManager.checkPermission(user, requiredRoles)) {
       return <div>Access Denied</div>;
     }
 

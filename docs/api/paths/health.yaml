@@ -1,0 +1,43 @@
+health:
+  get:
+    tags:
+      - Health
+    summary: Health check endpoint
+    description: Returns system health status and version information
+    operationId: getHealth
+    security: []
+    responses:
+      '200':
+        description: System is healthy
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+                - timestamp
+                - version
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, degraded, unhealthy]
+                  example: healthy
+                timestamp:
+                  type: string
+                  format: date-time
+                  example: '2025-11-15T14:00:00Z'
+                version:
+                  type: string
+                  example: '1.0.0'
+                uptime:
+                  type: integer
+                  description: Uptime in seconds
+                  example: 86400
+            examples:
+              healthy:
+                summary: Healthy system
+                value:
+                  status: healthy
+                  timestamp: '2025-11-15T14:00:00Z'
+                  version: '1.0.0'
+                  uptime: 86400

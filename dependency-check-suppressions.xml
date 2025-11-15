@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+    This file contains suppression rules for OWASP Dependency Check.
+    Suppressions should be temporary and regularly reviewed.
+    -->
+
+    <!-- Example suppression - remove or modify as needed -->
+    <!--
+    <suppress>
+        <notes>
+            <![CDATA[
+            Suppression for false positive in development dependency
+            Review date: 2025-01-01
+            ]]>
+        </notes>
+        <packageUrl regex="true">^pkg:npm/.*@.*$</packageUrl>
+        <cve>CVE-XXXX-XXXXX</cve>
+    </suppress>
+    -->
+</suppressions>

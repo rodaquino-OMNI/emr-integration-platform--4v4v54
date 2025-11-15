@@ -270,3 +270,17 @@ export const logger = createLogger();
 // Export individual log methods for convenience
 export const { error, warn, info, debug } = logger;
 export const audit = (logger as any).audit;
+
+/**
+ * Logger class wrapper for creating module-specific loggers
+ */
+export class Logger {
+  /**
+   * Create a child logger with a specific module label
+   * @param module - Module name for logging context
+   * @returns Winston logger instance with module context
+   */
+  static create(module: string): winston.Logger {
+    return logger.child({ module });
+  }
+}

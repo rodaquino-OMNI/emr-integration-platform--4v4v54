@@ -44,6 +44,8 @@
     "coverage",
     "test",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "src/tracing/**/*",
+    "src/examples/**/*"
   ]
 }

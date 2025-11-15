@@ -1,0 +1,307 @@
+# Artillery WebSocket Stress Test
+# Tests real-time updates and WebSocket connection stability
+
+config:
+  target: "{{ $processEnvironment.WS_URL || 'ws://localhost:3000' }}"
+  phases:
+    # Gradual connection ramp-up
+    - duration: 60
+      arrivalRate: 10
+      name: "Connection Ramp-up"
+
+    # Sustained connections
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained Connections"
+
+    # Connection spike
+    - duration: 60
+      arrivalRate: 200
+      name: "Connection Spike"
+
+    # Recovery
+    - duration: 120
+      arrivalRate: 20
+      name: "Recovery"
+
+  # WebSocket engine
+  engines:
+    ws:
+      timeout: 30000 # 30 second timeout
+
+  # Performance targets
+  ensure:
+    maxErrorRate: 2 # < 2% error rate for WebSocket
+
+  # Plugins
+  plugins:
+    expect: {}
+
+  # Variables
+  variables:
+    eventTypes:
+      - "task.created"
+      - "task.updated"
+      - "task.completed"
+      - "task.deleted"
+      - "emr.synced"
+      - "notification.sent"
+
+scenarios:
+  # Scenario 1: Basic WebSocket Connection
+  - name: "WebSocket Connection Lifecycle"
+    engine: ws
+    weight: 30
+    flow:
+      # Connect to WebSocket
+      - connect:
+          url: "/ws"
+
+      # Authenticate
+      - send:
+          payload:
+            type: "auth"
+            token: "test-token-{{ $randomString() }}"
+
+      # Wait for auth confirmation
+      - think: 1
+
+      # Subscribe to task updates
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "tasks"
+            filters:
+              status: "pending"
+
+      # Wait for messages
+      - think: 10
+
+      # Send heartbeat
+      - send:
+          payload:
+            type: "ping"
+
+      # Wait for pong
+      - think: 1
+
+      # Unsubscribe
+      - send:
+          payload:
+            type: "unsubscribe"
+            channel: "tasks"
+
+      # Disconnect
+      - think: 2
+
+  # Scenario 2: Real-time Task Updates
+  - name: "Real-time Task Monitoring"
+    engine: ws
+    weight: 40
+    flow:
+      - connect:
+          url: "/ws"
+
+      - send:
+          payload:
+            type: "auth"
+            token: "monitor-token-{{ $randomString() }}"
+
+      - think: 1
+
+      # Subscribe to multiple channels
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "tasks.created"
+
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "tasks.updated"
+
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "tasks.completed"
+
+      # Long-lived connection
+      - think: 30
+
+      # Periodic heartbeats
+      - loop:
+          - send:
+              payload:
+                type: "ping"
+          - think: 5
+        count: 6
+
+      # Disconnect
+      - send:
+          payload:
+            type: "disconnect"
+
+  # Scenario 3: EMR Sync Updates
+  - name: "EMR Sync Monitoring"
+    engine: ws
+    weight: 20
+    flow:
+      - connect:
+          url: "/ws"
+
+      - send:
+          payload:
+            type: "auth"
+            token: "emr-monitor-{{ $randomString() }}"
+
+      - think: 1
+
+      # Subscribe to EMR events
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "emr.sync"
+            patientId: "PAT-{{ $randomNumber(1, 1000) }}"
+
+      # Wait for sync updates
+      - think: 15
+
+      # Request sync status
+      - send:
+          payload:
+            type: "request"
+            action: "sync.status"
+            patientId: "PAT-{{ $randomNumber(1, 1000) }}"
+
+      - think: 5
+
+      # Disconnect
+      - send:
+          payload:
+            type: "disconnect"
+
+  # Scenario 4: Notification Streaming
+  - name: "User Notification Stream"
+    engine: ws
+    weight: 30
+    flow:
+      - connect:
+          url: "/ws"
+
+      - send:
+          payload:
+            type: "auth"
+            token: "user-{{ $randomNumber(1, 1000) }}-token"
+
+      - think: 1
+
+      # Subscribe to user notifications
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "notifications"
+            userId: "user-{{ $randomNumber(1, 1000) }}"
+
+      # Long-lived connection for notifications
+      - think: 45
+
+      # Acknowledge notifications
+      - loop:
+          - send:
+              payload:
+                type: "ack"
+                notificationId: "notif-{{ $randomString() }}"
+          - think: 8
+        count: 5
+
+      # Disconnect
+      - send:
+          payload:
+            type: "disconnect"
+
+  # Scenario 5: Connection Stability Test
+  - name: "Connection Reconnect Pattern"
+    engine: ws
+    weight: 10
+    flow:
+      # Initial connection
+      - connect:
+          url: "/ws"
+
+      - send:
+          payload:
+            type: "auth"
+            token: "stability-test-{{ $randomString() }}"
+
+      - think: 5
+
+      # Subscribe
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "all"
+
+      - think: 10
+
+      # Simulate disconnect
+      - send:
+          payload:
+            type: "disconnect"
+
+      - think: 2
+
+      # Reconnect
+      - connect:
+          url: "/ws"
+
+      - send:
+          payload:
+            type: "auth"
+            token: "stability-test-{{ $randomString() }}"
+
+      - think: 5
+
+      # Re-subscribe
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "all"
+
+      - think: 10
+
+  # Scenario 6: Broadcast Message Load
+  - name: "High Message Volume"
+    engine: ws
+    weight: 15
+    flow:
+      - connect:
+          url: "/ws"
+
+      - send:
+          payload:
+            type: "auth"
+            token: "broadcast-{{ $randomString() }}"
+
+      - think: 1
+
+      # Subscribe to high-volume channel
+      - send:
+          payload:
+            type: "subscribe"
+            channel: "broadcast"
+
+      # Receive many messages
+      - think: 20
+
+      # Send heartbeats during high load
+      - loop:
+          - send:
+              payload:
+                type: "ping"
+          - think: 3
+        count: 5
+
+      # Disconnect
+      - send:
+          payload:
+            type: "disconnect"
