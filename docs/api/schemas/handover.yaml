@@ -1,0 +1,419 @@
+HandoverStatus:
+  type: string
+  enum: [PREPARING, READY, IN_PROGRESS, COMPLETED, REJECTED, VERIFICATION_REQUIRED, VERIFICATION_FAILED]
+  description: Current status of handover workflow
+  example: IN_PROGRESS
+
+ShiftType:
+  type: string
+  enum: [MORNING, AFTERNOON, NIGHT]
+  description: Type of hospital shift
+  example: MORNING
+
+HandoverVerificationStatus:
+  type: string
+  enum: [PENDING, IN_PROGRESS, VERIFIED, FAILED, REQUIRES_REVIEW]
+  description: Verification status for handover accuracy
+  example: VERIFIED
+
+CriticalEventPriority:
+  type: string
+  enum: [LOW, MEDIUM, HIGH, URGENT]
+  description: Priority level for critical events during handover
+  example: URGENT
+
+Shift:
+  type: object
+  required:
+    - type
+    - startTime
+    - endTime
+    - staff
+    - department
+    - metadata
+  properties:
+    type:
+      $ref: '#/ShiftType'
+    startTime:
+      type: string
+      format: date-time
+      description: Shift start time
+      example: '2025-11-15T07:00:00Z'
+    endTime:
+      type: string
+      format: date-time
+      description: Shift end time
+      example: '2025-11-15T15:00:00Z'
+    staff:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: List of staff members on shift
+      example: ['7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f', '8e1f5f9b-4g2d-5c3f-0b9e-2d3c4b5a6d7e']
+    department:
+      type: string
+      description: Hospital department
+      example: Emergency Department
+    metadata:
+      type: object
+      required:
+        - capacity
+        - departmentProtocols
+        - supervisingDoctor
+        - emergencyContact
+      properties:
+        capacity:
+          type: integer
+          minimum: 1
+          description: Shift capacity
+          example: 8
+        specialInstructions:
+          type: string
+          description: Special shift instructions
+          example: COVID-19 protocols in effect
+        departmentProtocols:
+          type: array
+          items:
+            type: string
+          description: Active department protocols
+          example: ['ISO-001', 'HIPAA-COMP', 'COVID-PROTO']
+        supervisingDoctor:
+          type: string
+          format: uuid
+          description: Supervising physician ID
+          example: 9f2g6g0c-5h3e-6d4g-1c0f-3e4d5c6b7e8f
+        emergencyContact:
+          type: string
+          description: Emergency contact information
+          example: '+1-555-0100 ext. 4567'
+
+CriticalEvent:
+  type: object
+  required:
+    - id
+    - patientId
+    - description
+    - timestamp
+    - reportedBy
+    - priority
+    - relatedTasks
+    - resolution
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique event identifier
+      example: 3d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8g
+    patientId:
+      type: string
+      format: uuid
+      description: Patient identifier
+      example: 2c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f
+    description:
+      type: string
+      description: Event description
+      example: Patient experienced sudden drop in blood pressure
+    timestamp:
+      type: string
+      format: date-time
+      description: Event occurrence time
+      example: '2025-11-15T12:30:00Z'
+    reportedBy:
+      type: string
+      format: uuid
+      description: Healthcare worker who reported event
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    priority:
+      $ref: '#/CriticalEventPriority'
+    relatedTasks:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: Related task IDs
+      example: ['550e8400-e29b-41d4-a716-446655440000']
+    resolution:
+      type: object
+      required:
+        - status
+        - followUpRequired
+      properties:
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, RESOLVED]
+          description: Resolution status
+          example: IN_PROGRESS
+        resolvedBy:
+          type: string
+          format: uuid
+          description: Resolver ID
+          example: 9f2g6g0c-5h3e-6d4g-1c0f-3e4d5c6b7e8f
+        resolvedAt:
+          type: string
+          format: date-time
+          description: Resolution timestamp
+          example: '2025-11-15T13:00:00Z'
+        resolutionNotes:
+          type: string
+          description: Resolution notes
+          example: BP stabilized after medication adjustment
+        followUpRequired:
+          type: boolean
+          description: Whether follow-up is needed
+          example: true
+
+HandoverTask:
+  allOf:
+    - $ref: './task.yaml#/Task'
+    - type: object
+      required:
+        - handoverStatus
+        - handoverNotes
+        - reassignedTo
+        - verification
+        - auditTrail
+      properties:
+        handoverStatus:
+          type: object
+          required:
+            - currentStatus
+            - previousStatus
+            - lastVerifiedAt
+            - handoverAttempts
+          properties:
+            currentStatus:
+              $ref: './task.yaml#/TaskStatus'
+            previousStatus:
+              $ref: './task.yaml#/TaskStatus'
+            statusChangeReason:
+              type: string
+              example: Patient condition improved
+            lastVerifiedAt:
+              type: string
+              format: date-time
+              example: '2025-11-15T13:45:00Z'
+            handoverAttempts:
+              type: integer
+              minimum: 0
+              maximum: 3
+              example: 0
+        handoverNotes:
+          type: string
+          description: Notes for receiving shift
+          example: Patient requires close monitoring for next 2 hours
+        reassignedTo:
+          type: string
+          format: uuid
+          description: New assignee on receiving shift
+          example: 8e1f5f9b-4g2d-5c3f-0b9e-2d3c4b5a6d7e
+        verification:
+          type: object
+          required:
+            - verifiedBy
+            - verifiedAt
+            - verificationMethod
+            - verificationEvidence
+            - isValid
+            - validationErrors
+          properties:
+            verifiedBy:
+              type: string
+              format: uuid
+              example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+            verifiedAt:
+              type: string
+              format: date-time
+              example: '2025-11-15T13:50:00Z'
+            verificationMethod:
+              type: string
+              enum: [BARCODE, EMR, MANUAL]
+              example: BARCODE
+            verificationEvidence:
+              type: string
+              example: PAT-123456-DOE-JOHN
+            isValid:
+              type: boolean
+              example: true
+            validationErrors:
+              type: array
+              items:
+                type: string
+              example: []
+        auditTrail:
+          type: array
+          items:
+            type: object
+            required:
+              - timestamp
+              - action
+              - performedBy
+              - details
+              - vectorClock
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                example: '2025-11-15T13:45:00Z'
+              action:
+                type: string
+                example: STATUS_CHANGED
+              performedBy:
+                type: string
+                format: uuid
+                example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+              details:
+                type: object
+                additionalProperties: true
+                example:
+                  from: TODO
+                  to: IN_PROGRESS
+              vectorClock:
+                $ref: './common.yaml#/VectorClock'
+
+Handover:
+  type: object
+  required:
+    - id
+    - fromShift
+    - toShift
+    - status
+    - tasks
+    - criticalEvents
+    - notes
+    - createdAt
+    - completedAt
+    - vectorClock
+    - lastModifiedBy
+    - verificationStatus
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique handover identifier
+      example: 4e5f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8g9h
+    fromShift:
+      $ref: '#/Shift'
+    toShift:
+      $ref: '#/Shift'
+    status:
+      $ref: '#/HandoverStatus'
+    tasks:
+      type: array
+      items:
+        $ref: '#/HandoverTask'
+      maxItems: 100
+      description: Tasks being handed over
+    criticalEvents:
+      type: array
+      items:
+        $ref: '#/CriticalEvent'
+      maxItems: 50
+      description: Critical events during shift
+    notes:
+      type: string
+      description: General handover notes
+      example: Busy shift with 3 new admissions
+    createdAt:
+      type: string
+      format: date-time
+      description: Handover creation time
+      example: '2025-11-15T14:45:00Z'
+    completedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Handover completion time
+      example: '2025-11-15T15:15:00Z'
+    vectorClock:
+      $ref: './common.yaml#/VectorClock'
+    lastModifiedBy:
+      type: string
+      format: uuid
+      description: Last modifier ID
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    verificationStatus:
+      $ref: '#/HandoverVerificationStatus'
+
+HandoverCreate:
+  type: object
+  required:
+    - fromShift
+    - toShift
+    - tasks
+    - notes
+  properties:
+    fromShift:
+      $ref: '#/Shift'
+    toShift:
+      $ref: '#/Shift'
+    tasks:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: Task IDs to include in handover
+      example: ['550e8400-e29b-41d4-a716-446655440000']
+    notes:
+      type: string
+      description: General handover notes
+      example: Busy shift with 3 new admissions
+    criticalEvents:
+      type: array
+      items:
+        $ref: '#/CriticalEvent'
+      description: Critical events to report
+
+HandoverUpdate:
+  type: object
+  description: Partial handover update (all fields optional)
+  properties:
+    status:
+      $ref: '#/HandoverStatus'
+    notes:
+      type: string
+      example: Updated notes
+    criticalEvents:
+      type: array
+      items:
+        $ref: '#/CriticalEvent'
+    verificationStatus:
+      $ref: '#/HandoverVerificationStatus'
+    vectorClock:
+      $ref: './common.yaml#/VectorClock'
+
+HandoverQueryParams:
+  allOf:
+    - $ref: './common.yaml#/PaginationParams'
+    - type: object
+      properties:
+        status:
+          type: array
+          items:
+            $ref: '#/HandoverStatus'
+          description: Filter by handover status
+          example: [IN_PROGRESS, COMPLETED]
+        shiftType:
+          $ref: '#/ShiftType'
+        startDate:
+          type: string
+          format: date-time
+          description: Filter handovers after this date
+          example: '2025-11-15T00:00:00Z'
+        endDate:
+          type: string
+          format: date-time
+          description: Filter handovers before this date
+          example: '2025-11-16T00:00:00Z'
+        departments:
+          type: array
+          items:
+            type: string
+          description: Filter by department
+          example: ['Emergency Department', 'ICU']
+        verificationStatus:
+          type: array
+          items:
+            $ref: '#/HandoverVerificationStatus'
+          description: Filter by verification status
+          example: [VERIFIED]

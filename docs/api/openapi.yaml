@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: EMR Task Integration Platform API
+  description: |
+    Comprehensive API for EMR Task Integration Platform with HIPAA-compliant healthcare workflows.
+
+    ## Features
+    - **Task Management**: Create, update, and verify patient care tasks with EMR integration
+    - **Shift Handover**: Structured handover workflows between nursing shifts with verification
+    - **Real-time Synchronization**: CRDT-based conflict-free data synchronization
+    - **EMR Integration**: Support for EPIC, Cerner, and Generic FHIR systems
+    - **HIPAA Compliance**: Full audit logging and secure authentication
+    - **Barcode Verification**: Task verification using patient wristband barcodes
+
+    ## Authentication
+    All endpoints (except /auth/login and /health) require JWT Bearer token authentication.
+    Include the token in the Authorization header: `Authorization: Bearer <token>`
+
+    ## Rate Limiting
+    - Standard endpoints: 1000 requests/minute
+    - Critical endpoints: 5000 requests/minute
+    - System admins bypass rate limits
+
+    ## Error Handling
+    All errors follow a standardized format with error codes, messages, and details.
+    See the Error schema for complete structure.
+
+  version: 1.0.0
+  contact:
+    name: EMR Task Platform API Support
+    email: api-support@emrtask.com
+    url: https://docs.emrtask.com
+  license:
+    name: Proprietary
+    url: https://emrtask.com/license
+
+servers:
+  - url: https://api.emrtask.com/api/v1
+    description: Production Server
+  - url: https://staging-api.emrtask.com/api/v1
+    description: Staging Server
+  - url: http://localhost:3000/api/v1
+    description: Development Server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Tasks
+    description: Task management with EMR verification
+  - name: Handovers
+    description: Shift handover workflows
+  - name: EMR
+    description: EMR system integration and verification
+  - name: Sync
+    description: Real-time CRDT synchronization
+  - name: Health
+    description: System health and monitoring
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+
+  schemas:
+    # Common Types
+    Error:
+      $ref: './schemas/common.yaml#/Error'
+    ApiResponse:
+      $ref: './schemas/common.yaml#/ApiResponse'
+    PaginationParams:
+      $ref: './schemas/common.yaml#/PaginationParams'
+    ResponseMetadata:
+      $ref: './schemas/common.yaml#/ResponseMetadata'
+    VectorClock:
+      $ref: './schemas/common.yaml#/VectorClock'
+
+    # Task Types
+    Task:
+      $ref: './schemas/task.yaml#/Task'
+    TaskCreate:
+      $ref: './schemas/task.yaml#/TaskCreate'
+    TaskUpdate:
+      $ref: './schemas/task.yaml#/TaskUpdate'
+    TaskVerification:
+      $ref: './schemas/task.yaml#/TaskVerification'
+    TaskStatus:
+      $ref: './schemas/task.yaml#/TaskStatus'
+    TaskPriority:
+      $ref: './schemas/task.yaml#/TaskPriority'
+
+    # Handover Types
+    Handover:
+      $ref: './schemas/handover.yaml#/Handover'
+    HandoverCreate:
+      $ref: './schemas/handover.yaml#/HandoverCreate'
+    HandoverUpdate:
+      $ref: './schemas/handover.yaml#/HandoverUpdate'
+    HandoverStatus:
+      $ref: './schemas/handover.yaml#/HandoverStatus'
+    Shift:
+      $ref: './schemas/handover.yaml#/Shift'
+    CriticalEvent:
+      $ref: './schemas/handover.yaml#/CriticalEvent'
+
+    # User/Auth Types
+    User:
+      $ref: './schemas/user.yaml#/User'
+    UserCreate:
+      $ref: './schemas/user.yaml#/UserCreate'
+    UserUpdate:
+      $ref: './schemas/user.yaml#/UserUpdate'
+    LoginRequest:
+      $ref: './schemas/auth.yaml#/LoginRequest'
+    LoginResponse:
+      $ref: './schemas/auth.yaml#/LoginResponse'
+    MFASetupRequest:
+      $ref: './schemas/auth.yaml#/MFASetupRequest'
+    MFAVerifyRequest:
+      $ref: './schemas/auth.yaml#/MFAVerifyRequest'
+
+    # EMR Types
+    EMRData:
+      $ref: './schemas/emr.yaml#/EMRData'
+    EMRVerificationRequest:
+      $ref: './schemas/emr.yaml#/EMRVerificationRequest'
+    EMRVerificationResult:
+      $ref: './schemas/emr.yaml#/EMRVerificationResult'
+    FHIRPatient:
+      $ref: './schemas/emr.yaml#/FHIRPatient'
+    FHIRTask:
+      $ref: './schemas/emr.yaml#/FHIRTask'
+    EMRSystem:
+      $ref: './schemas/emr.yaml#/EMRSystem'
+
+paths:
+  # Health
+  /health:
+    $ref: './paths/health.yaml#/health'
+
+  # Authentication
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+  /auth/refresh:
+    $ref: './paths/auth.yaml#/refresh'
+  /auth/mfa/setup:
+    $ref: './paths/auth.yaml#/mfaSetup'
+  /auth/mfa/verify:
+    $ref: './paths/auth.yaml#/mfaVerify'
+
+  # Tasks
+  /tasks:
+    $ref: './paths/tasks.yaml#/tasks'
+  /tasks/{taskId}:
+    $ref: './paths/tasks.yaml#/taskById'
+  /tasks/{taskId}/verify:
+    $ref: './paths/tasks.yaml#/verifyTask'
+  /tasks/{taskId}/sync:
+    $ref: './paths/tasks.yaml#/syncTask'
+
+  # Handovers
+  /handover:
+    $ref: './paths/handovers.yaml#/handovers'
+  /handover/{handoverId}:
+    $ref: './paths/handovers.yaml#/handoverById'
+  /handover/{handoverId}/complete:
+    $ref: './paths/handovers.yaml#/completeHandover'
+  /handover/{handoverId}/verify:
+    $ref: './paths/handovers.yaml#/verifyHandover'
+
+  # EMR
+  /emr/verify:
+    $ref: './paths/emr.yaml#/verify'
+  /emr/patient/{patientId}:
+    $ref: './paths/emr.yaml#/getPatient'
+  /emr/sync:
+    $ref: './paths/emr.yaml#/sync'
+
+  # Sync
+  /sync/status:
+    $ref: './paths/sync.yaml#/status'
+  /sync/conflicts:
+    $ref: './paths/sync.yaml#/conflicts'
+  /sync/resolve:
+    $ref: './paths/sync.yaml#/resolve'

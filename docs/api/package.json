@@ -1,0 +1,27 @@
+{
+  "name": "@emrtask/api-docs",
+  "version": "1.0.0",
+  "description": "OpenAPI 3.0 documentation for EMR Task Integration Platform",
+  "private": true,
+  "scripts": {
+    "validate": "bash ../../scripts/api/validate-openapi.sh",
+    "lint": "redocly lint openapi.yaml",
+    "bundle": "redocly bundle openapi.yaml -o ../../dist/api/openapi-bundled.yaml",
+    "stats": "redocly stats openapi.yaml",
+    "docs:build": "redocly build-docs openapi.yaml -o ../../dist/api/index.html",
+    "docs:preview": "redocly preview-docs openapi.yaml",
+    "postman:generate": "openapi2postmanv2 -s openapi.yaml -o ../../dist/api/postman-collection.json --pretty",
+    "all": "npm run validate && npm run postman:generate"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.5.0",
+    "openapi2postmanv2": "^1.2.0"
+  },
+  "keywords": [
+    "openapi",
+    "api-documentation",
+    "healthcare",
+    "emr",
+    "fhir"
+  ]
+}

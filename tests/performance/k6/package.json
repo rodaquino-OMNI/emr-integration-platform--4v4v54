@@ -1,0 +1,35 @@
+{
+  "name": "@emrtask/k6-performance-tests",
+  "version": "2.0.0",
+  "description": "Comprehensive k6 performance testing suite for EMR Integration Platform",
+  "private": true,
+  "scripts": {
+    "test:baseline": "k6 run scenarios/api-baseline.js",
+    "test:emr": "k6 run scenarios/emr-integration.js",
+    "test:concurrent": "k6 run scenarios/concurrent-users.js",
+    "test:spike": "k6 run scenarios/spike-test.js",
+    "test:stress": "k6 run scenarios/stress-test.js",
+    "test:soak": "k6 run scenarios/soak-test.js",
+    "test:all": "npm run test:baseline && npm run test:emr && npm run test:concurrent",
+    "test:all-scenarios": "npm run test:baseline && npm run test:emr && npm run test:concurrent && npm run test:spike && npm run test:stress",
+    "report:html": "k6 report --format html --out report.html",
+    "report:json": "k6 report --format json --out report.json",
+    "clean": "rm -rf results/*.json results/*.html"
+  },
+  "dependencies": {
+    "k6": "^0.48.0"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.48.0"
+  },
+  "keywords": [
+    "load-testing",
+    "performance",
+    "k6",
+    "emr",
+    "healthcare",
+    "sla-validation"
+  ],
+  "author": "EMR Task Platform Team",
+  "license": "PROPRIETARY"
+}

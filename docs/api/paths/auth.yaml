@@ -1,0 +1,156 @@
+login:
+  post:
+    tags:
+      - Authentication
+    summary: User login
+    description: Authenticate user and receive JWT token
+    operationId: login
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/LoginRequest'
+          examples:
+            withoutMFA:
+              summary: Login without MFA
+              value:
+                email: jane.doe@hospital.com
+                password: SecureP@ssw0rd123!
+            withMFA:
+              summary: Login with MFA
+              value:
+                email: jane.doe@hospital.com
+                password: SecureP@ssw0rd123!
+                mfaCode: '123456'
+    responses:
+      '200':
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/LoginResponse'
+            examples:
+              success:
+                summary: Successful login
+                value:
+                  success: true
+                  data:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    refreshToken: dGhpc2lzYXJlZnJlc2h0b2tlbg...
+                    expiresIn: 3600
+                    user:
+                      id: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+                      email: jane.doe@hospital.com
+                      role: NURSE
+                      firstName: Jane
+                      lastName: Doe
+                    mfaRequired: false
+      '401':
+        description: Authentication failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+            examples:
+              invalidCredentials:
+                summary: Invalid credentials
+                value:
+                  code: INVALID_CREDENTIALS
+                  message: Email or password is incorrect
+                  details: {}
+      '429':
+        description: Rate limit exceeded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+refresh:
+  post:
+    tags:
+      - Authentication
+    summary: Refresh access token
+    description: Obtain a new access token using refresh token
+    operationId: refreshToken
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/RefreshTokenRequest'
+    responses:
+      '200':
+        description: Token refreshed successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/RefreshTokenResponse'
+      '401':
+        description: Invalid refresh token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+mfaSetup:
+  post:
+    tags:
+      - Authentication
+    summary: Setup MFA for user
+    description: Generate QR code and secret for MFA setup
+    operationId: setupMFA
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/MFASetupRequest'
+    responses:
+      '200':
+        description: MFA setup data generated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/MFASetupResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+mfaVerify:
+  post:
+    tags:
+      - Authentication
+    summary: Verify MFA code
+    description: Verify MFA code and complete authentication
+    operationId: verifyMFA
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/MFAVerifyRequest'
+    responses:
+      '200':
+        description: MFA verified successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/MFAVerifyResponse'
+      '401':
+        description: Invalid MFA code
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'

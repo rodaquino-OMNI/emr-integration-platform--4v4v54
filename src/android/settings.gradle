@@ -11,7 +11,7 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoryMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -26,21 +26,3 @@ include ':app'
 
 // Enable build features for performance optimization
 enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
-enableFeaturePreview('VERSION_CATALOGS')
-
-// Configure Gradle settings for optimal build performance
-gradle.projectsLoaded {
-    rootProject.allprojects {
-        // Enable parallel execution for faster builds
-        tasks.withType(JavaCompile).configureEach {
-            options.fork = true
-        }
-        
-        // Configure build cache for faster subsequent builds
-        buildCache {
-            local {
-                enabled = true
-            }
-        }
-    }
-}

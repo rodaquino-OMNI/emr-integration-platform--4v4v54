@@ -1,0 +1,221 @@
+verify:
+  post:
+    tags:
+      - EMR
+    summary: Verify EMR data
+    description: Verify task against EMR system using barcode scan
+    operationId: verifyEMRData
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/emr.yaml#/EMRVerificationRequest'
+          examples:
+            epicVerification:
+              summary: EPIC system verification
+              value:
+                taskId: 550e8400-e29b-41d4-a716-446655440000
+                barcodeData: PAT-123456-DOE-JOHN
+                emrSystem: EPIC
+                patientId: PAT-123456
+    responses:
+      '200':
+        description: Verification completed
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/emr.yaml#/EMRVerificationResult'
+            examples:
+              verified:
+                summary: Successful verification
+                value:
+                  success: true
+                  data:
+                    success: true
+                    verified: true
+                    matchScore: 0.98
+                    validation:
+                      isValid: true
+                      errors: []
+                      warnings: []
+                      lastValidated: '2025-11-15T13:55:00Z'
+                    timestamp: '2025-11-15T13:55:00Z'
+                    retryable: false
+      '400':
+        description: Verification failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+            examples:
+              mismatch:
+                summary: Patient mismatch
+                value:
+                  code: EMR_MISMATCH
+                  message: Patient data does not match EMR records
+                  details:
+                    matchScore: 0.45
+                    mismatches: ['patientId', 'name']
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '503':
+        description: EMR system unavailable
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+getPatient:
+  get:
+    tags:
+      - EMR
+    summary: Get patient from EMR
+    description: Retrieve patient data from EMR system
+    operationId: getPatientFromEMR
+    parameters:
+      - name: patientId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Patient ID in EMR system
+        example: PAT-123456
+      - name: emrSystem
+        in: query
+        required: true
+        schema:
+          $ref: '../schemas/emr.yaml#/EMRSystem'
+        description: EMR system type
+        example: EPIC
+    responses:
+      '200':
+        description: Patient data retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/emr.yaml#/FHIRPatient'
+      '404':
+        description: Patient not found in EMR
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '503':
+        description: EMR system unavailable
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+sync:
+  post:
+    tags:
+      - EMR
+    summary: Sync with EMR
+    description: Synchronize tasks with EMR system
+    operationId: syncWithEMR
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - emrSystem
+              - taskIds
+            properties:
+              emrSystem:
+                $ref: '../schemas/emr.yaml#/EMRSystem'
+              taskIds:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+                description: Task IDs to sync
+                example: ['550e8400-e29b-41d4-a716-446655440000']
+              fullSync:
+                type: boolean
+                description: Whether to perform full sync
+                default: false
+                example: false
+    responses:
+      '200':
+        description: Sync completed
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - syncedCount
+                        - failedCount
+                        - timestamp
+                      properties:
+                        syncedCount:
+                          type: integer
+                          description: Number of tasks synced successfully
+                          example: 15
+                        failedCount:
+                          type: integer
+                          description: Number of tasks that failed to sync
+                          example: 2
+                        errors:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              taskId:
+                                type: string
+                                format: uuid
+                              error:
+                                type: string
+                          example:
+                            - taskId: 660e8400-e29b-41d4-a716-446655440001
+                              error: Patient not found in EMR
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: '2025-11-15T14:00:00Z'
+      '400':
+        description: Invalid sync request
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '503':
+        description: EMR system unavailable
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'

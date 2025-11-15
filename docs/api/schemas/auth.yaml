@@ -1,0 +1,178 @@
+LoginRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      description: User email address
+      example: jane.doe@hospital.com
+    password:
+      type: string
+      format: password
+      description: User password
+      example: SecureP@ssw0rd123!
+    mfaCode:
+      type: string
+      pattern: '^\d{6}$'
+      description: MFA code (if MFA enabled)
+      example: '123456'
+
+LoginResponse:
+  type: object
+  required:
+    - success
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+    data:
+      type: object
+      required:
+        - token
+        - refreshToken
+        - expiresIn
+        - user
+      properties:
+        token:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg...
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 3600
+        user:
+          $ref: './user.yaml#/User'
+        mfaRequired:
+          type: boolean
+          description: Whether MFA verification is required
+          example: false
+
+RefreshTokenRequest:
+  type: object
+  required:
+    - refreshToken
+  properties:
+    refreshToken:
+      type: string
+      description: Refresh token
+      example: dGhpc2lzYXJlZnJlc2h0b2tlbg...
+
+RefreshTokenResponse:
+  type: object
+  required:
+    - success
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+    data:
+      type: object
+      required:
+        - token
+        - expiresIn
+      properties:
+        token:
+          type: string
+          description: New JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 3600
+
+MFASetupRequest:
+  type: object
+  required:
+    - userId
+  properties:
+    userId:
+      type: string
+      format: uuid
+      description: User ID to enable MFA for
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+
+MFASetupResponse:
+  type: object
+  required:
+    - success
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+    data:
+      type: object
+      required:
+        - qrCode
+        - secret
+        - backupCodes
+      properties:
+        qrCode:
+          type: string
+          description: QR code for authenticator app (base64 encoded)
+          example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+        secret:
+          type: string
+          description: TOTP secret key
+          example: JBSWY3DPEHPK3PXP
+        backupCodes:
+          type: array
+          items:
+            type: string
+          description: Backup codes for account recovery
+          example: ['12345678', '87654321', '11223344']
+
+MFAVerifyRequest:
+  type: object
+  required:
+    - userId
+    - code
+  properties:
+    userId:
+      type: string
+      format: uuid
+      description: User ID
+      example: 7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f
+    code:
+      type: string
+      pattern: '^\d{6}$'
+      description: 6-digit MFA code
+      example: '123456'
+
+MFAVerifyResponse:
+  type: object
+  required:
+    - success
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+    data:
+      type: object
+      required:
+        - verified
+        - token
+      properties:
+        verified:
+          type: boolean
+          description: Whether MFA code was valid
+          example: true
+        token:
+          type: string
+          description: JWT access token (if verified)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        message:
+          type: string
+          description: Verification message
+          example: MFA verified successfully

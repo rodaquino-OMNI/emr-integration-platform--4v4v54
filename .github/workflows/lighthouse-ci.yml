@@ -1,0 +1,234 @@
+name: Lighthouse CI - Performance & Accessibility
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/web/**'
+      - 'src/mobile/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/web/**'
+      - 'src/mobile/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LIGHTHOUSE_PERFORMANCE_THRESHOLD: 90
+  LIGHTHOUSE_ACCESSIBILITY_THRESHOLD: 95
+  LIGHTHOUSE_BEST_PRACTICES_THRESHOLD: 90
+  LIGHTHOUSE_SEO_THRESHOLD: 90
+
+jobs:
+  lighthouse-web:
+    name: Lighthouse Audit - Web Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./src/web
+
+      - name: Build web application
+        run: npm run build
+        working-directory: ./src/web
+        env:
+          CI: true
+          NODE_ENV: production
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-web-reports
+          path: .lighthouseci/
+          retention-days: 30
+
+      - name: Check performance thresholds
+        run: |
+          PERFORMANCE=$(jq -r '.[] | select(.url | contains("index.html")) | .categories.performance.score' .lighthouseci/lhr-*.json | head -1)
+          ACCESSIBILITY=$(jq -r '.[] | select(.url | contains("index.html")) | .categories.accessibility.score' .lighthouseci/lhr-*.json | head -1)
+          BEST_PRACTICES=$(jq -r '.[] | select(.url | contains("index.html")) | .categories["best-practices"].score' .lighthouseci/lhr-*.json | head -1)
+          SEO=$(jq -r '.[] | select(.url | contains("index.html")) | .categories.seo.score' .lighthouseci/lhr-*.json | head -1)
+
+          PERF_SCORE=$(echo "$PERFORMANCE * 100" | bc | cut -d'.' -f1)
+          ACC_SCORE=$(echo "$ACCESSIBILITY * 100" | bc | cut -d'.' -f1)
+          BP_SCORE=$(echo "$BEST_PRACTICES * 100" | bc | cut -d'.' -f1)
+          SEO_SCORE=$(echo "$SEO * 100" | bc | cut -d'.' -f1)
+
+          echo "Performance: $PERF_SCORE (threshold: ${{ env.LIGHTHOUSE_PERFORMANCE_THRESHOLD }})"
+          echo "Accessibility: $ACC_SCORE (threshold: ${{ env.LIGHTHOUSE_ACCESSIBILITY_THRESHOLD }})"
+          echo "Best Practices: $BP_SCORE (threshold: ${{ env.LIGHTHOUSE_BEST_PRACTICES_THRESHOLD }})"
+          echo "SEO: $SEO_SCORE (threshold: ${{ env.LIGHTHOUSE_SEO_THRESHOLD }})"
+
+          FAILED=0
+
+          if [ "$PERF_SCORE" -lt "${{ env.LIGHTHOUSE_PERFORMANCE_THRESHOLD }}" ]; then
+            echo "::error::Performance score ($PERF_SCORE) below threshold (${{ env.LIGHTHOUSE_PERFORMANCE_THRESHOLD }})"
+            FAILED=1
+          fi
+
+          if [ "$ACC_SCORE" -lt "${{ env.LIGHTHOUSE_ACCESSIBILITY_THRESHOLD }}" ]; then
+            echo "::error::Accessibility score ($ACC_SCORE) below threshold (${{ env.LIGHTHOUSE_ACCESSIBILITY_THRESHOLD }})"
+            FAILED=1
+          fi
+
+          if [ "$BP_SCORE" -lt "${{ env.LIGHTHOUSE_BEST_PRACTICES_THRESHOLD }}" ]; then
+            echo "::warning::Best Practices score ($BP_SCORE) below threshold (${{ env.LIGHTHOUSE_BEST_PRACTICES_THRESHOLD }})"
+          fi
+
+          if [ "$SEO_SCORE" -lt "${{ env.LIGHTHOUSE_SEO_THRESHOLD }}" ]; then
+            echo "::warning::SEO score ($SEO_SCORE) below threshold (${{ env.LIGHTHOUSE_SEO_THRESHOLD }})"
+          fi
+
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Comment PR with Lighthouse scores
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const lhrFiles = fs.readdirSync('.lighthouseci').filter(f => f.startsWith('lhr-'));
+            const lhr = JSON.parse(fs.readFileSync(`.lighthouseci/${lhrFiles[0]}`, 'utf8'));
+
+            const scores = {
+              performance: Math.round(lhr.categories.performance.score * 100),
+              accessibility: Math.round(lhr.categories.accessibility.score * 100),
+              bestPractices: Math.round(lhr.categories['best-practices'].score * 100),
+              seo: Math.round(lhr.categories.seo.score * 100)
+            };
+
+            const comment = `## Lighthouse CI Results 🚦
+
+            | Category | Score |
+            |----------|-------|
+            | ⚡ Performance | ${scores.performance}/100 |
+            | ♿ Accessibility | ${scores.accessibility}/100 |
+            | ✅ Best Practices | ${scores.bestPractices}/100 |
+            | 🔍 SEO | ${scores.seo}/100 |
+
+            [View full report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  lighthouse-mobile:
+    name: Lighthouse Audit - Mobile (PWA)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./src/web
+
+      - name: Build PWA
+        run: npm run build
+        working-directory: ./src/web
+        env:
+          CI: true
+          NODE_ENV: production
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Run Lighthouse CI (Mobile)
+        run: lhci autorun --config=lighthouserc-mobile.json
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Check PWA criteria
+        run: |
+          PWA_SCORE=$(jq -r '.[] | select(.url | contains("index.html")) | .categories.pwa.score' .lighthouseci/lhr-*.json | head -1)
+          PWA_PERCENT=$(echo "$PWA_SCORE * 100" | bc | cut -d'.' -f1)
+
+          echo "PWA Score: $PWA_PERCENT"
+
+          if [ "$PWA_PERCENT" -lt 80 ]; then
+            echo "::error::PWA score ($PWA_PERCENT) below threshold (80)"
+            exit 1
+          fi
+
+      - name: Upload Lighthouse mobile reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-mobile-reports
+          path: .lighthouseci/
+          retention-days: 30
+
+  lighthouse-report:
+    name: Generate Lighthouse Summary
+    needs: [lighthouse-web, lighthouse-mobile]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download web reports
+        uses: actions/download-artifact@v4
+        with:
+          name: lighthouse-web-reports
+          path: ./reports/web
+
+      - name: Download mobile reports
+        uses: actions/download-artifact@v4
+        with:
+          name: lighthouse-mobile-reports
+          path: ./reports/mobile
+
+      - name: Generate summary
+        run: |
+          echo "# Lighthouse CI Summary Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Web Application" >> $GITHUB_STEP_SUMMARY
+          echo "Status: ${{ needs.lighthouse-web.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Mobile PWA" >> $GITHUB_STEP_SUMMARY
+          echo "Status: ${{ needs.lighthouse-mobile.result }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload consolidated reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-all-reports
+          path: ./reports/
+          retention-days: 30

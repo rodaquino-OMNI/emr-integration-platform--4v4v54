@@ -1,0 +1,330 @@
+# Artillery API Endpoints Performance Test
+# Tests all critical REST API endpoints with realistic load patterns
+
+config:
+  target: "{{ $processEnvironment.API_BASE_URL || 'http://localhost:3000' }}"
+  phases:
+    # Warmup phase
+    - duration: 120
+      arrivalRate: 10
+      name: "Warmup"
+
+    # Normal load
+    - duration: 300
+      arrivalRate: 50
+      name: "Normal Load"
+
+    # Peak load
+    - duration: 180
+      arrivalRate: 100
+      name: "Peak Load"
+
+    # Cooldown
+    - duration: 60
+      arrivalRate: 10
+      name: "Cooldown"
+
+  # Performance targets
+  ensure:
+    p95: 500  # p95 latency < 500ms
+    p99: 1000 # p99 latency < 1000ms
+    maxErrorRate: 1 # < 1% error rate
+
+  # Plugins for enhanced reporting
+  plugins:
+    metrics-by-endpoint:
+      stripQueryString: true
+    expect: {}
+
+  # HTTP settings
+  http:
+    timeout: 10
+    pool: 50
+
+  # Variables for test data
+  variables:
+    emrSystems:
+      - "epic"
+      - "cerner"
+      - "meditech"
+    priorities:
+      - "low"
+      - "medium"
+      - "high"
+      - "critical"
+    statuses:
+      - "pending"
+      - "in_progress"
+      - "completed"
+
+scenarios:
+  # Scenario 1: Authentication Flow
+  - name: "User Authentication"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "test-user-{{ $randomNumber(1, 1000) }}@emrtask.io"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: token
+
+      - think: 2
+
+      - get:
+          url: "/api/v1/auth/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 2: Task CRUD Operations
+  - name: "Task Management"
+    weight: 30
+    flow:
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "doctor-{{ $randomNumber(1, 100) }}@emrtask.io"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 1
+
+      # Create task
+      - post:
+          url: "/api/v1/tasks"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Task {{ $randomString() }}"
+            description: "Performance test task"
+            patientId: "PAT-{{ $randomNumber(1, 10000) }}"
+            priority: "{{ priority }}"
+            status: "pending"
+            type: "medication"
+            assignedTo: "user-{{ $randomNumber(1, 100) }}"
+            dueDate: "2025-12-31T23:59:59Z"
+          capture:
+            - json: "$.id"
+              as: "taskId"
+          expect:
+            - statusCode: 201
+            - hasProperty: id
+
+      - think: 2
+
+      # Read task
+      - get:
+          url: "/api/v1/tasks/{{ taskId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: id
+
+      - think: 1
+
+      # Update task
+      - patch:
+          url: "/api/v1/tasks/{{ taskId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "in_progress"
+            priority: "high"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Complete task
+      - patch:
+          url: "/api/v1/tasks/{{ taskId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "completed"
+          expect:
+            - statusCode: 200
+
+  # Scenario 3: Task Listing and Search
+  - name: "Task Search and Filter"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "nurse-{{ $randomNumber(1, 50) }}@emrtask.io"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 1
+
+      # List all tasks
+      - get:
+          url: "/api/v1/tasks?limit=50&offset=0"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+
+      - think: 2
+
+      # Filter by status
+      - get:
+          url: "/api/v1/tasks?status={{ status }}&limit=20"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      # Filter by priority
+      - get:
+          url: "/api/v1/tasks?priority={{ priority }}&limit=20"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Search tasks
+      - get:
+          url: "/api/v1/tasks/search?q=patient&limit=20"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 4: EMR Integration
+  - name: "EMR Data Operations"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "emr-user-{{ $randomNumber(1, 50) }}@emrtask.io"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 1
+
+      # Sync EMR data
+      - post:
+          url: "/api/v1/emr/sync"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            patientId: "PAT-{{ $randomNumber(1, 10000) }}"
+            emrSystem: "{{ emrSystem }}"
+            syncType: "full"
+            includeHistory: true
+            includeMedications: true
+            includeLabResults: true
+          capture:
+            - json: "$.jobId"
+              as: "syncJobId"
+          expect:
+            - statusCode: 200
+            - hasProperty: jobId
+
+      - think: 2
+
+      # Check sync status
+      - get:
+          url: "/api/v1/emr/sync/status/{{ syncJobId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      # Verify EMR data
+      - get:
+          url: "/api/v1/emr/verify/PAT-{{ $randomNumber(1, 10000) }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 5: Statistics and Analytics
+  - name: "Analytics and Reports"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "admin-{{ $randomNumber(1, 10) }}@emrtask.io"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 1
+
+      # Get task statistics
+      - get:
+          url: "/api/v1/tasks/stats"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: total
+
+      - think: 2
+
+      # Get user statistics
+      - get:
+          url: "/api/v1/users/stats"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      # Get system health
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+            - hasProperty: status
+
+  # Scenario 6: Concurrent Operations
+  - name: "High Frequency Operations"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "test-{{ $randomNumber(1, 1000) }}@emrtask.io"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - loop:
+          - get:
+              url: "/api/v1/tasks?limit=10"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+          - think: 0.5
+        count: 10

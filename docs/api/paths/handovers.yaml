@@ -1,0 +1,378 @@
+handovers:
+  get:
+    tags:
+      - Handovers
+    summary: List handovers
+    description: Retrieve paginated list of shift handovers
+    operationId: listHandovers
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: Items per page
+      - name: status
+        in: query
+        schema:
+          type: array
+          items:
+            $ref: '../schemas/handover.yaml#/HandoverStatus'
+        style: form
+        explode: true
+        description: Filter by handover status
+      - name: shiftType
+        in: query
+        schema:
+          $ref: '../schemas/handover.yaml#/ShiftType'
+        description: Filter by shift type
+      - name: department
+        in: query
+        schema:
+          type: string
+        description: Filter by department
+      - name: startDate
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Filter handovers after this date
+      - name: endDate
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Filter handovers before this date
+    responses:
+      '200':
+        description: Handovers retrieved successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/handover.yaml#/Handover'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+  post:
+    tags:
+      - Handovers
+    summary: Create handover
+    description: Create a new shift handover
+    operationId: createHandover
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/handover.yaml#/HandoverCreate'
+          examples:
+            morningToAfternoon:
+              summary: Morning to afternoon shift handover
+              value:
+                fromShift:
+                  type: MORNING
+                  startTime: '2025-11-15T07:00:00Z'
+                  endTime: '2025-11-15T15:00:00Z'
+                  staff: ['7d0f4e8a-3f1c-4b2e-9a8d-1c2b3a4d5e6f']
+                  department: Emergency Department
+                  metadata:
+                    capacity: 8
+                    departmentProtocols: ['ISO-001', 'HIPAA-COMP']
+                    supervisingDoctor: 9f2f6a0c-5a3e-6d4f-1c0f-3e4d5c6b7e8f
+                    emergencyContact: '+1-555-0100'
+                toShift:
+                  type: AFTERNOON
+                  startTime: '2025-11-15T15:00:00Z'
+                  endTime: '2025-11-15T23:00:00Z'
+                  staff: ['8e1f5f9b-4a2d-5c3f-0b9e-2d3c4b5a6d7e']
+                  department: Emergency Department
+                  metadata:
+                    capacity: 8
+                    departmentProtocols: ['ISO-001', 'HIPAA-COMP']
+                    supervisingDoctor: 9f2f6a0c-5a3e-6d4f-1c0f-3e4d5c6b7e8f
+                    emergencyContact: '+1-555-0100'
+                tasks: ['550e8400-e29b-41d4-a716-446655440000']
+                notes: Busy shift with 3 new admissions
+                criticalEvents: []
+    responses:
+      '201':
+        description: Handover created successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/handover.yaml#/Handover'
+      '400':
+        description: Invalid input
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+handoverById:
+  get:
+    tags:
+      - Handovers
+    summary: Get handover by ID
+    description: Retrieve a specific handover by its ID
+    operationId: getHandoverById
+    parameters:
+      - name: handoverId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Handover ID
+    responses:
+      '200':
+        description: Handover retrieved successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/handover.yaml#/Handover'
+      '404':
+        description: Handover not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+  patch:
+    tags:
+      - Handovers
+    summary: Update handover
+    description: Partially update a handover
+    operationId: updateHandover
+    parameters:
+      - name: handoverId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Handover ID
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/handover.yaml#/HandoverUpdate'
+    responses:
+      '200':
+        description: Handover updated successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/handover.yaml#/Handover'
+      '400':
+        description: Invalid input
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '404':
+        description: Handover not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+  delete:
+    tags:
+      - Handovers
+    summary: Delete handover
+    description: Delete a handover (soft delete with audit trail)
+    operationId: deleteHandover
+    parameters:
+      - name: handoverId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Handover ID
+    responses:
+      '204':
+        description: Handover deleted successfully
+      '404':
+        description: Handover not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+completeHandover:
+  post:
+    tags:
+      - Handovers
+    summary: Complete handover
+    description: Mark handover as completed
+    operationId: completeHandover
+    parameters:
+      - name: handoverId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Handover ID
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - completedBy
+            properties:
+              completedBy:
+                type: string
+                format: uuid
+                description: User completing the handover
+                example: 8e1f5f9b-4a2d-5c3f-0b9e-2d3c4b5a6d7e
+              notes:
+                type: string
+                description: Completion notes
+                example: All tasks successfully handed over
+    responses:
+      '200':
+        description: Handover completed successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/handover.yaml#/Handover'
+      '400':
+        description: Handover cannot be completed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '404':
+        description: Handover not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+verifyHandover:
+  post:
+    tags:
+      - Handovers
+    summary: Verify handover
+    description: Verify handover completeness and accuracy
+    operationId: verifyHandover
+    parameters:
+      - name: handoverId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Handover ID
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - verifiedBy
+            properties:
+              verifiedBy:
+                type: string
+                format: uuid
+                description: User verifying the handover
+                example: 9f2f6a0c-5a3e-6d4f-1c0f-3e4d5c6b7e8f
+              verificationNotes:
+                type: string
+                description: Verification notes
+                example: All critical events reviewed
+    responses:
+      '200':
+        description: Handover verified successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - verified
+                        - verificationStatus
+                        - timestamp
+                      properties:
+                        verified:
+                          type: boolean
+                          example: true
+                        verificationStatus:
+                          $ref: '../schemas/handover.yaml#/HandoverVerificationStatus'
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: '2025-11-15T15:20:00Z'
+                        issues:
+                          type: array
+                          items:
+                            type: string
+                          example: []
+      '400':
+        description: Verification failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '404':
+        description: Handover not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'

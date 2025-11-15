@@ -1,0 +1,236 @@
+status:
+  get:
+    tags:
+      - Sync
+    summary: Get sync status
+    description: Retrieve synchronization status for all devices
+    operationId: getSyncStatus
+    responses:
+      '200':
+        description: Sync status retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - nodes
+                        - lastSyncAt
+                        - conflicts
+                      properties:
+                        nodes:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                              - nodeId
+                              - status
+                              - lastSeen
+                              - vectorClock
+                            properties:
+                              nodeId:
+                                type: string
+                                example: node-abc123
+                              status:
+                                type: string
+                                enum: [online, offline, syncing]
+                                example: online
+                              lastSeen:
+                                type: string
+                                format: date-time
+                                example: '2025-11-15T13:58:00Z'
+                              vectorClock:
+                                $ref: '../schemas/common.yaml#/VectorClock'
+                        lastSyncAt:
+                          type: string
+                          format: date-time
+                          example: '2025-11-15T13:55:00Z'
+                        conflicts:
+                          type: integer
+                          description: Number of unresolved conflicts
+                          example: 0
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+conflicts:
+  get:
+    tags:
+      - Sync
+    summary: Get sync conflicts
+    description: Retrieve list of unresolved CRDT conflicts
+    operationId: getSyncConflicts
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Conflicts retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - conflictId
+                          - resourceType
+                          - resourceId
+                          - conflictingVersions
+                          - detectedAt
+                        properties:
+                          conflictId:
+                            type: string
+                            format: uuid
+                            example: 770e8400-e29b-41d4-a716-446655440002
+                          resourceType:
+                            type: string
+                            enum: [Task, Handover]
+                            example: Task
+                          resourceId:
+                            type: string
+                            format: uuid
+                            example: 550e8400-e29b-41d4-a716-446655440000
+                          conflictingVersions:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                nodeId:
+                                  type: string
+                                  example: node-abc123
+                                vectorClock:
+                                  $ref: '../schemas/common.yaml#/VectorClock'
+                                data:
+                                  type: object
+                                  additionalProperties: true
+                          detectedAt:
+                            type: string
+                            format: date-time
+                            example: '2025-11-15T13:45:00Z'
+                          status:
+                            type: string
+                            enum: [pending, resolved, manual_review_required]
+                            example: pending
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+
+resolve:
+  post:
+    tags:
+      - Sync
+    summary: Resolve sync conflict
+    description: Manually resolve a CRDT conflict
+    operationId: resolveSyncConflict
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - conflictId
+              - resolution
+            properties:
+              conflictId:
+                type: string
+                format: uuid
+                description: Conflict to resolve
+                example: 770e8400-e29b-41d4-a716-446655440002
+              resolution:
+                type: string
+                enum: [accept_version, merge, manual]
+                description: Resolution strategy
+                example: merge
+              selectedVersion:
+                type: object
+                description: Selected version (if accept_version)
+                properties:
+                  nodeId:
+                    type: string
+                    example: node-abc123
+                  vectorClock:
+                    $ref: '../schemas/common.yaml#/VectorClock'
+              mergedData:
+                type: object
+                description: Manually merged data (if manual)
+                additionalProperties: true
+    responses:
+      '200':
+        description: Conflict resolved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - conflictId
+                        - resolved
+                        - resolution
+                        - timestamp
+                      properties:
+                        conflictId:
+                          type: string
+                          format: uuid
+                          example: 770e8400-e29b-41d4-a716-446655440002
+                        resolved:
+                          type: boolean
+                          example: true
+                        resolution:
+                          type: string
+                          example: merge
+                        finalVectorClock:
+                          $ref: '../schemas/common.yaml#/VectorClock'
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: '2025-11-15T14:00:00Z'
+      '400':
+        description: Invalid resolution
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '404':
+        description: Conflict not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Error'

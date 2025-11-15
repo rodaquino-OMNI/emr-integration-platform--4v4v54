@@ -1,0 +1,47 @@
+lint:
+  extends:
+    - recommended
+
+  rules:
+    # Info section rules
+    info-description: error
+    info-contact: warn
+    info-license: warn
+
+    # Operation rules
+    operation-description: error
+    operation-operationId: error
+    operation-operationId-unique: error
+    operation-summary: error
+    operation-tag-defined: error
+
+    # Parameter rules
+    parameter-description: warn
+
+    # Response rules
+    no-invalid-media-type-examples: error
+
+    # Schema rules
+    no-enum-type-mismatch: error
+    no-example-value-and-externalValue: error
+
+    # Tag rules
+    tag-description: warn
+    tags-alphabetical: off
+
+    # Path rules
+    path-declaration-must-exist: error
+    path-not-include-query: error
+    path-parameters-defined: error
+
+    # Security rules
+    security-defined: error
+
+    # Reference rules
+    no-unresolved-refs: error
+    no-unused-components: warn
+
+  # Ignore specific paths/files
+  ignore:
+    - node_modules/**
+    - dist/**

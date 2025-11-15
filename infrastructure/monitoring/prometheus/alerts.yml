@@ -1,0 +1,293 @@
+# Prometheus Alert Rules for EMR Integration Platform
+# Performance, availability, and resource alerts
+
+groups:
+  # Performance Alerts
+  - name: performance_alerts
+    interval: 30s
+    rules:
+      # API Performance
+      - alert: HighP95Latency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High P95 latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value }}s (threshold: 500ms) for {{ $labels.service }}"
+
+      - alert: CriticalP95Latency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 1.0
+        for: 3m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical P95 latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value }}s (critical threshold: 1000ms) for {{ $labels.service }}"
+
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High P99 latency on {{ $labels.service }}"
+          description: "P99 latency is {{ $value }}s for {{ $labels.service }}"
+
+      # Request Rate
+      - alert: LowRequestRate
+        expr: sum(rate(http_requests_total[5m])) by (service) < 100
+        for: 10m
+        labels:
+          severity: info
+          category: performance
+        annotations:
+          summary: "Low request rate on {{ $labels.service }}"
+          description: "Request rate is {{ $value }} req/s (expected > 100 req/s)"
+
+      - alert: HighRequestRate
+        expr: sum(rate(http_requests_total[5m])) by (service) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Unusually high request rate on {{ $labels.service }}"
+          description: "Request rate is {{ $value }} req/s"
+
+  # Error Rate Alerts
+  - name: error_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) / sum(rate(http_requests_total[5m])) by (service) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          category: errors
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+
+      - alert: ElevatedErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) / sum(rate(http_requests_total[5m])) by (service) > 0.005
+        for: 10m
+        labels:
+          severity: warning
+          category: errors
+        annotations:
+          summary: "Elevated error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+      - alert: EMRSyncFailureRate
+        expr: sum(rate(emr_sync_failures_total[5m])) by (service) / sum(rate(emr_sync_attempts_total[5m])) by (service) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          category: emr
+        annotations:
+          summary: "High EMR sync failure rate"
+          description: "EMR sync failure rate is {{ $value | humanizePercentage }}"
+
+  # Database Alerts
+  - name: database_alerts
+    interval: 30s
+    rules:
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $value | humanizePercentage }} of connections in use"
+
+      - alert: SlowDatabaseQueries
+        expr: rate(pg_stat_statements_mean_exec_time[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time is {{ $value }}ms"
+
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends > 80
+        for: 10m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "High number of database connections"
+          description: "{{ $value }} active database connections"
+
+      - alert: DatabaseDeadlocks
+        expr: increase(pg_stat_database_deadlocks[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Database deadlocks detected"
+          description: "{{ $value }} deadlocks in the last 5 minutes"
+
+  # Resource Alerts
+  - name: resource_alerts
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}%"
+
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 5m
+        labels:
+          severity: critical
+          category: resources
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}%"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: CriticalMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.95
+        for: 5m
+        labels:
+          severity: critical
+          category: resources
+        annotations:
+          summary: "Critical memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: DiskSpaceRunningOut
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining on {{ $labels.mountpoint }}"
+
+      - alert: CriticalDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.05
+        for: 1m
+        labels:
+          severity: critical
+          category: resources
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining on {{ $labels.mountpoint }}"
+
+  # Availability Alerts
+  - name: availability_alerts
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been down for more than 2 minutes"
+
+      - alert: EndpointDown
+        expr: probe_success == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Endpoint {{ $labels.instance }} is down"
+          description: "Endpoint has been unreachable for more than 2 minutes"
+
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          category: availability
+        annotations:
+          summary: "Pod {{ $labels.pod }} is crash looping"
+          description: "Pod has restarted {{ $value }} times in the last 15 minutes"
+
+  # EMR-Specific Alerts
+  - name: emr_alerts
+    interval: 30s
+    rules:
+      - alert: SlowEMRSync
+        expr: histogram_quantile(0.95, sum(rate(emr_sync_duration_seconds_bucket[5m])) by (le)) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          category: emr
+        annotations:
+          summary: "Slow EMR synchronization"
+          description: "P95 EMR sync time is {{ $value }}s (threshold: 2s)"
+
+      - alert: CriticalEMRSyncTime
+        expr: histogram_quantile(0.95, sum(rate(emr_sync_duration_seconds_bucket[5m])) by (le)) > 5.0
+        for: 3m
+        labels:
+          severity: critical
+          category: emr
+        annotations:
+          summary: "Critical EMR sync time"
+          description: "P95 EMR sync time is {{ $value }}s"
+
+      - alert: EMRSyncQueueBacklog
+        expr: emr_sync_queue_size > 1000
+        for: 10m
+        labels:
+          severity: warning
+          category: emr
+        annotations:
+          summary: "Large EMR sync queue backlog"
+          description: "{{ $value }} items in EMR sync queue"
+
+  # Business Metrics Alerts
+  - name: business_alerts
+    interval: 60s
+    rules:
+      - alert: LowTaskCreationRate
+        expr: sum(rate(tasks_created_total[10m])) < 10
+        for: 15m
+        labels:
+          severity: info
+          category: business
+        annotations:
+          summary: "Low task creation rate"
+          description: "Only {{ $value }} tasks/minute being created"
+
+      - alert: HighTaskFailureRate
+        expr: sum(rate(tasks_failed_total[5m])) / sum(rate(tasks_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "High task failure rate"
+          description: "{{ $value | humanizePercentage }} of tasks are failing"

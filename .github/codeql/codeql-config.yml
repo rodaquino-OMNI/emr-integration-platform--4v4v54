@@ -1,0 +1,32 @@
+name: "EMR Integration Platform CodeQL Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/build/**'
+  - '**/coverage/**'
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - '**/test/**'
+  - '**/tests/**'
+  - '**/__tests__/**'
+
+paths:
+  - src/backend
+  - src/web
+  - src/mobile
+
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+  - exclude:
+      id: js/useless-assignment-to-local
+
+# Custom queries for healthcare-specific security
+# Include HIPAA-compliant checks

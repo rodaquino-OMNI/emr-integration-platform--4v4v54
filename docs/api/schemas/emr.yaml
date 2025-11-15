@@ -1,0 +1,517 @@
+EMRSystem:
+  type: string
+  enum: [EPIC, CERNER, GENERIC_FHIR]
+  description: Supported EMR system types
+  example: EPIC
+
+FHIRResourceType:
+  type: string
+  enum: [Patient, Task, Observation, Procedure, Medication, MedicationRequest, CarePlan, Encounter, Condition, DiagnosticReport]
+  description: Supported FHIR R4 resource types
+  example: Patient
+
+FHIRTaskStatus:
+  type: string
+  enum: [draft, requested, received, accepted, rejected, ready, cancelled, in-progress, on-hold, failed, completed, entered-in-error]
+  description: FHIR Task status values
+  example: in-progress
+
+FHIRTaskPriority:
+  type: string
+  enum: [urgent, high, routine, low]
+  description: FHIR Task priority levels
+  example: high
+
+FHIRAdministrativeGender:
+  type: string
+  enum: [male, female, other, unknown]
+  description: FHIR administrative gender
+  example: female
+
+FHIRIdentifier:
+  type: object
+  required:
+    - system
+    - value
+  properties:
+    use:
+      type: string
+      enum: [usual, official, temp, secondary]
+      description: Identifier use
+      example: official
+    system:
+      type: string
+      description: Identifier naming system
+      example: http://hospital.com/patients
+    value:
+      type: string
+      description: Identifier value
+      example: PAT-123456
+    type:
+      $ref: '#/FHIRCodeableConcept'
+    period:
+      $ref: '#/FHIRPeriod'
+
+FHIRCodeableConcept:
+  type: object
+  required:
+    - coding
+  properties:
+    coding:
+      type: array
+      items:
+        type: object
+        required:
+          - system
+          - code
+        properties:
+          system:
+            type: string
+            description: Code system URL
+            example: http://snomed.info/sct
+          code:
+            type: string
+            description: Code value
+            example: '386053000'
+          display:
+            type: string
+            description: Human-readable code
+            example: Evaluation procedure
+      minItems: 1
+    text:
+      type: string
+      description: Plain text representation
+      example: Evaluation procedure
+
+FHIRPeriod:
+  type: object
+  properties:
+    start:
+      type: string
+      format: date-time
+      description: Start time
+      example: '2025-11-15T08:00:00Z'
+    end:
+      type: string
+      format: date-time
+      description: End time
+      example: '2025-11-15T16:00:00Z'
+
+FHIRReference:
+  type: object
+  required:
+    - reference
+  properties:
+    reference:
+      type: string
+      description: Literal reference, relative, internal or absolute URL
+      example: Patient/123456
+    type:
+      type: string
+      description: Type the reference refers to
+      example: Patient
+    identifier:
+      $ref: '#/FHIRIdentifier'
+    display:
+      type: string
+      description: Text alternative for the resource
+      example: John Doe
+
+FHIRHumanName:
+  type: object
+  properties:
+    use:
+      type: string
+      enum: [usual, official, temp, nickname, anonymous, old, maiden]
+      description: Name use
+      example: official
+    text:
+      type: string
+      description: Full name as text
+      example: Dr. Jane Doe, MD
+    family:
+      type: string
+      description: Family name
+      example: Doe
+    given:
+      type: array
+      items:
+        type: string
+      description: Given names
+      example: [Jane, Marie]
+    prefix:
+      type: array
+      items:
+        type: string
+      description: Name prefixes
+      example: [Dr.]
+    suffix:
+      type: array
+      items:
+        type: string
+      description: Name suffixes
+      example: [MD]
+    period:
+      $ref: '#/FHIRPeriod'
+
+FHIRPatient:
+  type: object
+  required:
+    - resourceType
+    - id
+    - identifier
+    - active
+    - name
+    - gender
+  properties:
+    resourceType:
+      type: string
+      enum: [Patient]
+      example: Patient
+    id:
+      type: string
+      description: Logical id of this artifact
+      example: '123456'
+    identifier:
+      type: array
+      items:
+        $ref: '#/FHIRIdentifier'
+      minItems: 1
+    active:
+      type: boolean
+      description: Whether patient record is in active use
+      example: true
+    name:
+      type: array
+      items:
+        $ref: '#/FHIRHumanName'
+      minItems: 1
+    gender:
+      $ref: '#/FHIRAdministrativeGender'
+    birthDate:
+      type: string
+      format: date
+      description: Date of birth
+      example: '1980-01-15'
+    deceasedBoolean:
+      type: boolean
+      description: Indicates if patient is deceased
+      example: false
+    deceasedDateTime:
+      type: string
+      format: date-time
+      description: Date/time of death
+      example: '2025-11-15T14:30:00Z'
+    address:
+      type: array
+      items:
+        type: object
+        properties:
+          use:
+            type: string
+            enum: [home, work, temp, old, billing]
+            example: home
+          type:
+            type: string
+            enum: [postal, physical, both]
+            example: both
+          line:
+            type: array
+            items:
+              type: string
+            example: ['123 Main St', 'Apt 4B']
+          city:
+            type: string
+            example: Springfield
+          state:
+            type: string
+            example: IL
+          postalCode:
+            type: string
+            example: '62701'
+          country:
+            type: string
+            example: USA
+
+FHIRTask:
+  type: object
+  required:
+    - resourceType
+    - id
+    - status
+    - intent
+    - code
+    - authoredOn
+    - lastModified
+  properties:
+    resourceType:
+      type: string
+      enum: [Task]
+      example: Task
+    id:
+      type: string
+      description: Logical id of this artifact
+      example: 'task-789'
+    identifier:
+      type: array
+      items:
+        $ref: '#/FHIRIdentifier'
+    status:
+      $ref: '#/FHIRTaskStatus'
+    statusReason:
+      $ref: '#/FHIRCodeableConcept'
+    businessStatus:
+      $ref: '#/FHIRCodeableConcept'
+    intent:
+      type: string
+      enum: [proposal, plan, order, original-order, reflex-order, filler-order, instance-order, option]
+      description: Task intent
+      example: order
+    priority:
+      $ref: '#/FHIRTaskPriority'
+    code:
+      $ref: '#/FHIRCodeableConcept'
+    description:
+      type: string
+      description: Human-readable task description
+      example: Administer medication to patient
+    focus:
+      $ref: '#/FHIRReference'
+    for:
+      $ref: '#/FHIRReference'
+    encounter:
+      $ref: '#/FHIRReference'
+    executionPeriod:
+      $ref: '#/FHIRPeriod'
+    authoredOn:
+      type: string
+      format: date-time
+      description: Task creation date
+      example: '2025-11-15T08:00:00Z'
+    lastModified:
+      type: string
+      format: date-time
+      description: Last modification date
+      example: '2025-11-15T13:30:00Z'
+    requester:
+      $ref: '#/FHIRReference'
+    owner:
+      $ref: '#/FHIRReference'
+    location:
+      $ref: '#/FHIRReference'
+    note:
+      type: array
+      items:
+        type: object
+        required:
+          - text
+        properties:
+          author:
+            $ref: '#/FHIRReference'
+          time:
+            type: string
+            format: date-time
+            example: '2025-11-15T13:00:00Z'
+          text:
+            type: string
+            example: Patient tolerated medication well
+    input:
+      type: array
+      items:
+        type: object
+        required:
+          - type
+          - value
+        properties:
+          type:
+            $ref: '#/FHIRCodeableConcept'
+          value:
+            description: Content to use in performing the task
+            oneOf:
+              - type: string
+              - type: object
+    output:
+      type: array
+      items:
+        type: object
+        required:
+          - type
+          - value
+        properties:
+          type:
+            $ref: '#/FHIRCodeableConcept'
+          value:
+            description: Result of output
+            oneOf:
+              - type: string
+              - type: object
+
+EMRValidationResult:
+  type: object
+  required:
+    - isValid
+    - errors
+    - warnings
+    - lastValidated
+  properties:
+    isValid:
+      type: boolean
+      description: Overall validation result
+      example: true
+    errors:
+      type: array
+      items:
+        type: object
+        required:
+          - field
+          - code
+          - message
+          - severity
+        properties:
+          field:
+            type: string
+            description: Field with error
+            example: patientId
+          code:
+            type: string
+            description: Error code
+            example: INVALID_FORMAT
+          message:
+            type: string
+            description: Error message
+            example: Patient ID format is invalid
+          severity:
+            type: string
+            enum: [ERROR]
+            example: ERROR
+    warnings:
+      type: array
+      items:
+        type: object
+        required:
+          - field
+          - code
+          - message
+          - severity
+        properties:
+          field:
+            type: string
+            description: Field with warning
+            example: birthDate
+          code:
+            type: string
+            description: Warning code
+            example: MISSING_OPTIONAL
+          message:
+            type: string
+            description: Warning message
+            example: Birth date is recommended but not required
+          severity:
+            type: string
+            enum: [WARNING]
+            example: WARNING
+    lastValidated:
+      type: string
+      format: date-time
+      description: Last validation timestamp
+      example: '2025-11-15T13:45:00Z'
+
+EMRData:
+  type: object
+  required:
+    - system
+    - patientId
+    - resourceType
+    - data
+    - lastUpdated
+    - version
+    - validation
+  properties:
+    system:
+      $ref: '#/EMRSystem'
+    patientId:
+      type: string
+      description: Patient identifier in EMR system
+      example: PAT-123456
+    resourceType:
+      $ref: '#/FHIRResourceType'
+    data:
+      description: FHIR resource data
+      oneOf:
+        - $ref: '#/FHIRPatient'
+        - $ref: '#/FHIRTask'
+        - type: object
+    lastUpdated:
+      type: string
+      format: date-time
+      description: Last EMR data update
+      example: '2025-11-15T13:30:00Z'
+    version:
+      type: string
+      description: EMR data version
+      example: '1.0.0'
+    validation:
+      $ref: '#/EMRValidationResult'
+
+EMRVerificationRequest:
+  type: object
+  required:
+    - taskId
+    - barcodeData
+    - emrSystem
+  properties:
+    taskId:
+      type: string
+      format: uuid
+      description: Task to verify
+      example: 550e8400-e29b-41d4-a716-446655440000
+    barcodeData:
+      type: string
+      description: Scanned barcode from patient wristband
+      example: PAT-123456-DOE-JOHN
+    emrSystem:
+      $ref: '#/EMRSystem'
+    patientId:
+      type: string
+      description: Patient ID for verification
+      example: PAT-123456
+
+EMRVerificationResult:
+  type: object
+  required:
+    - success
+    - verified
+    - matchScore
+    - validation
+    - timestamp
+  properties:
+    success:
+      type: boolean
+      description: Whether verification request succeeded
+      example: true
+    verified:
+      type: boolean
+      description: Whether verification passed
+      example: true
+    matchScore:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 1
+      description: Confidence score for match (0-1)
+      example: 0.98
+    patientData:
+      $ref: '#/FHIRPatient'
+    taskData:
+      $ref: '#/FHIRTask'
+    validation:
+      $ref: '#/EMRValidationResult'
+    timestamp:
+      type: string
+      format: date-time
+      description: Verification timestamp
+      example: '2025-11-15T13:55:00Z'
+    retryable:
+      type: boolean
+      description: Whether verification can be retried
+      example: false

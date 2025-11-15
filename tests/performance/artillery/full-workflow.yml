@@ -1,0 +1,490 @@
+# Artillery Full User Workflow Test
+# End-to-end user journeys simulating real clinical workflows
+
+config:
+  target: "{{ $processEnvironment.API_BASE_URL || 'http://localhost:3000' }}"
+  phases:
+    # Morning shift start
+    - duration: 180
+      arrivalRate: 30
+      name: "Morning Shift Start"
+
+    # Midday peak
+    - duration: 300
+      arrivalRate: 60
+      name: "Midday Peak Activity"
+
+    # Afternoon steady
+    - duration: 240
+      arrivalRate: 40
+      name: "Afternoon Steady State"
+
+    # Evening wind-down
+    - duration: 120
+      arrivalRate: 15
+      name: "Evening Wind-down"
+
+  ensure:
+    p95: 500
+    p99: 1000
+    maxErrorRate: 1
+
+  plugins:
+    metrics-by-endpoint:
+      stripQueryString: true
+    expect: {}
+
+  http:
+    timeout: 15
+    pool: 100
+
+  variables:
+    userRoles:
+      - "doctor"
+      - "nurse"
+      - "staff"
+    patientConditions:
+      - "critical"
+      - "stable"
+      - "recovering"
+    taskTypes:
+      - "medication"
+      - "vitals"
+      - "lab"
+      - "procedure"
+      - "consultation"
+
+scenarios:
+  # Scenario 1: Doctor's Morning Rounds
+  - name: "Doctor Morning Rounds"
+    weight: 25
+    flow:
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "dr.{{ $randomString() }}@hospital.com"
+            password: "SecurePass123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+            - json: "$.userId"
+              as: "userId"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Check assigned patients
+      - get:
+          url: "/api/v1/patients?assignedTo={{ userId }}&status=active"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            - json: "$[0].id"
+              as: "patientId"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Review patient EMR data
+      - get:
+          url: "/api/v1/emr/patient/{{ patientId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 5
+
+      # Check pending tasks for patient
+      - get:
+          url: "/api/v1/tasks?patientId={{ patientId }}&status=pending"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            - json: "$[0].id"
+              as: "taskId"
+          expect:
+            - statusCode: 200
+
+      - think: 4
+
+      # Create new medication order
+      - post:
+          url: "/api/v1/tasks"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            type: "medication"
+            title: "Administer medication"
+            patientId: "{{ patientId }}"
+            priority: "high"
+            status: "pending"
+            dueDate: "{{ $timestamp() }}"
+            metadata:
+              medication: "Aspirin 100mg"
+              dosage: "1 tablet"
+              frequency: "daily"
+          expect:
+            - statusCode: 201
+
+      - think: 3
+
+      # Update task status
+      - patch:
+          url: "/api/v1/tasks/{{ taskId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "in_progress"
+            notes: "Reviewed during morning rounds"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Add clinical note
+      - post:
+          url: "/api/v1/patients/{{ patientId }}/notes"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            type: "progress_note"
+            content: "Patient stable. Continue current treatment."
+            timestamp: "{{ $timestamp() }}"
+          expect:
+            - statusCode: 201
+
+      - think: 5
+
+      # Check notifications
+      - get:
+          url: "/api/v1/notifications?unread=true"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Logout
+      - post:
+          url: "/api/v1/auth/logout"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 2: Nurse Task Execution
+  - name: "Nurse Task Workflow"
+    weight: 35
+    flow:
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "nurse.{{ $randomString() }}@hospital.com"
+            password: "SecurePass123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+            - json: "$.userId"
+              as: "userId"
+
+      - think: 2
+
+      # Get assigned tasks
+      - get:
+          url: "/api/v1/tasks?assignedTo={{ userId }}&status=pending&sortBy=priority"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            - json: "$[0].id"
+              as: "taskId1"
+            - json: "$[0].patientId"
+              as: "patientId"
+            - json: "$[1].id"
+              as: "taskId2"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Get patient vitals
+      - get:
+          url: "/api/v1/patients/{{ patientId }}/vitals"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Start first task
+      - patch:
+          url: "/api/v1/tasks/{{ taskId1 }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "in_progress"
+            startedAt: "{{ $timestamp() }}"
+          expect:
+            - statusCode: 200
+
+      - think: 8
+
+      # Record vitals
+      - post:
+          url: "/api/v1/patients/{{ patientId }}/vitals"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            temperature: 98.6
+            bloodPressure: "120/80"
+            heartRate: 72
+            respiratoryRate: 16
+            timestamp: "{{ $timestamp() }}"
+          expect:
+            - statusCode: 201
+
+      - think: 3
+
+      # Complete first task
+      - patch:
+          url: "/api/v1/tasks/{{ taskId1 }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "completed"
+            completedAt: "{{ $timestamp() }}"
+            notes: "Vitals recorded successfully"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Start second task
+      - patch:
+          url: "/api/v1/tasks/{{ taskId2 }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "in_progress"
+          expect:
+            - statusCode: 200
+
+      - think: 10
+
+      # Complete second task
+      - patch:
+          url: "/api/v1/tasks/{{ taskId2 }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            status: "completed"
+            completedAt: "{{ $timestamp() }}"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Check for new tasks
+      - get:
+          url: "/api/v1/tasks?assignedTo={{ userId }}&status=pending&limit=5"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 3: Patient Admission Workflow
+  - name: "Patient Admission"
+    weight: 15
+    flow:
+      # Login as admissions staff
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "admin.{{ $randomString() }}@hospital.com"
+            password: "SecurePass123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 2
+
+      # Create new patient
+      - post:
+          url: "/api/v1/patients"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            firstName: "John"
+            lastName: "Doe{{ $randomNumber(1000, 9999) }}"
+            dateOfBirth: "1980-01-15"
+            mrn: "MRN-{{ $randomNumber(100000, 999999) }}"
+            admissionDate: "{{ $timestamp() }}"
+            condition: "{{ patientCondition }}"
+            assignedDoctor: "dr-{{ $randomNumber(1, 50) }}"
+          capture:
+            - json: "$.id"
+              as: "newPatientId"
+          expect:
+            - statusCode: 201
+
+      - think: 5
+
+      # Sync EMR data
+      - post:
+          url: "/api/v1/emr/sync"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            patientId: "{{ newPatientId }}"
+            emrSystem: "epic"
+            syncType: "full"
+          capture:
+            - json: "$.jobId"
+              as: "syncJobId"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Check sync status
+      - get:
+          url: "/api/v1/emr/sync/status/{{ syncJobId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 4
+
+      # Create admission tasks
+      - post:
+          url: "/api/v1/tasks/batch"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            patientId: "{{ newPatientId }}"
+            tasks:
+              - type: "vitals"
+                title: "Initial vitals assessment"
+                priority: "high"
+              - type: "lab"
+                title: "Admission lab work"
+                priority: "high"
+              - type: "medication"
+                title: "Review medications"
+                priority: "medium"
+          expect:
+            - statusCode: 201
+
+  # Scenario 4: Shift Handover
+  - name: "Shift Handover"
+    weight: 15
+    flow:
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "nurse.handover{{ $randomNumber(1, 100) }}@hospital.com"
+            password: "SecurePass123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+            - json: "$.userId"
+              as: "userId"
+
+      - think: 2
+
+      # Get handover report
+      - get:
+          url: "/api/v1/handover/report?shift=current"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 5
+
+      # Get critical patients
+      - get:
+          url: "/api/v1/patients?priority=critical&assignedTo={{ userId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Get pending tasks
+      - get:
+          url: "/api/v1/tasks?status=pending&priority=high,critical"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 4
+
+      # Create handover note
+      - post:
+          url: "/api/v1/handover/notes"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            shift: "day"
+            notes: "All critical tasks completed. 3 pending medium priority tasks."
+            timestamp: "{{ $timestamp() }}"
+          expect:
+            - statusCode: 201
+
+  # Scenario 5: Emergency Response
+  - name: "Emergency Task Creation"
+    weight: 10
+    flow:
+      # Quick login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            username: "emergency{{ $randomNumber(1, 50) }}@hospital.com"
+            password: "SecurePass123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 1
+
+      # Create critical task
+      - post:
+          url: "/api/v1/tasks"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            type: "procedure"
+            title: "EMERGENCY: Immediate intervention required"
+            patientId: "PAT-{{ $randomNumber(1, 1000) }}"
+            priority: "critical"
+            status: "pending"
+            assignedTo: "on-call-doctor"
+            dueDate: "{{ $timestamp() }}"
+            metadata:
+              emergency: true
+              code: "CODE_BLUE"
+          expect:
+            - statusCode: 201
+
+      - think: 1
+
+      # Broadcast notification
+      - post:
+          url: "/api/v1/notifications/broadcast"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            type: "emergency"
+            message: "Code Blue activated"
+            priority: "critical"
+          expect:
+            - statusCode: 200
