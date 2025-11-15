@@ -205,3 +205,12 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+# NPM Audit Reports (generated artifacts)
+npm-audit-report*.json
+npm-audit-report*.txt
+npm-outdated-report*.txt
+
+# Phase-specific audit reports
+**/npm-audit-report-phase*.json
+
