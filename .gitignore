@@ -214,3 +214,13 @@ npm-outdated-report*.txt
 # Phase-specific audit reports
 **/npm-audit-report-phase*.json
 
+# Working/temporary documentation files
+docs/*-results.md
+docs/file-search-results.md
+docs/*-analysis.md
+
+# Service-specific generated documentation
+**/packages/*/docs/*-errors*.md
+**/packages/*/docs/*-analysis.md
+**/packages/*/docs/*-directory-tree.md
+
