@@ -218,6 +218,10 @@ npm-outdated-report*.txt
 docs/*-results.md
 docs/file-search-results.md
 docs/*-analysis.md
+docs/CODEBASE_VERIFICATION_REPORT.md
+docs/phase6_7_FORENSIC_ANALYSIS.md
+docs/phase5_execution/RESEARCHER_FORENSIC_ANALYSIS.md
+docs/phase5_execution/TEST_FORENSICS_REPORT.md
 
 # Service-specific generated documentation
 **/packages/*/docs/*-errors*.md
