@@ -1,7 +1,7 @@
 import { z } from 'zod'; // v3.21.4
 import { PrismaClient } from '@prisma/client'; // v4.16.2
 import { pino } from 'pino'; // v8.14.1
-import { VectorClock } from '../../shared/src/types/common.types';
+import { VectorClock } from '@emrtask/shared/types/common.types';
 import {
   CRDTOperation,
   CRDTState,

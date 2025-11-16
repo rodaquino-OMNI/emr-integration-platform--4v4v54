@@ -47,8 +47,18 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@emrtask/shared": ["./packages/shared/src"],
-      "@emrtask/shared/*": ["./packages/shared/src/*"]
+      "@emrtask/shared": ["./packages/shared/src/index.ts"],
+      "@emrtask/shared/*": ["./packages/shared/src/*"],
+      "@emrtask/shared/middleware": ["./packages/shared/src/middleware/index.ts"],
+      "@emrtask/shared/middleware/*": ["./packages/shared/src/middleware/*"],
+      "@emrtask/shared/database": ["./packages/shared/src/database/index.ts"],
+      "@emrtask/shared/logger": ["./packages/shared/src/logger/index.ts"],
+      "@emrtask/shared/config": ["./packages/shared/src/config/index.ts"],
+      "@emrtask/shared/types/*": ["./packages/shared/src/types/*"],
+      "@emrtask/shared/constants": ["./packages/shared/src/constants/index.ts"],
+      "@emrtask/shared/healthcheck": ["./packages/shared/src/healthcheck.ts"],
+      "@emrtask/shared/metrics": ["./packages/shared/src/metrics/index.ts"],
+      "@emrtask/shared/utils/*": ["./packages/shared/src/utils/*"]
     },
 
     // Decorator Support

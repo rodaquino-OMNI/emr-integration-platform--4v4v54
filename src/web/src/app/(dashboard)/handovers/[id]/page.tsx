@@ -7,29 +7,8 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import Loading from '@/components/common/Loading';
 import { useHandovers } from '@/hooks/useHandovers';
 
-// Metadata generation for SEO and accessibility
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  try {
-    return {
-      title: `Handover Details #${params.id} | EMR Task Management`,
-      description: 'Secure shift handover details with EMR verification',
-      openGraph: {
-        title: `Handover Details #${params.id}`,
-        description: 'EMR-verified shift handover information',
-        type: 'website',
-      },
-      robots: {
-        index: false, // Prevent indexing of sensitive healthcare data
-        follow: false,
-      },
-    };
-  } catch (error) {
-    return {
-      title: 'Handover Details | EMR Task Management',
-      description: 'Shift handover information',
-    };
-  }
-}
+// Note: generateMetadata removed - not compatible with 'use client' directive
+// Metadata should be set in parent layout.tsx or separate server component
 
 // Props interface for the page component
 interface HandoverPageProps {

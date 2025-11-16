@@ -230,12 +230,17 @@ export class DigitalSignatureService {
         });
       }
 
-      return {
+      const result: SignatureVerification = {
         valid,
         algorithm: signatureData.algorithm,
-        timestamp: signatureData.timestamp,
-        error: valid ? undefined : 'Invalid signature'
+        timestamp: signatureData.timestamp
       };
+
+      if (!valid) {
+        result.error = 'Invalid signature';
+      }
+
+      return result;
     } catch (error) {
       logger.error('Failed to verify signature', {
         error: error instanceof Error ? error.message : 'Unknown error'

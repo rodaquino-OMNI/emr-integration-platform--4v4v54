@@ -1,5 +1,5 @@
 import { z } from 'zod'; // v3.21.4
-import { VectorClock } from '../../shared/src/types/common.types';
+import { VectorClock } from '@emrtask/shared/types/common.types';
 
 /**
  * Maximum number of operations that can be processed in a single sync batch

@@ -5,7 +5,19 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@emrtask/shared": ["../shared/src/index.ts"],
+      "@emrtask/shared/*": ["../shared/src/*"],
+      "@emrtask/shared/middleware": ["../shared/src/middleware/index.ts"],
+      "@emrtask/shared/middleware/*": ["../shared/src/middleware/*"],
+      "@emrtask/shared/database": ["../shared/src/database/index.ts"],
+      "@emrtask/shared/logger": ["../shared/src/logger/index.ts"],
+      "@emrtask/shared/config": ["../shared/src/config/index.ts"],
+      "@emrtask/shared/types/*": ["../shared/src/types/*"],
+      "@emrtask/shared/constants": ["../shared/src/constants/index.ts"],
+      "@emrtask/shared/healthcheck": ["../shared/src/healthcheck.ts"],
+      "@emrtask/shared/metrics": ["../shared/src/metrics/index.ts"],
+      "@emrtask/shared/utils/*": ["../shared/src/utils/*"]
     },
     "composite": true,
     "declaration": true,
@@ -13,8 +25,8 @@
     "sourceMap": true,
     "incremental": true,
     "target": "ES2020",
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -30,7 +42,9 @@
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "importHelpers": true,
+    "types": ["node", "jest"],
     "typeRoots": [
+      "../../node_modules/@types",
       "./node_modules/@types",
       "./src/types"
     ]

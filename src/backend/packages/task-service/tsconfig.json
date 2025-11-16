@@ -3,8 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": ".",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
@@ -22,7 +23,22 @@
       "node",
       "jest",
       "express"
-    ]
+    ],
+    "paths": {
+      "@emrtask/shared": ["../shared/src/index.ts"],
+      "@emrtask/shared/*": ["../shared/src/*"],
+      "@emrtask/shared/middleware": ["../shared/src/middleware/index.ts"],
+      "@emrtask/shared/middleware/*": ["../shared/src/middleware/*"],
+      "@emrtask/shared/database": ["../shared/src/database/index.ts"],
+      "@emrtask/shared/logger": ["../shared/src/logger/index.ts"],
+      "@emrtask/shared/config": ["../shared/src/config/index.ts"],
+      "@emrtask/shared/types/*": ["../shared/src/types/*"],
+      "@emrtask/shared/constants": ["../shared/src/constants/index.ts"],
+      "@emrtask/shared/healthcheck": ["../shared/src/healthcheck.ts"],
+      "@emrtask/shared/metrics": ["../shared/src/metrics/index.ts"],
+      "@emrtask/shared/utils/*": ["../shared/src/utils/*"],
+      "@emr/services": ["../emr-service/src/services/index.ts"]
+    }
   },
   "include": [
     "src/**/*.ts"

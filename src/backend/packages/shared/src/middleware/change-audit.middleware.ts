@@ -85,7 +85,7 @@ export function auditChange(changeType: ChangeType, entityType: EntityType) {
       }
 
       // Extract entity ID from request params or body
-      const entityId = req.params.id || req.body?.id || 'unknown';
+      const entityId = req.params['id'] || req.body?.id || 'unknown';
 
       // Capture before state for UPDATE and DELETE operations
       let beforeState: object | undefined;
@@ -110,7 +110,7 @@ export function auditChange(changeType: ChangeType, entityType: EntityType) {
         return originalJson.call(this, body);
       };
 
-      res.end = function(...args: any[]) {
+      res.end = function(this: any, ...args: any[]) {
         if (!captured) {
           // Create audit record
           const auditRecord: ChangeAuditRecord = {
@@ -121,8 +121,6 @@ export function auditChange(changeType: ChangeType, entityType: EntityType) {
             changeType,
             entityType,
             entityId,
-            beforeState,
-            afterState,
             changes: calculateChanges(beforeState, afterState),
             timestamp: new Date(),
             ipAddress: req.ip || 'unknown',
@@ -131,8 +129,16 @@ export function auditChange(changeType: ChangeType, entityType: EntityType) {
             sessionId: extractSessionId(req),
             emrSystem: req.headers['x-emr-system'] as string,
             patientId: req.headers['x-patient-id'] as string,
-            reason: req.body?.reason || req.query.reason as string
+            reason: req.body?.reason || req.query['reason'] as string
           };
+
+          // Add optional fields only if they exist
+          if (beforeState !== undefined) {
+            auditRecord.beforeState = beforeState;
+          }
+          if (afterState !== undefined) {
+            auditRecord.afterState = afterState;
+          }
 
           // Log the audit record
           logAuditRecord(auditRecord);
@@ -143,8 +149,8 @@ export function auditChange(changeType: ChangeType, entityType: EntityType) {
           captured = true;
         }
 
-        return originalEnd.apply(this, args);
-      };
+        return (originalEnd as any).apply(this, args);
+      } as any;
 
       next();
     } catch (error) {

@@ -7,17 +7,8 @@ import { useAuth } from '../../../lib/auth';
 import ErrorBoundary from '../../../components/common/ErrorBoundary';
 import { THEME } from '../../../lib/constants';
 
-// Enhanced metadata with security headers
-export const metadata = {
-  title: 'Login - EMR Task Management Platform',
-  description: 'Secure login portal for healthcare professionals to access EMR task management system',
-  headers: {
-    'Content-Security-Policy': "default-src 'self'; frame-ancestors 'none';",
-    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-    'X-Frame-Options': 'DENY',
-    'X-Content-Type-Options': 'nosniff'
-  }
-};
+// Note: metadata export removed - not compatible with 'use client' directive
+// Metadata should be set in parent layout.tsx or via next/head in client components
 
 /**
  * Enhanced login page component with healthcare-specific security features

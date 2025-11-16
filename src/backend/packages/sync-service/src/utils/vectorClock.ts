@@ -1,4 +1,4 @@
-import { VectorClock } from '../../shared/src/types/common.types';
+import { VectorClock } from '@emrtask/shared/types/common.types';
 
 /**
  * Constants for vector clock operations

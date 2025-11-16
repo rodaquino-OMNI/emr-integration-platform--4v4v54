@@ -1,7 +1,9 @@
 import { config as dotenvConfig } from 'dotenv';
 import * as Joi from 'joi';
 import { createLogger, format, transports } from 'winston';
-import { API_VERSIONS, API_RATE_LIMIT } from '../../../shared/src/constants';
+import { API_VERSIONS } from '@emrtask/shared';
+import { API_RATE_LIMIT } from '../../../shared/src/constants';
+import type { AppConfig } from '@emrtask/shared';
 
 // Load environment variables
 dotenvConfig();
@@ -11,7 +13,7 @@ dotenvConfig();
  * @version 1.0.0
  */
 export class ConfigurationError extends Error {
-  public readonly name: string = 'ConfigurationError';
+  public override readonly name: string = 'ConfigurationError';
   public readonly details: object;
   public readonly timestamp: string;
 
@@ -114,12 +116,12 @@ const logger = createLogger({
 
 /**
  * Loads and processes configuration with secure defaults
- * @returns {object} Processed configuration object
+ * @returns {AppConfig} Processed configuration object
  */
-export const loadConfig = (): object => {
+export const loadConfig = (): AppConfig => {
   logger.info('Loading configuration...');
-  
-  const config = {
+
+  const config: AppConfig = {
     server: {
       env: process.env['NODE_ENV'] || 'development',
       port: parseInt(process.env['PORT'] || '3000', 10),

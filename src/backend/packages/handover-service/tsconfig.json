@@ -3,8 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "module": "commonjs",
+    "moduleResolution": "node",
 
     // Build Configuration
     "composite": true,
@@ -34,8 +34,23 @@
     ],
     
     // Path Aliases
+    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/src/*"]
+      "@shared/*": ["../shared/src/*"],
+      "@emrtask/shared": ["../shared/src/index.ts"],
+      "@emrtask/shared/*": ["../shared/src/*"],
+      "@emrtask/shared/middleware": ["../shared/src/middleware/index.ts"],
+      "@emrtask/shared/middleware/*": ["../shared/src/middleware/*"],
+      "@emrtask/shared/database": ["../shared/src/database/index.ts"],
+      "@emrtask/shared/logger": ["../shared/src/logger/index.ts"],
+      "@emrtask/shared/config": ["../shared/src/config/index.ts"],
+      "@emrtask/shared/types/*": ["../shared/src/types/*"],
+      "@emrtask/shared/constants": ["../shared/src/constants/index.ts"],
+      "@emrtask/shared/healthcheck": ["../shared/src/healthcheck.ts"],
+      "@emrtask/shared/metrics": ["../shared/src/metrics/index.ts"],
+      "@emrtask/shared/utils/*": ["../shared/src/utils/*"],
+      "@task/types": ["../task-service/src/types/task.types"],
+      "@task/services": ["../task-service/src/services/task.service"]
     }
   },
   

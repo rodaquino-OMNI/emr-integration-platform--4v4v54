@@ -11,11 +11,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuditLog } from '@/lib/audit';
 import { Task, TaskStatus } from '@/lib/types';
 
-// Page metadata for SEO and accessibility
-export const metadata = {
-  title: 'Tasks | EMR Task Management',
-  description: 'HIPAA-compliant healthcare task management dashboard with EMR integration and real-time updates'
-};
+// Note: metadata export removed - not compatible with 'use client' directive
+// Metadata should be set in parent layout.tsx
 
 /**
  * TasksPage Component

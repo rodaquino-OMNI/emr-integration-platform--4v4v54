@@ -15,7 +15,7 @@ import {
 } from '../types/task.types';
 
 import { TaskModel } from '../models/task.model';
-import { EMRService } from '../../emr-service/src/services/emr.service';
+import { EMRService } from '@emr/services';
 
 import {
   EMRData,

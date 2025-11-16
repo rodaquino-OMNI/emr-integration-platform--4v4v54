@@ -66,10 +66,7 @@ const LogoutPage = () => {
   );
 };
 
-// Metadata to prevent caching and ensure page is always dynamic
-export const metadata = {
-  dynamic: 'force-dynamic',
-  revalidate: 0
-};
+// Note: metadata export removed - not compatible with 'use client' directive
+// Dynamic settings should be set in parent layout.tsx or route segment config
 
 export default LogoutPage;

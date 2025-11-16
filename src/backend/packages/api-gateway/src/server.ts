@@ -11,10 +11,7 @@ import https from 'https';
 import { trace, context } from '@opentelemetry/api'; // ^1.4.0
 
 import router from './routes';
-import errorHandler from '@emrtask/shared/middleware/error.middleware';
-import requestLogger from '@emrtask/shared/middleware/logging.middleware';
-import { logger } from '@emrtask/shared/logger';
-import { httpRequestTotal } from '@emrtask/shared/metrics';
+import { errorHandler, requestLogger, logger, httpRequestTotal } from '@emrtask/shared';
 import { config } from './config';
 
 // Initialize Express application

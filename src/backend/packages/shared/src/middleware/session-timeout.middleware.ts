@@ -7,13 +7,12 @@ import { HTTP_STATUS } from '../constants';
  * Session timeout configuration by role
  * HIPAA Compliance: §164.312(a)(2)(iii) - Automatic Logoff
  *
- * - ADMIN/SYSTEM_ADMIN: 15 minutes idle (high security)
+ * - ADMIN: 15 minutes idle (high security)
  * - DOCTOR/NURSE: 60 minutes idle (balance security and usability)
  * - STAFF: 60 minutes idle
  */
 const SESSION_TIMEOUT_MS: Record<UserRole, number> = {
   [UserRole.ADMIN]: 15 * 60 * 1000, // 15 minutes
-  [UserRole.SYSTEM_ADMIN]: 15 * 60 * 1000, // 15 minutes
   [UserRole.DOCTOR]: 60 * 60 * 1000, // 60 minutes
   [UserRole.NURSE]: 60 * 60 * 1000, // 60 minutes
   [UserRole.STAFF]: 60 * 60 * 1000 // 60 minutes

@@ -10,7 +10,7 @@ import {
   HANDOVER_WINDOW_MINUTES,
   MAX_HANDOVER_RETRIES
 } from '../types/handover.types';
-import { DatabaseService } from '@emrtask/shared/database';
+import DatabaseService from '@emrtask/shared/database';
 import { VectorClock, MergeOperationType } from '@emrtask/shared/types/common.types';
 import { logger } from '@emrtask/shared/logger';
 

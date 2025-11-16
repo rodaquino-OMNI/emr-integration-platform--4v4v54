@@ -99,7 +99,7 @@ export class GDPRController {
       }
 
       // Get export format from query parameter
-      const format = (req.query.format as ExportFormat) || ExportFormat.JSON;
+      const format = (req.query['format'] as ExportFormat) || ExportFormat.JSON;
 
       if (!Object.values(ExportFormat).includes(format)) {
         const errorResponse: ErrorResponse = {

@@ -1,25 +1,25 @@
 import { Request, Response } from 'express'; // v4.18.2
 import { JwtPayload } from 'jsonwebtoken'; // v9.0.0
-import { 
-  ApiResponse, 
-  PaginationParams, 
-  EMRData, 
+import {
+  ApiResponse,
+  PaginationParams,
+  EMRData,
   EMR_SYSTEMS,
   EMRValidationResult,
   TracingMetadata
-} from '@emrtask/shared/types/common.types';
-import { 
-  FHIRTask, 
-  FHIRPatient, 
-  FHIRResourceType,
-  FHIRTaskStatus 
-} from '@emr/types';
-import { 
-  Task, 
-  TaskVerification, 
-  TaskStatus,
-  TaskVerificationStatus 
-} from '@task/types';
+} from '@emrtask/shared';
+
+// Stub types for FHIR resources (should be imported from fhir/r4 once available)
+export type FHIRTask = any;
+export type FHIRPatient = any;
+export type FHIRResourceType = string;
+export type FHIRTaskStatus = string;
+
+// Stub types for Task service (should be imported from task-service once available)
+export type Task = any;
+export type TaskVerification = any;
+export type TaskStatus = string;
+export type TaskVerificationStatus = string;
 
 /**
  * Enhanced HTTP methods with healthcare-specific requirements

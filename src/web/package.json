@@ -22,13 +22,16 @@
     "validate": "npm run type-check && npm run lint && npm run test"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
     "@headlessui/react": "^1.7.0",
+    "@mui/material": "^5.14.0",
     "@mui/x-date-pickers": "^6.0.0",
     "@react-aria/overlays": "^3.0.0",
     "@sentry/nextjs": "^7.0.0",
     "@tailwindcss/forms": "^0.5.0",
     "automerge": "0.14.2",
-    "axios": "^1.4.0",
+    "axios": "~0.21.1",
     "axios-cache-adapter": "^2.7.3",
     "axios-retry": "^3.5.0",
     "chart.js": "4.x",
@@ -64,7 +67,8 @@
     "xss": "1.0.14",
     "yup": "^1.2.0",
     "zod": "3.21.4",
-    "zustand": "^4.3.9"
+    "zustand": "^4.3.9",
+    "rate-limiter-flexible": "^2.4.1"
   },
   "devDependencies": {
     "@axe-core/react": "^4.7.0",

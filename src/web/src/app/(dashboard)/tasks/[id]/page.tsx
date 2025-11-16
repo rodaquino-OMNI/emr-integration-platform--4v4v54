@@ -15,25 +15,8 @@ const ERROR_MESSAGES = {
   OFFLINE_MODE: 'Working in offline mode'
 } as const;
 
-/**
- * Enhanced metadata generator for SEO optimization
- * @param params - Route parameters containing task ID
- */
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  return {
-    title: PAGE_TITLE,
-    description: `Detailed view and EMR verification for task ${params.id}`,
-    openGraph: {
-      title: PAGE_TITLE,
-      description: `Task management and EMR verification interface for healthcare professionals`,
-      type: 'website'
-    },
-    robots: {
-      index: false,
-      follow: false
-    }
-  };
-}
+// Note: generateMetadata removed - not compatible with 'use client' directive
+// Metadata should be set in parent layout.tsx or separate server component
 
 /**
  * Task details page component with comprehensive error handling and accessibility support

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest, UserRole } from './auth.middleware';
 import { logger } from '../logger';
 import { HTTP_STATUS } from '../constants';
@@ -39,8 +39,7 @@ interface MFAErrorResponse {
  * HIPAA Compliance: Multi-factor authentication for administrative access
  */
 const MFA_REQUIRED_ROLES: UserRole[] = [
-  UserRole.ADMIN,
-  UserRole.SYSTEM_ADMIN
+  UserRole.ADMIN
 ];
 
 /**

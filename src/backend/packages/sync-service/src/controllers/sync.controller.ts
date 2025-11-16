@@ -6,9 +6,9 @@ import CircuitBreaker from 'opossum'; // v6.4.0
 
 import { SyncService } from '../services/sync.service';
 import { CRDTOperation } from '../types/crdt.types';
-import { errorHandler } from '../../shared/src/middleware/error.middleware';
-import { logger } from '../../shared/src/middleware/logger';
-import { syncLatency } from '../../shared/src/metrics';
+import { errorHandler } from '@emrtask/shared/middleware/error.middleware';
+import { logger } from '@emrtask/shared/logger';
+import { syncLatency } from '@emrtask/shared/metrics';
 
 // Route constants
 const SYNC_ROUTES = {

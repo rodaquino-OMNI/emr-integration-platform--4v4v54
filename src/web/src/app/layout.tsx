@@ -10,43 +10,11 @@ import { ThemeProvider } from '../context/ThemeContext';
 import { AuthProvider } from '../context/AuthContext';
 import { THEME } from '../lib/constants';
 
-// Generate metadata for the application
-export const generateMetadata = (): Metadata => {
-  return {
-    title: 'EMR Task Management Platform',
-    description: 'HIPAA-compliant healthcare task management system with EMR integration',
-    viewport: {
-      width: 'device-width',
-      initialScale: 1,
-      viewportFit: 'cover',
-      minimumScale: 1,
-    },
-    themeColor: THEME.COLORS.PRIMARY[500],
-    manifest: '/manifest.json',
-    icons: {
-      icon: '/favicon.ico',
-      apple: '/logo.svg'
-    },
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: 'default',
-      title: 'EMR Tasks'
-    },
-    formatDetection: {
-      telephone: true,
-      date: true,
-      address: true,
-      email: true,
-      url: true
-    },
-    verification: {
-      'hsts-valid': 'true'
-    }
-  };
-};
+// Note: generateMetadata removed - not compatible with 'use client' directive
+// Metadata configured via next.config.js and individual page metadata
 
 // Generate security headers
-export const generateSecurityHeaders = () => {
+const generateSecurityHeaders = () => {
   return {
     'Content-Security-Policy': [
       "default-src 'self'",

@@ -20,7 +20,7 @@ import {
   VectorClock,
   MergeOperationType,
   VECTOR_CLOCK_PRECISION
-} from '../../shared/src/types/common.types';
+} from '@emrtask/shared/types/common.types';
 
 @injectable()
 export class CRDTService {

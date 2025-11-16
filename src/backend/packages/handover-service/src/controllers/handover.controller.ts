@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express'; // v4.18.0
 import { z } from 'zod'; // v3.21.4
 import { Logger } from 'winston'; // v3.10.0
-import rateLimit from 'express-rate-limit'; // v6.7.0
+const rateLimit = require('express-rate-limit'); // v6.7.0 - using require for CommonJS compatibility
 
 import { HandoverService } from '../services/handover.service';
 import {
