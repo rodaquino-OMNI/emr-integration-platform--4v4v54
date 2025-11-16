@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "module": "Node16",
     "moduleResolution": "node16",
 
     // Build Configuration

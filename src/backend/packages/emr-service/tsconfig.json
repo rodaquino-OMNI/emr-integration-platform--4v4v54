@@ -4,11 +4,20 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": ".",
+    "module": "Node16",
     "moduleResolution": "node16",
     "paths": {
       "@/*": ["src/*"],
       "@emrtask/shared": ["../shared/src"],
-      "@emrtask/shared/*": ["../shared/src/*"]
+      "@emrtask/shared/*": ["../shared/src/*"],
+      "fhir/r4": ["src/stubs/fhir-r4"],
+      "circuit-breaker-ts": ["src/stubs/circuit-breaker-ts"],
+      "circuit-breaker-js": ["src/stubs/circuit-breaker-ts"],
+      "@company/monitoring": ["src/stubs/company-monitoring"],
+      "@company/audit-logger": ["src/stubs/company-audit-logger"],
+      "retry-axios": ["src/stubs/retry-axios"],
+      "@opentelemetry/metrics": ["src/stubs/opentelemetry-metrics"],
+      "express-validator": ["src/stubs/express-validator"]
     },
     "composite": true,
     "declaration": true,
